@@ -36,3 +36,7 @@
 
 - [x] Add a local-development-only Laravel admin seeder with temporary credentials.
 - [x] Run and verify the local admin account seeding flow without exposing production secrets.
+
+- [x] Diagnose the React «تعذر الاتصال بالخادم» authentication failure.
+- [x] Fix the React-to-Laravel API base URL or proxy connection path.
+- [x] Verify login, API error handling, frontend build, and Laravel tests after the fix.
