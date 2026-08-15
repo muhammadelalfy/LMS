@@ -53,3 +53,7 @@
 - [x] Add Laravel factories for Arabic students and related LMS entities.
 - [x] Add an idempotent local-only Arabic demo-data seeder with linked accounts and QR tokens.
 - [x] Verify seeded relationships, roles, assignments, attendance, exams, payments, and QR scan data.
+
+- [x] Replace technical CRUD column names with Arabic human-readable labels.
+- [x] Format date_at and other timestamps as localized Arabic date/time text.
+- [x] Verify localized attendance, exam, payment, and worksheet tables on responsive screens.
