@@ -45,3 +45,7 @@
 - [x] Record QR attendance with server UTC timestamp and duplicate prevention.
 - [x] Add student QR display and admin scanner/scan-result UI.
 - [x] Test authorization, invalid QR, repeated scan, timestamp, and responsive flows.
+
+- [x] Add an explicit-permission live camera QR scanner to the admin attendance panel.
+- [x] Connect decoded camera payloads to Laravel attendance scan with duplicate/result feedback.
+- [x] Preserve manual QR input fallback and test camera permission, cleanup, and responsive states.
