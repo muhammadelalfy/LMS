@@ -49,3 +49,7 @@
 - [x] Add an explicit-permission live camera QR scanner to the admin attendance panel.
 - [x] Connect decoded camera payloads to Laravel attendance scan with duplicate/result feedback.
 - [x] Preserve manual QR input fallback and test camera permission, cleanup, and responsive states.
+
+- [x] Add Laravel factories for Arabic students and related LMS entities.
+- [x] Add an idempotent local-only Arabic demo-data seeder with linked accounts and QR tokens.
+- [x] Verify seeded relationships, roles, assignments, attendance, exams, payments, and QR scan data.

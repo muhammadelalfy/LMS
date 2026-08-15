@@ -42,3 +42,13 @@ php artisan test --compact
 ```
 
 The test suite currently covers registration/login, teacher assignment, student submission, and role authorization. Production validation must also run the migration and endpoint smoke checks against MySQL.
+
+## Arabic local demo data
+
+The project includes localized factories and a guarded `ArabicDemoSeeder` for local development and automated testing. Run it with:
+
+```bash
+APP_ENV=local php artisan db:seed --class=Database\\Seeders\\ArabicDemoSeeder --force
+```
+
+The seeder is intentionally blocked outside `local` and `testing`. It is idempotent and creates six Arabic students, parent and student accounts, unique QR tokens, published mathematics worksheets, assignments, five days of attendance history, exam results, and payment records. Development credentials are printed by the command and must not be reused in production.
