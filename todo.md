@@ -33,3 +33,6 @@
 - [x] Verify exam-results CRUD interactions and authorization from the admin dashboard.
 - [x] Validate restricted student and parent dashboard data and navigation.
 - [x] Add regression tests for frontend API failures and role-specific access states.
+
+- [x] Add a local-development-only Laravel admin seeder with temporary credentials.
+- [x] Run and verify the local admin account seeding flow without exposing production secrets.
