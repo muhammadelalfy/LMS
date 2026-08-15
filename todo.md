@@ -40,3 +40,8 @@
 - [x] Diagnose the React «تعذر الاتصال بالخادم» authentication failure.
 - [x] Fix the React-to-Laravel API base URL or proxy connection path.
 - [x] Verify login, API error handling, frontend build, and Laravel tests after the fix.
+
+- [x] Add unique QR identity and server-side scan validation for each student.
+- [x] Record QR attendance with server UTC timestamp and duplicate prevention.
+- [x] Add student QR display and admin scanner/scan-result UI.
+- [x] Test authorization, invalid QR, repeated scan, timestamp, and responsive flows.

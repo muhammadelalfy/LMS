@@ -4,7 +4,8 @@ export type ApiUser = { id: number; name: string; email: string; role: Role; stu
 export type Student = { id: number; name: string; group: string; grade: string; phone: string; parent_phone?: string | null; status: "excellent" | "average" | "weak"; assignments_count?: number; attendance_records_count?: number; exam_results_count?: number; payments_count?: number };
 export type Worksheet = { id: number; title: string; subject: string; grade: string; status: "draft" | "published"; assignments_count?: number; submitted_count?: number; assignments?: Assignment[] };
 export type Assignment = { id: number; status: "assigned" | "in_progress" | "submitted" | "graded"; score?: number | null; max_score?: number | null; feedback?: string | null; worksheet?: Worksheet; student?: Student };
-export type Attendance = { id: number; student_id: number; date_at: string; status: "present" | "absent" | "late"; note?: string | null; student?: Student };
+export type Attendance = { id: number; student_id: number; date_at: string; attendance_date?: string | null; status: "present" | "absent" | "late"; note?: string | null; student?: Student };
+export type StudentQr = { student_id: number; payload: string; generated_at: string };
 export type ExamResult = { id: number; student_id: number; title: string; score: number; max_score: number; taken_at: string; student?: Student };
 export type Payment = { id: number; student_id: number; amount: number; status: "pending" | "paid" | "overdue"; due_at: string; paid_at?: string | null; note?: string | null; student?: Student };
 
@@ -28,11 +29,13 @@ export const laravelApi = {
   async me() { return request<ApiUser>("/auth/me"); },
   async logout() { await request("/auth/logout", { method: "POST" }); window.localStorage.removeItem(TOKEN_KEY); },
   async students() { const result = await request<{ data: Student[] }>("/students"); return result.data; },
+  async studentQr(studentId: number) { return request<StudentQr>(`/students/${studentId}/qr`); },
   async worksheets() { const result = await request<{ data: Worksheet[] }>("/worksheets"); return result.data; },
   async attendance() { const result = await request<{ data: Attendance[] }>("/attendance"); return result.data; },
   async exams() { const result = await request<{ data: ExamResult[] }>("/exams"); return result.data; },
   async payments() { const result = await request<{ data: Payment[] }>("/payments"); return result.data; },
   async createAttendance(payload: Omit<Attendance, "id" | "student">) { return request<Attendance>("/attendance", { method: "POST", body: JSON.stringify(payload) }); },
+  async scanAttendance(payload: string) { return request<{ already_recorded: boolean; attendance: Attendance }>("/attendance/scan", { method: "POST", body: JSON.stringify({ payload }) }); },
   async updateAttendance(id: number, payload: Partial<Attendance>) { return request<Attendance>(`/attendance/${id}`, { method: "PUT", body: JSON.stringify(payload) }); },
   async deleteAttendance(id: number) { return request<void>(`/attendance/${id}`, { method: "DELETE" }); },
   async createExam(payload: Omit<ExamResult, "id" | "student">) { return request<ExamResult>("/exams", { method: "POST", body: JSON.stringify(payload) }); },

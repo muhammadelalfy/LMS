@@ -87,4 +87,30 @@ class LmsApiTest extends TestCase
             'student_id' => $student->id, 'date_at' => '2026-08-15', 'status' => 'present',
         ])->assertForbidden();
     }
+
+    public function test_teacher_can_generate_qr_and_scan_attendance_once_per_day(): void
+    {
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $student = Student::create(['name' => 'طالب QR', 'group' => 'بنين', 'grade' => 'ثانية إعدادى', 'phone' => '0100000000']);
+        Sanctum::actingAs($teacher);
+
+        $payload = $this->getJson("/api/students/{$student->id}/qr")
+            ->assertOk()->assertJsonPath('student_id', $student->id)->json('payload');
+
+        $this->postJson('/api/attendance/scan', ['payload' => $payload])
+            ->assertCreated()->assertJsonPath('already_recorded', false)->assertJsonPath('attendance.student_id', $student->id);
+        $this->postJson('/api/attendance/scan', ['payload' => $payload])
+            ->assertOk()->assertJsonPath('already_recorded', true);
+    }
+
+    public function test_invalid_qr_is_rejected_and_student_cannot_scan(): void
+    {
+        $studentUser = User::factory()->create(['role' => 'student']);
+        $student = Student::create(['name' => 'طالب ممنوع', 'group' => 'بنين', 'grade' => 'ثانية إعدادى', 'phone' => '0100000000']);
+        $student->account()->create(['user_id' => $studentUser->id, 'relationship' => 'student']);
+        Sanctum::actingAs($studentUser);
+
+        $this->postJson('/api/attendance/scan', ['payload' => str_repeat('x', 64)])->assertForbidden();
+        $this->getJson("/api/students/{$student->id}/qr")->assertOk()->assertJsonPath('student_id', $student->id);
+    }
 }

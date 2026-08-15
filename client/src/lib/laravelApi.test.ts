@@ -34,6 +34,16 @@ describe("laravelApi", () => {
     expect(fetchMock.mock.calls.map(([url, init]) => [url, init?.method])).toEqual([["/api/attendance", "POST"], ["/api/exams/7", "PUT"], ["/api/attendance/4", "DELETE"]]);
   });
 
+  it("maps QR generation and scan requests to the protected Laravel endpoints", async () => {
+    const fetchMock = vi.fn().mockImplementation(() => new Response(JSON.stringify({ student_id: 2, payload: "q".repeat(64), generated_at: "2026-08-15T10:00:00Z", already_recorded: false, attendance: { id: 8 } }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await laravelApi.studentQr(2);
+    await laravelApi.scanAttendance("q".repeat(64));
+
+    expect(fetchMock.mock.calls.map(([url, init]) => [url, init?.method])).toEqual([["/api/students/2/qr", undefined], ["/api/attendance/scan", "POST"]]);
+  });
+
   it("surfaces Laravel authorization failures as ApiError status values", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ message: "Forbidden" }), { status: 403 })));
     await expect(laravelApi.exams()).rejects.toMatchObject({ status: 403, message: "Forbidden" });
