@@ -27,3 +27,9 @@
 - [x] Build admin CRUD screens for attendance, exam results, and payments.
 - [x] Build restricted student and parent dashboards with role-specific navigation and data.
 - [x] Verify API errors, loading/empty states, role boundaries, responsive screens, and builds.
+
+- [x] Test Laravel authentication and role-based login from the React frontend.
+- [x] Verify attendance CRUD interactions and authorization from the admin dashboard.
+- [x] Verify exam-results CRUD interactions and authorization from the admin dashboard.
+- [x] Validate restricted student and parent dashboard data and navigation.
+- [x] Add regression tests for frontend API failures and role-specific access states.

@@ -55,4 +55,36 @@ class LmsApiTest extends TestCase
         ])->assertForbidden();
         $this->getJson('/api/reports/summary')->assertForbidden();
     }
+
+    public function test_teacher_can_manage_attendance_and_exam_results(): void
+    {
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $student = Student::create(['name' => 'سجل تجريبي', 'group' => 'بنين', 'grade' => 'ثانية إعدادى', 'phone' => '0100000000']);
+        Sanctum::actingAs($teacher);
+
+        $attendance = $this->postJson('/api/attendance', [
+            'student_id' => $student->id, 'date_at' => '2026-08-15', 'status' => 'present', 'note' => 'في الموعد',
+        ])->assertCreated()->json('id');
+        $this->putJson("/api/attendance/{$attendance}", ['status' => 'late'])->assertOk()->assertJsonPath('status', 'late');
+
+        $exam = $this->postJson('/api/exams', [
+            'student_id' => $student->id, 'title' => 'اختبار الجبر', 'score' => 18, 'max_score' => 20, 'taken_at' => '2026-08-15',
+        ])->assertCreated()->json('id');
+        $this->putJson("/api/exams/{$exam}", ['score' => 19])->assertOk()->assertJsonPath('score', 19);
+        $this->deleteJson("/api/attendance/{$attendance}")->assertNoContent();
+        $this->deleteJson("/api/exams/{$exam}")->assertNoContent();
+    }
+
+    public function test_student_reads_only_linked_attendance_and_cannot_mutate_it(): void
+    {
+        $studentUser = User::factory()->create(['role' => 'student']);
+        $student = Student::create(['name' => 'طالب مقيد', 'group' => 'بنين', 'grade' => 'ثانية إعدادى', 'phone' => '0100000000']);
+        $student->account()->create(['user_id' => $studentUser->id, 'relationship' => 'student']);
+        Sanctum::actingAs($studentUser);
+
+        $this->getJson('/api/attendance')->assertOk()->assertJsonCount(0, 'data');
+        $this->postJson('/api/attendance', [
+            'student_id' => $student->id, 'date_at' => '2026-08-15', 'status' => 'present',
+        ])->assertForbidden();
+    }
 }
