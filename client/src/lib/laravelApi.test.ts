@@ -6,6 +6,7 @@ const storage = new Map<string, string>();
 beforeEach(() => {
   storage.clear();
   vi.stubGlobal("window", { localStorage: { getItem: (key: string) => storage.get(key) ?? null, setItem: (key: string, value: string) => storage.set(key, value), removeItem: (key: string) => storage.delete(key) } });
+  vi.stubGlobal("navigator", { onLine: true });
   vi.restoreAllMocks();
 });
 
@@ -47,5 +48,19 @@ describe("laravelApi", () => {
   it("surfaces Laravel authorization failures as ApiError status values", async () => {
     vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response(JSON.stringify({ message: "Forbidden" }), { status: 403 })));
     await expect(laravelApi.exams()).rejects.toMatchObject({ status: 403, message: "Forbidden" });
+  });
+
+  it("maps role-specific logins to dedicated Laravel portals", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ user: { id: 1, name: "مدير", email: "admin@test.local", role: "admin" }, token: "admin-token", login_type: "admin" }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await laravelApi.loginAsRole("admin", { email: "admin@test.local", password: "Secret123!" });
+    expect(fetchMock.mock.calls[0]?.[0]).toBe("/api/auth/admin/login");
+  });
+
+  it("queues mutating requests when the browser is offline", async () => {
+    vi.stubGlobal("navigator", { onLine: false });
+    vi.stubGlobal("fetch", vi.fn());
+    await expect(laravelApi.deleteAttendance(10)).rejects.toMatchObject({ status: 0 });
+    expect(JSON.parse(storage.get("al-imtiaz-offline-mutations") || "[]")).toHaveLength(1);
   });
 });

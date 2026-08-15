@@ -8,5 +8,21 @@ import LiveDashboard from "./pages/LiveDashboard";
 import NotFound from "./pages/NotFound";
 
 export default function App() {
-  return <ErrorBoundary><ThemeProvider defaultTheme="light"><TooltipProvider><Toaster/><Switch><Route path="/" component={LiveDashboard}/><Route path="/404" component={NotFound}/><Route component={NotFound}/></Switch></TooltipProvider></ThemeProvider></ErrorBoundary>;
+  return (
+    <ErrorBoundary>
+      <ThemeProvider defaultTheme="light">
+        <TooltipProvider>
+          <Toaster />
+          <Switch>
+            <Route path="/">{() => <LiveDashboard initialPortal="admin" />}</Route>
+            <Route path="/admin/login">{() => <LiveDashboard initialPortal="admin" />}</Route>
+            <Route path="/parent/login">{() => <LiveDashboard initialPortal="parent" />}</Route>
+            <Route path="/student/login">{() => <LiveDashboard initialPortal="student" />}</Route>
+            <Route path="/404" component={NotFound} />
+            <Route component={NotFound} />
+          </Switch>
+        </TooltipProvider>
+      </ThemeProvider>
+    </ErrorBoundary>
+  );
 }

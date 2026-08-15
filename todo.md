@@ -57,3 +57,9 @@
 - [x] Replace technical CRUD column names with Arabic human-readable labels.
 - [x] Format date_at and other timestamps as localized Arabic date/time text.
 - [x] Verify localized attendance, exam, payment, and worksheet tables on responsive screens.
+
+- [x] Audit and complete separate admin, parent, and student login paths and role guards.
+- [x] Add Arabic admin workflow: classes, grades, groups, students, exams, worksheets, reports, and settings.
+- [x] Add student list/search/detail card with contact, attendance, status, subscription, exam, worksheet, notes, edit, and delete actions.
+- [x] Add offline cache, queued writes, and synchronization status for the dashboard.
+- [x] Verify multi-auth restrictions, navigation, student cards, offline states, and sync behavior.

@@ -1,3 +1,5 @@
+import { enqueueMutation, readMutationQueue, replaceMutationQueue } from "./offlineStore";
+
 export type Role = "admin" | "teacher" | "parent" | "student";
 
 export type ApiUser = { id: number; name: string; email: string; role: Role; student_account?: { student?: Student } | null };
@@ -16,19 +18,54 @@ export class ApiError extends Error { constructor(public status: number, message
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = window.localStorage.getItem(TOKEN_KEY);
-  const response = await fetch(`${API_URL}${path}`, { ...init, headers: { Accept: "application/json", "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(init.headers || {}) } });
-  const body = await response.json().catch(() => null);
-  if (!response.ok) throw new ApiError(response.status, body?.message || "تعذر إتمام الطلب");
-  return body as T;
+  const method = (init.method || "GET").toUpperCase();
+  const headers = { Accept: "application/json", "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}), ...(init.headers || {}) };
+  if (!navigator.onLine && method !== "GET") {
+    enqueueMutation({ path, method, body: typeof init.body === "string" ? init.body : undefined });
+    throw new ApiError(0, "تم حفظ العملية محلياً وستتم مزامنتها عند عودة الاتصال.");
+  }
+  try {
+    const response = await fetch(`${API_URL}${path}`, { ...init, headers });
+    const body = await response.json().catch(() => null);
+    if (!response.ok) throw new ApiError(response.status, body?.message || "تعذر إتمام الطلب");
+    return body as T;
+  } catch (error) {
+    if (method !== "GET" && !(error instanceof ApiError && error.status > 0)) {
+      enqueueMutation({ path, method, body: typeof init.body === "string" ? init.body : undefined });
+      throw new ApiError(0, "تعذر الاتصال. تم حفظ العملية للمزامنة لاحقاً.");
+    }
+    throw error;
+  }
+}
+
+export async function syncOfflineQueue(): Promise<number> {
+  if (!navigator.onLine) return 0;
+  const queue = readMutationQueue();
+  const remaining = [...queue]; let synced = 0;
+  for (const mutation of queue) {
+    try {
+      const token = window.localStorage.getItem(TOKEN_KEY);
+      const response = await fetch(`${API_URL}${mutation.path}`, { method: mutation.method, body: mutation.body, headers: { Accept: "application/json", "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) } });
+      if (!response.ok) throw new Error("sync failed");
+      remaining.splice(remaining.findIndex(item => item.id === mutation.id), 1); synced += 1;
+    } catch { break; }
+  }
+  replaceMutationQueue(remaining);
+  return synced;
 }
 
 export const laravelApi = {
   getToken: () => window.localStorage.getItem(TOKEN_KEY),
   async login(payload: { email: string; password: string }) { const result = await request<{ user: ApiUser; token: string }>("/auth/login", { method: "POST", body: JSON.stringify(payload) }); window.localStorage.setItem(TOKEN_KEY, result.token); return result.user; },
+  async loginAsRole(role: "admin" | "parent" | "student", payload: { email: string; password: string }) { const result = await request<{ user: ApiUser; token: string; login_type: string }>(`/auth/${role}/login`, { method: "POST", body: JSON.stringify(payload) }); window.localStorage.setItem(TOKEN_KEY, result.token); return result.user; },
   async register(payload: { name: string; email: string; password: string; password_confirmation: string; role: "parent" | "student" }) { const result = await request<{ user: ApiUser; token: string }>("/auth/register", { method: "POST", body: JSON.stringify(payload) }); window.localStorage.setItem(TOKEN_KEY, result.token); return result.user; },
   async me() { return request<ApiUser>("/auth/me"); },
   async logout() { await request("/auth/logout", { method: "POST" }); window.localStorage.removeItem(TOKEN_KEY); },
-  async students() { const result = await request<{ data: Student[] }>("/students"); return result.data; },
+  async students(filters: { grade?: string; group?: string; search?: string } = {}) { const query = new URLSearchParams(Object.entries(filters).filter(([, value]) => value).map(([key, value]) => [key, String(value)])).toString(); const result = await request<{ data: Student[] }>(`/students${query ? `?${query}` : ""}`); return result.data; },
+  async student(studentId: number) { return request<Student>(`/students/${studentId}`); },
+  async createStudent(payload: Omit<Student, "id">) { return request<Student>("/students", { method: "POST", body: JSON.stringify(payload) }); },
+  async updateStudent(id: number, payload: Partial<Student>) { return request<Student>(`/students/${id}`, { method: "PUT", body: JSON.stringify(payload) }); },
+  async deleteStudent(id: number) { return request<void>(`/students/${id}`, { method: "DELETE" }); },
   async studentQr(studentId: number) { return request<StudentQr>(`/students/${studentId}/qr`); },
   async worksheets() { const result = await request<{ data: Worksheet[] }>("/worksheets"); return result.data; },
   async attendance() { const result = await request<{ data: Attendance[] }>("/attendance"); return result.data; },

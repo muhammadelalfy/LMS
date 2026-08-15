@@ -6,6 +6,7 @@ use App\Models\Student;
 use App\Models\User;
 use App\Models\Worksheet;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -112,5 +113,28 @@ class LmsApiTest extends TestCase
 
         $this->postJson('/api/attendance/scan', ['payload' => str_repeat('x', 64)])->assertForbidden();
         $this->getJson("/api/students/{$student->id}/qr")->assertOk()->assertJsonPath('student_id', $student->id);
+    }
+
+    public function test_role_specific_login_endpoints_reject_wrong_portals(): void
+    {
+        User::factory()->create(['name' => 'مدير اختبار', 'email' => 'admin@test.local', 'password' => Hash::make('Secret123!'), 'role' => 'admin']);
+
+        $this->postJson('/api/auth/admin/login', ['email' => 'admin@test.local', 'password' => 'Secret123!'])
+            ->assertOk()->assertJsonPath('user.role', 'admin')->assertJsonPath('login_type', 'admin');
+        $this->postJson('/api/auth/student/login', ['email' => 'admin@test.local', 'password' => 'Secret123!'])
+            ->assertStatus(422);
+    }
+
+    public function test_only_admin_can_delete_student_and_staff_can_update_profile(): void
+    {
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $admin = User::factory()->create(['role' => 'admin']);
+        $student = Student::create(['name' => 'ملف قابل للتعديل', 'group' => 'بنين', 'grade' => 'أولى إعدادى', 'phone' => '0100000000']);
+
+        Sanctum::actingAs($teacher);
+        $this->putJson("/api/students/{$student->id}", ['name' => 'اسم معدل'])->assertOk()->assertJsonPath('name', 'اسم معدل');
+        $this->deleteJson("/api/students/{$student->id}")->assertForbidden();
+        Sanctum::actingAs($admin);
+        $this->deleteJson("/api/students/{$student->id}")->assertNoContent();
     }
 }
