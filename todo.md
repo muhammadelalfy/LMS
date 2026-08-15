@@ -21,3 +21,9 @@
 - [x] Implement Eloquent models and migrations for students, worksheets, assignments, submissions, attendance, exams, payments, and reporting.
 - [ ] Preserve the Arabic LMS frontend contract while switching data access to Laravel endpoints.
 - [x] Verify Laravel tests, local migrations, authorization, and frontend build health; production MySQL deployment remains pending.
+
+- [x] Add a typed React client for Laravel authentication and LMS API requests.
+- [x] Replace the demo login and local-only dashboard state with live Laravel authentication/data states.
+- [x] Build admin CRUD screens for attendance, exam results, and payments.
+- [x] Build restricted student and parent dashboards with role-specific navigation and data.
+- [x] Verify API errors, loading/empty states, role boundaries, responsive screens, and builds.
