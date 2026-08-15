@@ -66,3 +66,9 @@ Contemporary Arabic editorial dashboard — مزيج من التحرير الع�
 
 ### Signature Brand Color
 زمردي عميق **#147D68**، لون مملوك يوازن بين الجدية التعليمية والإحساس بالنمو.
+
+## Style Decisions
+
+- Keep the «دفء الفصل» direction visible on entry and dashboard surfaces through a larger geometric brand mark, copper rules, and a subtle dotted math-grid motif.
+- Prefer warm ivory, emerald, and restrained copper image treatments over colder blue overlays so the platform feels like a trusted teacher's control center.
+- Use Cairo for confident Arabic display headings and IBM Plex Sans Arabic for practical labels, forms, and supporting text.
