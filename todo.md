@@ -9,3 +9,15 @@
 - [x] إضافة أزرار تصدير قائمة الطلاب والتقرير الفردي إلى Excel وPDF.
 - [x] التحقق من الواجهة على سطح المكتب والموبايل.
 - [ ] حفظ checkpoint بعد اكتمال التحسينات.
+
+- [ ] Upgrade static project to full-stack with secure role-based authentication and persisted LMS data.
+- [ ] Refactor shared LMS domain types, storage access, and repeated UI patterns using KISS/DRY principles.
+- [ ] Connect worksheets to student assignments and submission status workflows.
+- [ ] Add persisted attendance, exam results, and payment records with data-backed reports.
+- [ ] Verify authorization boundaries, migrations, responsive flows, typecheck, build, and production behavior.
+
+- [x] Pivot backend architecture to latest Laravel with Eloquent and MySQL.
+- [x] Add Laravel authentication and role-aware account workflows.
+- [x] Implement Eloquent models and migrations for students, worksheets, assignments, submissions, attendance, exams, payments, and reporting.
+- [ ] Preserve the Arabic LMS frontend contract while switching data access to Laravel endpoints.
+- [x] Verify Laravel tests, local migrations, authorization, and frontend build health; production MySQL deployment remains pending.
