@@ -23,3 +23,9 @@
 - [x] Run PHP tests/linting and frontend tests/linting/typechecking/build in CI with reproducible dependency setup.
 - [x] Validate CI commands locally and document required CI assumptions.
 - [x] Document CI environment assumptions and the local reproduction command set, including the scoped frontend lint policy.
+- [x] Audit shared shell and authentication page background/layout boundaries for a reusable visual treatment.
+- [x] Implement an animated 3D mathematics background with readable overlays and reduced-motion support across system/auth pages.
+- [x] Verify desktop/mobile visuals, accessibility, and production build stability for the new background.
+- [ ] Capture desktop and mobile screenshots for an authenticated system dashboard using the shared 3D mathematics background.
+- [ ] Perform and document focused contrast, readability, keyboard-focus, and reduced-motion checks across auth and system surfaces.
+- [x] Refine the math background with clearer animated 3D geometric shapes, including sphere, cube, pyramid, and wireframe forms.
