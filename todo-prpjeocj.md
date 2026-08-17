@@ -26,6 +26,7 @@
 - [x] Audit shared shell and authentication page background/layout boundaries for a reusable visual treatment.
 - [x] Implement an animated 3D mathematics background with readable overlays and reduced-motion support across system/auth pages.
 - [x] Verify desktop/mobile visuals, accessibility, and production build stability for the new background.
-- [ ] Capture desktop and mobile screenshots for an authenticated system dashboard using the shared 3D mathematics background.
-- [ ] Perform and document focused contrast, readability, keyboard-focus, and reduced-motion checks across auth and system surfaces.
+- [x] Capture desktop and mobile screenshots for an authenticated system dashboard using the shared 3D mathematics background.
+- [x] Perform and document focused contrast, readability, keyboard-focus, and reduced-motion checks across auth and system surfaces.
 - [x] Refine the math background with clearer animated 3D geometric shapes, including sphere, cube, pyramid, and wireframe forms.
+- [x] Restore and emphasize the animated geometric shapes behind the Arabic login form without reducing input readability or focus visibility.
