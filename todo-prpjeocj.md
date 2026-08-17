@@ -30,3 +30,6 @@
 - [x] Perform and document focused contrast, readability, keyboard-focus, and reduced-motion checks across auth and system surfaces.
 - [x] Refine the math background with clearer animated 3D geometric shapes, including sphere, cube, pyramid, and wireframe forms.
 - [x] Restore and emphasize the animated geometric shapes behind the Arabic login form without reducing input readability or focus visibility.
+- [x] Replace the first dashboard page with real KPI cards, attendance/exam/payment charts, and a clear performance diagram using loaded Laravel data.
+- [x] Move QR attendance into a dedicated navigation tab while preserving camera, manual scan, and student QR actions.
+- [x] Verify overview and QR-tab navigation, responsive layout, and regression/build stability.
