@@ -19,3 +19,7 @@
 - [x] Add or update regression tests for every refactored contract and confirm typecheck/build stability.
 - [x] Save a persistent KISS/DRY audit note documenting findings, selected refactors, and intentionally unchanged boundaries.
 - [x] Add focused regression tests for the shared API-client helpers and staff authorization concern.
+- [x] Add CI workflow triggers for every push and pull request.
+- [x] Run PHP tests/linting and frontend tests/linting/typechecking/build in CI with reproducible dependency setup.
+- [x] Validate CI commands locally and document required CI assumptions.
+- [x] Document CI environment assumptions and the local reproduction command set, including the scoped frontend lint policy.

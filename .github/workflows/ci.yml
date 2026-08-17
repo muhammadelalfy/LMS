@@ -1,0 +1,87 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: .
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.4.1
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run frontend lint
+        run: pnpm lint
+
+      - name: Run TypeScript checks
+        run: pnpm check
+
+      - name: Run frontend tests
+        run: pnpm test -- --run
+
+      - name: Build frontend and server bundle
+        run: pnpm build
+
+  laravel:
+    name: Laravel checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: laravel-backend
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.3"
+          extensions: mbstring, dom, fileinfo, sqlite3, pdo_sqlite, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare test environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate
+          mkdir -p database
+          touch database/database.sqlite
+          printf '\nDB_CONNECTION=sqlite\nDB_DATABASE=%s\n' "$PWD/database/database.sqlite" >> .env
+
+      - name: Run PHP syntax checks
+        run: find app Modules tests -type f -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Run Laravel migrations
+        run: php artisan migrate --force
+
+      - name: Run Laravel tests
+        run: php artisan test --compact
