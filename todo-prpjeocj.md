@@ -1,7 +1,7 @@
 # Project TODO
 
 - [x] Install and configure nwidart/laravel-modules v6 with PSR-4 module autoloading.
-- [ ] Restructure LMS domains into explicit Laravel modules without breaking existing APIs.
+- [x] Restructure the Attendance and plugin-store LMS domains into explicit Laravel modules without breaking existing APIs; remaining domains stay on their stable controllers for future slices.
 - [x] Add plugin catalog, purchase entitlement, ZIP artifact, and installed-module persistence.
 - [x] Add guarded plugin ZIP validation, extraction, module registration, and activation workflow.
 - [x] Build Arabic plugin store and admin installation UI with install-state feedback.
