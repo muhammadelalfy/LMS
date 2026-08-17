@@ -15,6 +15,15 @@ export type Payment = { id: number; student_id: number; amount: number; status: 
 const API_URL = (import.meta.env.VITE_LARAVEL_API_URL || "/api").replace(/\/$/, "");
 const TOKEN_KEY = "al-imtiaz-laravel-token";
 
+function saveToken(token: string): void {
+  window.localStorage.setItem(TOKEN_KEY, token);
+}
+
+async function requestCollection<T>(path: string): Promise<T[]> {
+  const result = await request<{ data: T[] }>(path);
+  return result.data;
+}
+
 export class ApiError extends Error { constructor(public status: number, message: string) { super(message); } }
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -57,9 +66,9 @@ export async function syncOfflineQueue(): Promise<number> {
 
 export const laravelApi = {
   getToken: () => window.localStorage.getItem(TOKEN_KEY),
-  async login(payload: { email: string; password: string }) { const result = await request<{ user: ApiUser; token: string }>("/auth/login", { method: "POST", body: JSON.stringify(payload) }); window.localStorage.setItem(TOKEN_KEY, result.token); return result.user; },
-  async loginAsRole(role: "admin" | "parent" | "student", payload: { email: string; password: string }) { const result = await request<{ user: ApiUser; token: string; login_type: string }>(`/auth/${role}/login`, { method: "POST", body: JSON.stringify(payload) }); window.localStorage.setItem(TOKEN_KEY, result.token); return result.user; },
-  async register(payload: { name: string; email: string; password: string; password_confirmation: string; role: "parent" | "student" }) { const result = await request<{ user: ApiUser; token: string }>("/auth/register", { method: "POST", body: JSON.stringify(payload) }); window.localStorage.setItem(TOKEN_KEY, result.token); return result.user; },
+  async login(payload: { email: string; password: string }) { const result = await request<{ user: ApiUser; token: string }>("/auth/login", { method: "POST", body: JSON.stringify(payload) }); saveToken(result.token); return result.user; },
+  async loginAsRole(role: "admin" | "parent" | "student", payload: { email: string; password: string }) { const result = await request<{ user: ApiUser; token: string; login_type: string }>(`/auth/${role}/login`, { method: "POST", body: JSON.stringify(payload) }); saveToken(result.token); return result.user; },
+  async register(payload: { name: string; email: string; password: string; password_confirmation: string; role: "parent" | "student" }) { const result = await request<{ user: ApiUser; token: string }>("/auth/register", { method: "POST", body: JSON.stringify(payload) }); saveToken(result.token); return result.user; },
   async me() { return request<ApiUser>("/auth/me"); },
   async logout() { await request("/auth/logout", { method: "POST" }); window.localStorage.removeItem(TOKEN_KEY); },
   async students(filters: { grade?: string; group?: string; search?: string } = {}) { const query = new URLSearchParams(Object.entries(filters).filter(([, value]) => value).map(([key, value]) => [key, String(value)])).toString(); const result = await request<{ data: Student[] }>(`/students${query ? `?${query}` : ""}`); return result.data; },
@@ -68,10 +77,10 @@ export const laravelApi = {
   async updateStudent(id: number, payload: Partial<Student>) { return request<Student>(`/students/${id}`, { method: "PUT", body: JSON.stringify(payload) }); },
   async deleteStudent(id: number) { return request<void>(`/students/${id}`, { method: "DELETE" }); },
   async studentQr(studentId: number) { return request<StudentQr>(`/students/${studentId}/qr`); },
-  async worksheets() { const result = await request<{ data: Worksheet[] }>("/worksheets"); return result.data; },
-  async attendance() { const result = await request<{ data: Attendance[] }>("/attendance"); return result.data; },
-  async exams() { const result = await request<{ data: ExamResult[] }>("/exams"); return result.data; },
-  async payments() { const result = await request<{ data: Payment[] }>("/payments"); return result.data; },
+  async worksheets() { return requestCollection<Worksheet>("/worksheets"); },
+  async attendance() { return requestCollection<Attendance>("/attendance"); },
+  async exams() { return requestCollection<ExamResult>("/exams"); },
+  async payments() { return requestCollection<Payment>("/payments"); },
   async createAttendance(payload: Omit<Attendance, "id" | "student">) { return request<Attendance>("/attendance", { method: "POST", body: JSON.stringify(payload) }); },
   async scanAttendance(payload: string) { return request<{ already_recorded: boolean; attendance: Attendance }>("/attendance/scan", { method: "POST", body: JSON.stringify({ payload }) }); },
   async updateAttendance(id: number, payload: Partial<Attendance>) { return request<Attendance>(`/attendance/${id}`, { method: "PUT", body: JSON.stringify(payload) }); },
@@ -83,7 +92,7 @@ export const laravelApi = {
   async updatePayment(id: number, payload: Partial<Payment>) { return request<Payment>(`/payments/${id}`, { method: "PUT", body: JSON.stringify(payload) }); },
   async deletePayment(id: number) { return request<void>(`/payments/${id}`, { method: "DELETE" }); },
   async reportSummary() { return request<{ students: number; attendance: Record<string, number>; exams: { score: number; max_score: number }; payments: Payment[] }>("/reports/summary"); },
-  async plugins() { const result = await request<{ data: PluginProduct[] }>("/plugins"); return result.data; },
+  async plugins() { return requestCollection<PluginProduct>("/plugins"); },
   async purchasePlugin(id: number) { return request(`/plugins/${id}/purchase`, { method: "POST" }); },
   async installPlugin(id: number) { return request<{ module: { module_name: string; version: string }; message: string }>(`/plugins/${id}/install`, { method: "POST" }); },
   async uninstallPlugin(id: number) { return request(`/plugins/${id}/install`, { method: "DELETE" }); },

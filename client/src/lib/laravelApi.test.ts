@@ -24,6 +24,14 @@ describe("laravelApi", () => {
     expect(fetchMock.mock.calls[1]?.[1]).toMatchObject({ headers: expect.objectContaining({ Authorization: "Bearer sanctum-token", Accept: "application/json" }) });
   });
 
+  it("unwraps collection responses through the shared collection helper", async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify({ data: [{ id: 1, name: "طالب" }] }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(laravelApi.students()).resolves.toEqual([{ id: 1, name: "طالب" }]);
+    expect(fetchMock).toHaveBeenCalledWith("/api/students", expect.anything());
+  });
+
   it("maps attendance and exam CRUD operations to the Laravel resources", async () => {
     const fetchMock = vi.fn().mockImplementation(() => new Response(JSON.stringify({ id: 4 }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);

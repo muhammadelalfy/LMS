@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\Api\Concerns\AuthorizesStaff;
 use App\Models\AttendanceRecord;
 use Illuminate\Http\Request;
 use Modules\Attendance\Services\AttendanceDomainService;
 
 class AttendanceController extends Controller
 {
+    use AuthorizesStaff;
+
     public function __construct(private readonly AttendanceDomainService $attendance)
     {
     }
@@ -23,7 +26,7 @@ class AttendanceController extends Controller
 
     public function store(Request $request)
     {
-        $this->staff($request);
+        $this->authorizeStaff($request);
         $data = $request->validate([
             'student_id' => 'required|exists:students,id',
             'date_at' => 'required|date',
@@ -36,7 +39,7 @@ class AttendanceController extends Controller
 
     public function scan(Request $request)
     {
-        $this->staff($request);
+        $this->authorizeStaff($request);
         $payload = $request->validate(['payload' => 'required|string|min:32|max:96'])['payload'];
         $result = $this->attendance->scan($payload, $request->user()->id);
 
@@ -45,7 +48,7 @@ class AttendanceController extends Controller
 
     public function update(Request $request, AttendanceRecord $attendance)
     {
-        $this->staff($request);
+        $this->authorizeStaff($request);
         $data = $request->validate([
             'date_at' => 'sometimes|date',
             'status' => 'sometimes|in:present,absent,late',
@@ -57,15 +60,10 @@ class AttendanceController extends Controller
 
     public function destroy(Request $request, AttendanceRecord $attendance)
     {
-        $this->staff($request);
+        $this->authorizeStaff($request);
         $this->attendance->delete($attendance);
 
         return response()->noContent();
-    }
-
-    private function staff(Request $request): void
-    {
-        abort_unless($request->user()->isAnyRole('admin', 'teacher'), 403);
     }
 
     private function scope($query, Request $request): void

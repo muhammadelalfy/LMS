@@ -14,3 +14,8 @@
 - [x] Add regression coverage for the existing attendance and QR-scan API contracts after module abstraction.
 - [x] Add attendance API regression tests for update and delete after module-service refactor.
 - [x] Add QR-scan tests for first-scan success, duplicate idempotency, and invalid payload handling.
+- [x] Audit and document repeated backend/frontend patterns, oversized components, and unnecessary abstraction.
+- [x] Refactor the highest-value duplicated patterns using small reusable services, helpers, and components without changing public behavior.
+- [x] Add or update regression tests for every refactored contract and confirm typecheck/build stability.
+- [x] Save a persistent KISS/DRY audit note documenting findings, selected refactors, and intentionally unchanged boundaries.
+- [x] Add focused regression tests for the shared API-client helpers and staff authorization concern.
