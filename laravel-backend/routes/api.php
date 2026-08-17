@@ -3,6 +3,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\ExamResultController;
 use App\Http\Controllers\Api\PaymentController;
+use App\Http\Controllers\Api\PluginStoreController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\StudentController;
 use App\Http\Controllers\Api\WorksheetController;
@@ -25,4 +26,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('exams', ExamResultController::class)->only(['index','store','update','destroy']);
     Route::apiResource('payments', PaymentController::class)->only(['index','store','update','destroy']);
     Route::get('/reports/summary', [ReportController::class, 'summary']);
+    Route::get('/plugins', [PluginStoreController::class, 'index']);
+    Route::get('/plugins/installed', [PluginStoreController::class, 'installed']);
+    Route::post('/plugins/{plugin}/purchase', [PluginStoreController::class, 'purchase']);
+    Route::post('/plugins/{plugin}/install', [PluginStoreController::class, 'install']);
+    Route::delete('/plugins/{plugin}/install', [PluginStoreController::class, 'uninstall']);
 });

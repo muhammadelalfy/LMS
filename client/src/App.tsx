@@ -14,10 +14,10 @@ export default function App() {
         <TooltipProvider>
           <Toaster />
           <Switch>
-            <Route path="/">{() => <LiveDashboard initialPortal="admin" />}</Route>
-            <Route path="/admin/login">{() => <LiveDashboard initialPortal="admin" />}</Route>
-            <Route path="/parent/login">{() => <LiveDashboard initialPortal="parent" />}</Route>
-            <Route path="/student/login">{() => <LiveDashboard initialPortal="student" />}</Route>
+            <Route path="/" component={() => <LiveDashboard initialPortal="admin" />} />
+            <Route path="/admin/login" component={() => <LiveDashboard initialPortal="admin" />} />
+            <Route path="/parent/login" component={() => <LiveDashboard initialPortal="parent" />} />
+            <Route path="/student/login" component={() => <LiveDashboard initialPortal="student" />} />
             <Route path="/404" component={NotFound} />
             <Route component={NotFound} />
           </Switch>

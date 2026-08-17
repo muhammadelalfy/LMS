@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\AttendanceRecord;
 use App\Models\ExamResult;
 use App\Models\Payment;
+use App\Models\PluginProduct;
+use App\Models\PluginPurchase;
 use App\Models\Student;
 use App\Models\StudentAccount;
 use App\Models\User;
@@ -32,6 +34,7 @@ class ArabicDemoSeeder extends Seeder
         $admin = $this->user(self::ADMIN_EMAIL, 'مدير الامتياز', 'admin', self::ADMIN_PASSWORD);
         $teacher = $this->user(self::TEACHER_EMAIL, 'أستاذ الرياضيات', 'teacher', self::TEACHER_PASSWORD);
         $students = $this->seedStudents();
+        $this->seedPlugins($admin);
 
         $worksheets = collect([
             ['title' => 'مراجعة المعادلات الخطية', 'grade' => 'الأول الإعدادي'],
@@ -74,6 +77,29 @@ class ArabicDemoSeeder extends Seeder
         $this->command?->info('Admin: '.self::ADMIN_EMAIL.' / '.self::ADMIN_PASSWORD);
         $this->command?->info('Teacher: '.self::TEACHER_EMAIL.' / '.self::TEACHER_PASSWORD);
         $this->command?->info('Parent password: '.self::PARENT_PASSWORD.' · Student password: '.self::STUDENT_PASSWORD);
+    }
+
+    private function seedPlugins(User $admin): void
+    {
+        $plugin = PluginProduct::updateOrCreate(
+            ['slug' => 'attendance-insights'],
+            [
+                'name' => 'تحليلات الحضور',
+                'description' => 'وحدة جاهزة لعرض مؤشرات الحضور اليومية داخل لوحة الإدارة.',
+                'version' => '1.0.0',
+                'module_name' => 'AttendanceInsights',
+                'artifact_path' => 'plugins/artifacts/attendance-insights.zip',
+                'artifact_sha256' => 'c91600cd5ec365daee974159f041af14b38d734bdd9430b60542e52ae485d21e',
+                'price' => 0,
+                'is_active' => true,
+                'metadata' => ['category' => 'reports', 'language' => 'ar'],
+            ],
+        );
+
+        PluginPurchase::updateOrCreate(
+            ['user_id' => $admin->id, 'plugin_product_id' => $plugin->id],
+            ['status' => 'completed', 'purchased_at' => now()],
+        );
     }
 
     private function seedStudents(): array

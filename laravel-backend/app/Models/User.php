@@ -8,6 +8,7 @@ use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class User extends Authenticatable
 {
@@ -34,6 +35,16 @@ class User extends Authenticatable
     public function studentAccount()
     {
         return $this->hasOne(StudentAccount::class);
+    }
+
+    public function pluginPurchases(): HasMany
+    {
+        return $this->hasMany(PluginPurchase::class);
+    }
+
+    public function installedModules(): HasMany
+    {
+        return $this->hasMany(InstalledModule::class, 'installed_by');
     }
 
     public function isAnyRole(string ...$roles): bool

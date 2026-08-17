@@ -5,6 +5,7 @@ export type Role = "admin" | "teacher" | "parent" | "student";
 export type ApiUser = { id: number; name: string; email: string; role: Role; student_account?: { student?: Student } | null };
 export type Student = { id: number; name: string; group: string; grade: string; phone: string; parent_phone?: string | null; status: "excellent" | "average" | "weak"; assignments_count?: number; attendance_records_count?: number; exam_results_count?: number; payments_count?: number };
 export type Worksheet = { id: number; title: string; subject: string; grade: string; status: "draft" | "published"; assignments_count?: number; submitted_count?: number; assignments?: Assignment[] };
+export type PluginProduct = { id: number; slug: string; name: string; description?: string | null; version: string; module_name: string; price: string; purchased: boolean; installed: boolean; installed_module?: string | null; metadata?: Record<string, unknown> | null };
 export type Assignment = { id: number; status: "assigned" | "in_progress" | "submitted" | "graded"; score?: number | null; max_score?: number | null; feedback?: string | null; worksheet?: Worksheet; student?: Student };
 export type Attendance = { id: number; student_id: number; date_at: string; attendance_date?: string | null; status: "present" | "absent" | "late"; note?: string | null; student?: Student };
 export type StudentQr = { student_id: number; payload: string; generated_at: string };
@@ -82,4 +83,8 @@ export const laravelApi = {
   async updatePayment(id: number, payload: Partial<Payment>) { return request<Payment>(`/payments/${id}`, { method: "PUT", body: JSON.stringify(payload) }); },
   async deletePayment(id: number) { return request<void>(`/payments/${id}`, { method: "DELETE" }); },
   async reportSummary() { return request<{ students: number; attendance: Record<string, number>; exams: { score: number; max_score: number }; payments: Payment[] }>("/reports/summary"); },
+  async plugins() { const result = await request<{ data: PluginProduct[] }>("/plugins"); return result.data; },
+  async purchasePlugin(id: number) { return request(`/plugins/${id}/purchase`, { method: "POST" }); },
+  async installPlugin(id: number) { return request<{ module: { module_name: string; version: string }; message: string }>(`/plugins/${id}/install`, { method: "POST" }); },
+  async uninstallPlugin(id: number) { return request(`/plugins/${id}/install`, { method: "DELETE" }); },
 };
