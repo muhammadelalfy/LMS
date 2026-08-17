@@ -1,6 +1,6 @@
 # Project TODO
 
-- [ ] Install and configure nwidart/laravel-modules v6 with PSR-4 module autoloading.
+- [x] Install and configure nwidart/laravel-modules v6 with PSR-4 module autoloading.
 - [ ] Restructure LMS domains into explicit Laravel modules without breaking existing APIs.
 - [x] Add plugin catalog, purchase entitlement, ZIP artifact, and installed-module persistence.
 - [x] Add guarded plugin ZIP validation, extraction, module registration, and activation workflow.
@@ -9,3 +9,8 @@
 - [x] Add executable AttendanceInsights report logic and a guarded development data reset command.
 - [x] Exercise installer rollback after a failed replacement and verify the prior module remains intact.
 - [x] Verify post-install nwidart discovery, route loading, and registered module configuration.
+- [x] Introduce the Attendance domain module as a compatibility layer around existing attendance APIs without duplicating persistence logic.
+- [x] Route attendance list, create, scan, update, and delete operations through the Attendance module service.
+- [x] Add regression coverage for the existing attendance and QR-scan API contracts after module abstraction.
+- [x] Add attendance API regression tests for update and delete after module-service refactor.
+- [x] Add QR-scan tests for first-scan success, duplicate idempotency, and invalid payload handling.

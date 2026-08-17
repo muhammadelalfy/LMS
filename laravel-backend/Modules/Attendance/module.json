@@ -1,0 +1,12 @@
+{
+  "name": "Attendance",
+  "alias": "attendance",
+  "description": "Attendance domain services for the Al-Imtiaz LMS.",
+  "keywords": ["attendance", "qr", "reports"],
+  "priority": 10,
+  "providers": [
+    "Modules\\Attendance\\Providers\\AttendanceServiceProvider"
+  ],
+  "files": [],
+  "version": "1.0.0"
+}

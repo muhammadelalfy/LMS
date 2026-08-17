@@ -1,3 +1,4 @@
 {
-    "AttendanceInsights": true
+    "AttendanceInsights": true,
+    "Attendance": true
 }
