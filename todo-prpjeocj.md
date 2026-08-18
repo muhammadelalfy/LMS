@@ -57,3 +57,6 @@
 - [x] Add an authorization-safe server-side PDF download contract for exam templates.
 - [x] Refine exam preview paper shape, check icons, and watermark treatment across question cards.
 - [x] Add PDF generation, download, preview-rendering tests, documentation, and responsive verification.
+- [x] Fix Arabic text rendering/crash in server-side exam PDF generation using a compatible embedded font and RTL-safe layout.
+- [x] Replace option check icons with empty checkbox controls in the exam preview and generated PDF.
+- [x] Add supplied-PDF regression inspection, regenerate output, and rerun full verification.

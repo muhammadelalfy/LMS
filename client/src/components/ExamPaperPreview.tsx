@@ -50,7 +50,7 @@ export function ExamPaper({ template, mode = "preview" }: ExamPaperProps) {
             <div className="exam-question-prompt" dangerouslySetInnerHTML={{ __html: question.prompt_html }} />
             {question.type === "mcq" && (
               <ol className="exam-paper-options">
-                {(question.options || []).map((option) => <li key={option}><CheckCircle2 size={15} aria-hidden="true" />{option}</li>)}
+                {(question.options || []).map((option) => <li key={option}><span className="exam-option-checkbox" aria-hidden="true" />{option}</li>)}
               </ol>
             )}
             {question.type !== "mcq" && <div className="exam-paper-answer-lines" aria-label="مساحة الإجابة" />}

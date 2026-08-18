@@ -27,6 +27,7 @@ describe("ExamPaper", () => {
     expect(html).toContain("نسخة الطالب");
     expect(html).toContain("السؤال 1");
     expect(html).toContain("أ");
+    expect(html).toContain("exam-option-checkbox");
     expect(html).toContain("exam-paper-answer-lines");
   });
 });

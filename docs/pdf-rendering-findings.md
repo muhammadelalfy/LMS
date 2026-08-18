@@ -1,0 +1,3 @@
+# PDF Rendering Findings
+
+The supplied `exam-1.pdf` showed Arabic glyphs rendered as disconnected or reversed-looking characters, indicating that the prior Dompdf/DejaVu path was not suitable for Arabic shaping. The regenerated TCPDF output now shows connected Arabic glyphs and readable RTL text. Multiple-choice options render with empty square checkbox controls (`☐`) rather than check icons. The current TCPDF output is readable, but it spans two pages because the template uses large watermark blocks and repeated per-question branding; this is acceptable for correctness but may be tightened in a later layout pass.
