@@ -81,7 +81,7 @@ export function ExamPaper({ template, mode = "preview", paperRef }: ExamPaperPro
       </div>
       <header className="exam-paper-header">
         <div>
-          <span className="eyebrow"><CheckCircle2 size={14} aria-hidden="true" /> الامتياز في الرياضيات</span>
+          <span className="eyebrow exam-paper-brand" dir="rtl"><CheckCircle2 size={14} aria-hidden="true" /><bdi>الامتياز في الرياضيات</bdi></span>
           <h2>{template.title}</h2>
           <p>{template.department?.name || "اختبار رياضيات"}</p>
         </div>
@@ -109,7 +109,7 @@ export function ExamPaper({ template, mode = "preview", paperRef }: ExamPaperPro
             {question.type === "geometry" && isGeometryDiagram(question.options) && <GeometryDiagram spec={question.options} />}
             {question.type === "mcq" && Array.isArray(question.options) && (
               <ol className="exam-paper-options">
-                {question.options.map((option) => <li key={option}><span className="exam-option-checkbox" aria-hidden="true" />{option}</li>)}
+                {question.options.map((option) => <li key={option}><span className="exam-option-checkbox" aria-hidden="true" /><span className="exam-option-text" dir="rtl">{option}</span></li>)}
               </ol>
             )}
             {question.type !== "mcq" && <div className="exam-paper-answer-lines" aria-label="مساحة الإجابة" />}

@@ -76,3 +76,7 @@
 - [x] Re-seed the active development database and visually verify geometry preview and browser PDF export.
 - [x] Export a fresh browser-generated PDF after watermark containment and inspect the softened per-question watermark.
 - [x] Verify the post-reseed browser PDF includes the geometry diagram, dimension labels, and correct watermark rendering.
+- [x] Repair Arabic «الامتياز في الرياضيات» title rendering in browser-generated PDF.
+- [x] Align PDF option checkboxes and option text consistently on one line.
+- [x] Normalize all question watermarks to a contained, light, readable treatment without oversized broken instances.
+- [x] Regenerate and visually inspect the corrected PDF, then run regression, typecheck, and build checks.
