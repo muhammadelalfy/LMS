@@ -3,7 +3,13 @@
 namespace Database\Seeders;
 
 use App\Models\AttendanceRecord;
+use App\Models\ExamDepartment;
+use App\Models\ExamQuestion;
 use App\Models\ExamResult;
+use App\Models\ExamSession;
+use App\Models\ExamSessionAnswer;
+use App\Models\ExamSessionEvent;
+use App\Models\ExamTemplate;
 use App\Models\Payment;
 use App\Models\PluginProduct;
 use App\Models\PluginPurchase;
@@ -34,6 +40,7 @@ class ArabicDemoSeeder extends Seeder
         $admin = $this->user(self::ADMIN_EMAIL, 'مدير الامتياز', 'admin', self::ADMIN_PASSWORD);
         $teacher = $this->user(self::TEACHER_EMAIL, 'أستاذ الرياضيات', 'teacher', self::TEACHER_PASSWORD);
         $students = $this->seedStudents();
+        $this->seedExams($teacher, $students);
         $this->seedPlugins($admin);
 
         $worksheets = collect([
@@ -77,6 +84,88 @@ class ArabicDemoSeeder extends Seeder
         $this->command?->info('Admin: '.self::ADMIN_EMAIL.' / '.self::ADMIN_PASSWORD);
         $this->command?->info('Teacher: '.self::TEACHER_EMAIL.' / '.self::TEACHER_PASSWORD);
         $this->command?->info('Parent password: '.self::PARENT_PASSWORD.' · Student password: '.self::STUDENT_PASSWORD);
+    }
+
+    private function seedExams(User $teacher, array $students): void
+    {
+        $departments = collect([
+            ['name' => 'الجبر والمعادلات', 'slug' => 'algebra-equations', 'description' => 'اختبارات الجبر والمعادلات الخطية.'],
+            ['name' => 'الهندسة', 'slug' => 'geometry', 'description' => 'اختبارات الهندسة والأشكال والقياس.'],
+            ['name' => 'الإحصاء', 'slug' => 'statistics', 'description' => 'اختبارات الإحصاء وتحليل البيانات.'],
+        ])->mapWithKeys(fn (array $attributes) => [$attributes['slug'] => ExamDepartment::updateOrCreate(['slug' => $attributes['slug']], [...$attributes, 'is_active' => true])]);
+
+        $templates = [
+            ['title' => 'اختبار الجبر الأول', 'slug' => 'algebra-first-test', 'department' => 'algebra-equations', 'grade' => 'الأول الإعدادي', 'status' => 'published'],
+            ['title' => 'مراجعة الهندسة', 'slug' => 'geometry-review', 'department' => 'geometry', 'grade' => 'الثاني الإعدادي', 'status' => 'published'],
+            ['title' => 'مسودة اختبار الإحصاء', 'slug' => 'statistics-draft', 'department' => 'statistics', 'grade' => 'الثالث الإعدادي', 'status' => 'draft'],
+        ];
+
+        foreach ($templates as $templateData) {
+            $template = ExamTemplate::updateOrCreate(
+                ['title' => $templateData['title']],
+                [
+                    'department_id' => $departments[$templateData['department']]->id,
+                    'created_by' => $teacher->id,
+                    'grade' => $templateData['grade'],
+                    'duration_minutes' => 45,
+                    'instructions' => 'اقرأ الأسئلة جيداً، واكتب خطوات الحل بوضوح قبل التسليم.',
+                    'watermark_text' => 'الامتياز في الرياضيات · '.$templateData['grade'],
+                    'watermark_opacity' => 12,
+                    'status' => $templateData['status'],
+                ],
+            );
+
+            $questions = [
+                ['type' => 'mcq', 'prompt_html' => '<p>إذا كان س = ٣، فما قيمة ٢س + ١؟</p>', 'options' => ['٥', '٦', '٧', '٨'], 'correct_answer' => '٧', 'points' => 2, 'sort_order' => 0],
+                ['type' => 'true_false', 'prompt_html' => '<p>مجموع زوايا المثلث يساوي ١٨٠ درجة.</p>', 'options' => ['صح', 'خطأ'], 'correct_answer' => 'صح', 'points' => 1, 'sort_order' => 1],
+                ['type' => 'math', 'prompt_html' => '<p>حل المعادلة: س + ٤ = ٩.</p>', 'options' => null, 'correct_answer' => '٥', 'points' => 3, 'sort_order' => 2],
+            ];
+
+            foreach ($questions as $questionData) {
+                ExamQuestion::updateOrCreate(
+                    ['template_id' => $template->id, 'sort_order' => $questionData['sort_order']],
+                    [...$questionData, 'template_id' => $template->id],
+                );
+            }
+
+            if ($template->status !== 'published') {
+                continue;
+            }
+
+            foreach (array_slice($students, 0, 2) as $index => $student) {
+                $session = ExamSession::updateOrCreate(
+                    ['template_id' => $template->id, 'student_id' => $student->id],
+                    [
+                        'started_at' => now()->subMinutes(18 + $index),
+                        'submitted_at' => $index === 1 ? now()->subMinutes(3) : null,
+                        'status' => $index === 1 ? 'submitted' : 'active',
+                        'camera_required' => true,
+                        'fullscreen_required' => true,
+                        'focus_loss_count' => $index,
+                        'last_event_at' => now()->subMinute(),
+                    ],
+                );
+
+                foreach ($template->questions as $question) {
+                    ExamSessionAnswer::updateOrCreate(
+                        ['session_id' => $session->id, 'question_id' => $question->id],
+                        ['answer' => $question->correct_answer, 'answered_at' => now()->subMinutes(4)],
+                    );
+                }
+
+                ExamSessionEvent::updateOrCreate(
+                    ['session_id' => $session->id, 'type' => 'camera_granted'],
+                    ['metadata' => ['source' => 'seeded-demo', 'student' => $student->name], 'occurred_at' => $session->started_at],
+                );
+
+                if ($index === 1) {
+                    ExamSessionEvent::updateOrCreate(
+                        ['session_id' => $session->id, 'type' => 'submitted'],
+                        ['metadata' => ['source' => 'seeded-demo'], 'occurred_at' => $session->submitted_at],
+                    );
+                }
+            }
+        }
     }
 
     private function seedPlugins(User $admin): void

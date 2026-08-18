@@ -48,3 +48,6 @@
 - [x] Add an explicit hard-delete department action with reference-protection safeguards.
 - [x] Document the browser-level publish-then-student-start verification boundary, with authenticated API/session coverage and an explicit user-controlled-login requirement.
 - [x] Add React component tests for template actions and runner warnings, with autosave request coverage in the API tests.
+- [x] Add guarded factories for exam departments, templates, questions, sessions, answers, and proctoring events.
+- [x] Extend the Arabic development seeder with idempotent exam departments, published/draft templates, questions, student sessions, answers, and audit events.
+- [x] Verify seeded counts, repeatability, CRUD/API behavior, and full Laravel/frontend regression stability.
