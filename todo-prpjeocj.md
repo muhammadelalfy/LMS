@@ -54,3 +54,6 @@
 - [x] Define authorization-safe published exam viewer, admin preview, and PDF export contracts.
 - [x] Implement student viewer and admin preview with Arabic rich-text, watermark, question layout, and PDF export.
 - [x] Add viewer/export regression tests, responsive verification, and maintainer documentation.
+- [x] Add an authorization-safe server-side PDF download contract for exam templates.
+- [x] Refine exam preview paper shape, check icons, and watermark treatment across question cards.
+- [x] Add PDF generation, download, preview-rendering tests, documentation, and responsive verification.

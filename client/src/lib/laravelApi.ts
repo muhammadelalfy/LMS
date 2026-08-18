@@ -299,6 +299,23 @@ export const laravelApi = {
     const result = await request<{ data: ExamTemplate[] }>("/exam-templates");
     return result.data;
   },
+  async downloadExamPdf(templateId: number) {
+    const token = window.localStorage.getItem(TOKEN_KEY);
+    const response = await fetch(`${API_URL}/exam-templates/${templateId}/pdf`, {
+      headers: { Accept: "application/pdf", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    });
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      throw new ApiError(response.status, body?.message || "تعذر تحميل ملف PDF");
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `exam-${templateId}.pdf`;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  },
   async createExamTemplate(payload: Omit<ExamTemplate, "id" | "department" | "questions"> & { questions: Omit<ExamQuestion, "id">[] }) {
     return request<ExamTemplate>("/exam-templates", { method: "POST", body: JSON.stringify(payload) });
   },

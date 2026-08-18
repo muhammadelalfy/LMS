@@ -12,6 +12,7 @@ use App\Models\ExamSessionEvent;
 use App\Models\ExamTemplate;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\ExamPaperPdfService;
 
 class ExamManagementController extends Controller
 {
@@ -89,6 +90,22 @@ class ExamManagementController extends Controller
         $this->authorizeStaff($request);
         $template->delete();
         return response()->noContent();
+    }
+
+    public function downloadPdf(Request $request, ExamTemplate $template, ExamPaperPdfService $pdfService)
+    {
+        if ($request->user()->isAnyRole('student', 'parent')) {
+            abort_unless($template->status === 'published', 404);
+        } else {
+            $this->authorizeStaff($request);
+        }
+
+        $filename = str($template->title)->slug('-')->append('.pdf')->toString() ?: 'exam-paper.pdf';
+        return response($pdfService->render($template), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'attachment; filename="' . $filename . '"',
+            'Cache-Control' => 'private, no-store',
+        ]);
     }
 
     public function startSession(Request $request, ExamTemplate $template)

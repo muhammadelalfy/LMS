@@ -43,6 +43,48 @@ class ExamManagementTest extends TestCase
         $this->assertDatabaseHas('exam_sessions', ['template_id' => $template->id, 'student_id' => $student->id, 'status' => 'ready']);
     }
 
+    public function test_staff_can_download_an_exam_paper_as_pdf(): void
+    {
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $template = ExamTemplate::create([
+            'created_by' => $teacher->id,
+            'title' => 'اختبار PDF',
+            'duration_minutes' => 30,
+            'instructions' => 'اختر الإجابة الصحيحة.',
+            'watermark_text' => 'نسخة المركز',
+            'watermark_opacity' => 12,
+            'status' => 'draft',
+        ]);
+        $template->questions()->create([
+            'type' => 'mcq',
+            'prompt_html' => '<p>اختر ٢ + ٢</p>',
+            'options' => ['٣', '٤'],
+            'points' => 2,
+            'sort_order' => 0,
+        ]);
+
+        $response = $this->actingAs($teacher, 'sanctum')->get("/api/exam-templates/{$template->id}/pdf");
+
+        $response->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('Cache-Control', 'no-store, private');
+        $this->assertStringStartsWith('%PDF', $response->getContent());
+    }
+
+    public function test_student_can_download_only_published_exam_papers(): void
+    {
+        $student = Student::factory()->create();
+        $studentUser = User::factory()->create(['role' => 'student']);
+        StudentAccount::create(['user_id' => $studentUser->id, 'student_id' => $student->id, 'relationship' => 'student']);
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $draft = ExamTemplate::create(['created_by' => $teacher->id, 'title' => 'مسودة', 'duration_minutes' => 20, 'status' => 'draft']);
+        $published = ExamTemplate::create(['created_by' => $teacher->id, 'title' => 'منشور', 'duration_minutes' => 20, 'status' => 'published']);
+
+        $this->actingAs($studentUser, 'sanctum')->get("/api/exam-templates/{$draft->id}/pdf")->assertNotFound();
+        $publishedResponse = $this->actingAs($studentUser, 'sanctum')->get("/api/exam-templates/{$published->id}/pdf");
+        $publishedResponse->assertOk()->assertHeader('Content-Type', 'application/pdf');
+    }
+
     public function test_student_focus_loss_is_recorded_and_flags_session(): void
     {
         $student = Student::factory()->create();

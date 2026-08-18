@@ -188,3 +188,21 @@ describe("laravelApi", () => {
       ["/api/exam-templates", undefined], ["/api/exam-templates", "POST"], ["/api/exam-templates/3", "PUT"], ["/api/exam-templates/3", "DELETE"], ["/api/exam-templates/3/start", "POST"], ["/api/exam-sessions/4/events", "POST"], ["/api/exam-sessions/4/answers", "POST"], ["/api/exam-sessions/4/submit", "POST"],
     ]);
   });
+
+describe("exam PDF download", () => {
+  it("downloads the protected PDF blob with the Sanctum token", async () => {
+    storage.set("al-imtiaz-laravel-token", "student-token");
+    const fetchMock = vi.fn().mockResolvedValue(new Response(new Blob(["%PDF-1.7"]), { status: 200 }));
+    const click = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    vi.stubGlobal("URL", { createObjectURL: vi.fn(() => "blob:exam"), revokeObjectURL: vi.fn() });
+    vi.stubGlobal("document", { createElement: vi.fn(() => ({ click })) });
+
+    await laravelApi.downloadExamPdf(12);
+
+    expect(fetchMock).toHaveBeenCalledWith("/api/exam-templates/12/pdf", expect.objectContaining({
+      headers: { Accept: "application/pdf", Authorization: "Bearer student-token" },
+    }));
+    expect(click).toHaveBeenCalled();
+  });
+});

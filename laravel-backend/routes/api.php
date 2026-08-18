@@ -33,6 +33,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/exam-templates', [ExamManagementController::class, 'storeTemplate']);
     Route::put('/exam-templates/{template}', [ExamManagementController::class, 'updateTemplate']);
     Route::delete('/exam-templates/{template}', [ExamManagementController::class, 'destroyTemplate']);
+    Route::get('/exam-templates/{template}/pdf', [ExamManagementController::class, 'downloadPdf']);
     Route::post('/exam-templates/{template}/start', [ExamManagementController::class, 'startSession']);
     Route::post('/exam-sessions/{session}/events', [ExamManagementController::class, 'event']);
     Route::post('/exam-sessions/{session}/answers', [ExamManagementController::class, 'answer']);
