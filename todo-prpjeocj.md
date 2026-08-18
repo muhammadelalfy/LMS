@@ -51,3 +51,6 @@
 - [x] Add guarded factories for exam departments, templates, questions, sessions, answers, and proctoring events.
 - [x] Extend the Arabic development seeder with idempotent exam departments, published/draft templates, questions, student sessions, answers, and audit events.
 - [x] Verify seeded counts, repeatability, CRUD/API behavior, and full Laravel/frontend regression stability.
+- [x] Define authorization-safe published exam viewer, admin preview, and PDF export contracts.
+- [x] Implement student viewer and admin preview with Arabic rich-text, watermark, question layout, and PDF export.
+- [x] Add viewer/export regression tests, responsive verification, and maintainer documentation.

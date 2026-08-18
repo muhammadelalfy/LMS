@@ -27,3 +27,17 @@ Contrast was reviewed against the existing ivory card surfaces, dark teal headin
 The authenticated admin authoring surface was verified in the live preview after the undefined-collection crash was fixed; departments, rich-text authoring, watermark fields, and template actions render in Arabic RTL. The student publish-to-session flow is covered by Laravel feature tests, including camera-required session creation, answer/event persistence, focus-loss auditing, and submission behavior. A browser-level student camera check requires a user-controlled student login because the preview browser retained the admin session; the application does not bypass that authentication step.
 
 Department deletion is now explicit and safe: the UI offers hard delete, while the API refuses deletion when templates still reference the department and instructs administrators to preserve or reassign those templates first.
+
+## Published exam viewer, preview, and PDF export
+
+The student-facing exam library uses the existing authenticated `GET /api/exam-templates` contract. The API applies the role boundary at the controller: students and parents receive only templates whose status is `published`, while administrators and teachers receive the management collection. The shared `ExamPaper` renderer presents the published title, department, grade, duration, instructions, rich-text prompts, multiple-choice options, answer space, and configured watermark before a monitored session begins. Starting the exam still requires the existing `POST /api/exam-templates/{template}/start` flow and does not occur from preview.
+
+Administrators see the same paper renderer from each template row through `معاينة / PDF`. This intentionally reuses the already authorized template payload rather than introducing a second read endpoint or duplicating serialization. The preview is read-only and does not expose correct answers. Draft and archived templates remain available only to staff through the management collection and are never shown in the student portal.
+
+PDF export is intentionally implemented through the browser print pipeline instead of adding a server-side PDF dependency. Selecting `تصدير PDF / طباعة` switches the preview into print layout, removes modal controls, preserves RTL typography and watermark styling, and invokes the native print dialog. The user can choose **Save as PDF** from the browser. The print mode is cleaned up after `afterprint` or when the preview closes, so it does not affect subsequent dashboard pages.
+
+The preview is not a proctoring boundary and does not create an exam session. Camera permission, fullscreen requests, focus-loss monitoring, answer autosave, and submission remain exclusive to the monitored runner. This separation keeps preview safe for inspection and preserves the existing student-session authorization checks.
+
+### Verification for this slice
+
+The `ExamPaper` component has a server-rendered regression test covering Arabic metadata, watermark text, ordered questions, multiple-choice options, and essay answer space. The frontend suite passes with 17 tests, TypeScript passes, and the production build completes. The preview overlay uses a responsive one-column layout below 700px, wrapped toolbar controls, scrollable paper content, and print-specific styles. A live unauthenticated preview capture confirmed that the existing Arabic RTL authentication shell remains readable; authenticated admin/student preview checks remain dependent on the corresponding role login session.
