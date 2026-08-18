@@ -119,6 +119,7 @@ class ArabicDemoSeeder extends Seeder
                 ['type' => 'mcq', 'prompt_html' => '<p>إذا كان س = ٣، فما قيمة ٢س + ١؟</p>', 'options' => ['٥', '٦', '٧', '٨'], 'correct_answer' => '٧', 'points' => 2, 'sort_order' => 0],
                 ['type' => 'true_false', 'prompt_html' => '<p>مجموع زوايا المثلث يساوي ١٨٠ درجة.</p>', 'options' => ['صح', 'خطأ'], 'correct_answer' => 'صح', 'points' => 1, 'sort_order' => 1],
                 ['type' => 'math', 'prompt_html' => '<p>حل المعادلة: س + ٤ = ٩.</p>', 'options' => null, 'correct_answer' => '٥', 'points' => 3, 'sort_order' => 2],
+                ['type' => 'geometry', 'prompt_html' => '<p>احسب مساحة المستطيل الموضح.</p>', 'options' => ['shape' => 'rectangle', 'dimensions' => ['width' => '٦ سم', 'height' => '٤ سم'], 'labels' => ['title' => 'مستطيل بأبعاد معلومة']], 'correct_answer' => '٢٤ سم²', 'points' => 4, 'sort_order' => 3],
             ];
 
             foreach ($questions as $questionData) {

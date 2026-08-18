@@ -67,3 +67,12 @@
 - [x] Fix the first two Arabic exam headlines in browser-captured PDF output.
 - [x] Restore clearly visible watermarks inside every question box in browser preview and exported PDF.
 - [x] Add supplied-PDF inspection, export regression coverage, and full verification.
+- [x] Contain question watermarks inside each box and reduce size, weight, and opacity so they do not intersect content.
+- [x] Verify the refined watermark in browser preview and exported PDF with regression, typecheck, and build checks.
+- [x] Research and compare popular JavaScript geometry libraries for dimensioned exam diagrams.
+- [x] Add a reusable dimensioned geometry question representation and diagram renderer.
+- [x] Integrate geometry questions into authoring, preview, browser PDF capture, tests, seed examples, and documentation.
+- [x] Reload geometry shape and dimensions when editing an existing geometry exam question.
+- [x] Re-seed the active development database and visually verify geometry preview and browser PDF export.
+- [x] Export a fresh browser-generated PDF after watermark containment and inspect the softened per-question watermark.
+- [x] Verify the post-reseed browser PDF includes the geometry diagram, dimension labels, and correct watermark rendering.

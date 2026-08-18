@@ -3,6 +3,7 @@ import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { CheckCircle2, Download, X } from "lucide-react";
 import type { ExamTemplate } from "@/lib/laravelApi";
+import { GeometryDiagram, isGeometryDiagram } from "./GeometryDiagram";
 
 type ExamPaperProps = {
   template: ExamTemplate;
@@ -105,9 +106,10 @@ export function ExamPaper({ template, mode = "preview", paperRef }: ExamPaperPro
               <span>{question.points} درجة</span>
             </div>
             <div className="exam-question-prompt" dangerouslySetInnerHTML={{ __html: question.prompt_html }} />
-            {question.type === "mcq" && (
+            {question.type === "geometry" && isGeometryDiagram(question.options) && <GeometryDiagram spec={question.options} />}
+            {question.type === "mcq" && Array.isArray(question.options) && (
               <ol className="exam-paper-options">
-                {(question.options || []).map((option) => <li key={option}><span className="exam-option-checkbox" aria-hidden="true" />{option}</li>)}
+                {question.options.map((option) => <li key={option}><span className="exam-option-checkbox" aria-hidden="true" />{option}</li>)}
               </ol>
             )}
             {question.type !== "mcq" && <div className="exam-paper-answer-lines" aria-label="مساحة الإجابة" />}

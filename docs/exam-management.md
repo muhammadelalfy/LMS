@@ -41,3 +41,9 @@ The preview is not a proctoring boundary and does not create an exam session. Ca
 ### Verification for this slice
 
 The `ExamPaper` component has rendering regression tests covering Arabic metadata, watermark text, ordered questions, empty option checkboxes, essay answer space, browser image-PDF generation, and fallback behavior. Laravel feature tests cover the fallback PDF endpoint, PDF signature and headers, published-only student access, and monitored-session behavior. The authenticated browser preview confirms the checkbox and option text remain on one line with visible spacing. The frontend suite passes with 20 tests, TypeScript passes, and the production build completes. The preview overlay uses a responsive one-column layout below 700px, a scrollable paper surface, repeated question watermarks, and browser image-PDF export.
+
+## Dimensioned geometry questions
+
+Geometry questions use a small internal SVG contract rather than embedding a full interactive authoring board. This keeps the model KISS/DRY, produces deterministic browser-PDF captures, and supports accessible SVG output. The current contract supports `rectangle`, `triangle`, `circle`, and `angle` shapes with named dimension values such as `width`, `height`, `base`, `radius`, or `angle`. The authoring form stores one `name=value` dimension per line, and the same renderer is used in administrator preview, student exam mode, and browser image-PDF capture.
+
+During library research, JSXGraph was identified as the strongest future option for interactive geometry authoring because it supports Euclidean/projective geometry, 2D/3D, SVG/canvas, MathJax/KaTeX, accessibility, and assessment workflows. GeoGebra remains useful for teacher-created complex constructions, but both would add more integration and storage complexity than this first deterministic SVG slice. A future interactive authoring module can adopt JSXGraph while retaining the stored geometry contract.

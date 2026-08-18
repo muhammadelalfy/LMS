@@ -14,6 +14,7 @@ h1 { color: #173f46; font-size: 18pt; margin: 3pt 0; }
 .checkbox { display: inline-block; flex: 0 0 auto; font-size: 14pt; line-height: 1; color: #16846d; }
 .answer-lines { border-bottom: 1px solid #d8ccbb; height: 52pt; }
 .watermark { color: #b87945; font-size: 25pt; font-weight: bold; opacity: 0.1; text-align: center; }
+.question .watermark { font-size: 11pt; font-weight: normal; opacity: 0.06; margin-top: 5pt; }
 .footer { color: #8a8175; font-size: 8pt; text-align: center; border-top: 1px solid #dfd3c2; padding-top: 5pt; }
 </style>
 <div class="watermark">{{ $watermark }}</div>

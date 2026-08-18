@@ -30,7 +30,7 @@ class ExamSeederTest extends TestCase
         $this->seed(ArabicDemoSeeder::class);
         $secondCounts = $this->counts();
 
-        $this->assertSame(['departments' => 3, 'templates' => 3, 'questions' => 9, 'sessions' => 4, 'answers' => 12, 'events' => 6], $firstCounts);
+        $this->assertSame(['departments' => 3, 'templates' => 3, 'questions' => 12, 'sessions' => 4, 'answers' => 16, 'events' => 6], $firstCounts);
         $this->assertSame($firstCounts, $secondCounts);
         $this->assertDatabaseHas('exam_templates', ['title' => 'اختبار الجبر الأول', 'status' => 'published']);
         $this->assertDatabaseHas('exam_sessions', ['status' => 'submitted']);

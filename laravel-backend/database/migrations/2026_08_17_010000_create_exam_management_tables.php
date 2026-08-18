@@ -34,7 +34,7 @@ return new class extends Migration {
         Schema::create('exam_questions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('template_id')->constrained('exam_templates')->cascadeOnDelete();
-            $table->enum('type', ['mcq', 'true_false', 'essay', 'math'])->default('mcq');
+            $table->enum('type', ['mcq', 'true_false', 'essay', 'math', 'geometry'])->default('mcq');
             $table->longText('prompt_html');
             $table->json('options')->nullable();
             $table->text('correct_answer')->nullable();

@@ -43,6 +43,28 @@ class ExamManagementTest extends TestCase
         $this->assertDatabaseHas('exam_sessions', ['template_id' => $template->id, 'student_id' => $student->id, 'status' => 'ready']);
     }
 
+    public function test_staff_can_create_a_dimensioned_geometry_question(): void
+    {
+        $teacher = User::factory()->create(['role' => 'teacher']);
+
+        $response = $this->actingAs($teacher, 'sanctum')->postJson('/api/exam-templates', [
+            'title' => 'اختبار الهندسة',
+            'grade' => 'الأول الإعدادي',
+            'duration_minutes' => 30,
+            'status' => 'draft',
+            'questions' => [[
+                'type' => 'geometry',
+                'prompt_html' => '<p>احسب مساحة المستطيل.</p>',
+                'options' => ['shape' => 'rectangle', 'dimensions' => ['width' => '٦ سم', 'height' => '٤ سم']],
+                'correct_answer' => '٢٤ سم²',
+                'points' => 4,
+            ]],
+        ]);
+
+        $response->assertCreated()->assertJsonPath('questions.0.type', 'geometry');
+        $this->assertDatabaseHas('exam_questions', ['type' => 'geometry']);
+    }
+
     public function test_staff_can_download_an_exam_paper_as_pdf(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher']);
