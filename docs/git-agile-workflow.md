@@ -43,3 +43,9 @@ git push -u origin feature/frontend-exam-review
 ```
 
 Never use `git push --force` on `main`, `backend`, or `frontend`. Database migrations must be reviewed with their rollback and data-preservation implications. A broken integration branch should be repaired through a new Pull Request rather than rewriting shared history.
+
+## GitHub access and branch protection
+
+The project has a configured GitHub connector in the Manus session, but this sandbox’s Git CLI is not authenticated through that connector: `gh` reports that no CLI login is present and `git push` cannot prompt for credentials. The local repository therefore contains the requested `github` remote and local branches, but pushing and opening Pull Requests must be completed through the Management UI’s GitHub export flow or from a separately authenticated GitHub environment. No password or personal access token should be committed or sent through chat.
+
+After the repository is pushed, configure branch protection in GitHub under **Settings → Branches → Add branch ruleset**. Protect `main`, `backend`, and `frontend` with required Pull Requests, at least one reviewer approval, required CI checks (`Frontend checks` and `Laravel checks`), dismissal of stale approvals after new commits, conversation resolution, no force-push, and no branch deletion. Allow direct pushes only for repository administrators when an emergency recovery is documented.
