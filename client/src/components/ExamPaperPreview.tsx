@@ -1,10 +1,13 @@
-import React from "react";
+import React, { useRef, useState } from "react";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 import { CheckCircle2, Download, X } from "lucide-react";
 import type { ExamTemplate } from "@/lib/laravelApi";
 
 type ExamPaperProps = {
   template: ExamTemplate;
   mode?: "preview" | "print";
+  paperRef?: React.RefObject<HTMLElement | null>;
 };
 
 type ExamPaperPreviewProps = ExamPaperProps & {
@@ -12,9 +15,57 @@ type ExamPaperPreviewProps = ExamPaperProps & {
   onExportPdf?: () => Promise<void>;
 };
 
-export function ExamPaper({ template, mode = "preview" }: ExamPaperProps) {
+type BrowserPdfDependencies = {
+  capture: (element: HTMLElement, options: Record<string, unknown>) => Promise<{ width: number; height: number; toDataURL: (type: string) => string }>;
+  Pdf: new (options: Record<string, unknown>) => {
+    internal: { pageSize: { getWidth: () => number; getHeight: () => number } };
+    addPage: () => void;
+    addImage: (image: string, format: string, x: number, y: number, width: number, height: number, alias?: string, compression?: "NONE" | "FAST" | "MEDIUM" | "SLOW", rotation?: number) => void;
+    save: (filename: string) => void;
+  };
+};
+
+export async function exportExamPaperFromBrowser(
+  element: HTMLElement,
+  templateId: number,
+  dependencies: BrowserPdfDependencies = { capture: html2canvas, Pdf: jsPDF },
+) {
+  const canvas = await dependencies.capture(element, {
+    backgroundColor: "#fffdf8",
+    scale: Math.min((typeof window === "undefined" ? 1 : window.devicePixelRatio) * 1.5, 3),
+    useCORS: true,
+    logging: false,
+    windowWidth: element.scrollWidth,
+  });
+  const image = canvas.toDataURL("image/png");
+  const pdf = new dependencies.Pdf({ unit: "pt", format: "a4", orientation: "portrait", compress: true });
+  const pageWidth = pdf.internal.pageSize.getWidth();
+  const pageHeight = pdf.internal.pageSize.getHeight();
+  const imageHeight = canvas.height * (pageWidth / canvas.width);
+  const pages = Math.max(1, Math.ceil(imageHeight / pageHeight));
+  for (let page = 0; page < pages; page += 1) {
+    if (page > 0) pdf.addPage();
+    pdf.addImage(image, "PNG", 0, -(page * pageHeight), pageWidth, imageHeight, undefined, "FAST");
+  }
+  pdf.save(`exam-${templateId}.pdf`);
+}
+
+export async function exportExamPaperWithFallback(
+  element: HTMLElement,
+  templateId: number,
+  exportBrowser: (element: HTMLElement, templateId: number) => Promise<void>,
+  fallback: () => Promise<void>,
+) {
+  try {
+    await exportBrowser(element, templateId);
+  } catch {
+    await fallback();
+  }
+}
+
+export function ExamPaper({ template, mode = "preview", paperRef }: ExamPaperProps) {
   return (
-    <article className={`exam-paper exam-paper--${mode}`} dir="rtl">
+    <article ref={paperRef} className={`exam-paper exam-paper--${mode}`} dir="rtl">
       <div className="exam-paper-watermark" style={{ opacity: template.watermark_opacity / 100 }} aria-hidden="true">
         {template.watermark_text || "الامتياز في الرياضيات"}
       </div>
@@ -62,17 +113,29 @@ export function ExamPaper({ template, mode = "preview" }: ExamPaperProps) {
 }
 
 export default function ExamPaperPreview({ template, onClose, onExportPdf }: ExamPaperPreviewProps) {
+  const paperRef = useRef<HTMLElement | null>(null);
+  const [exporting, setExporting] = useState(false);
   const exportPdf = async () => {
-    if (onExportPdf) {
-      await onExportPdf();
-      return;
+    if (exporting) return;
+    setExporting(true);
+    try {
+      if (!paperRef.current) throw new Error("paper-not-mounted");
+      await exportExamPaperWithFallback(
+        paperRef.current,
+        template.id,
+        exportExamPaperFromBrowser,
+        async () => {
+          if (onExportPdf) return onExportPdf();
+          document.body.classList.add("printing-exam-paper");
+          const cleanup = () => document.body.classList.remove("printing-exam-paper");
+          window.addEventListener("afterprint", cleanup, { once: true });
+          window.setTimeout(() => window.print(), 0);
+        },
+      );
+    } finally {
+      setExporting(false);
     }
-    document.body.classList.add("printing-exam-paper");
-    const cleanup = () => document.body.classList.remove("printing-exam-paper");
-    window.addEventListener("afterprint", cleanup, { once: true });
-    window.setTimeout(() => window.print(), 0);
   };
-
   const close = () => {
     document.body.classList.remove("printing-exam-paper");
     onClose();
@@ -87,11 +150,11 @@ export default function ExamPaperPreview({ template, onClose, onExportPdf }: Exa
             <strong>{template.title}</strong>
           </div>
           <div className="exam-preview-actions">
-            <button type="button" className="primary" onClick={() => void exportPdf()}><Download size={15} aria-hidden="true" /> تحميل PDF</button>
+            <button type="button" className="primary" onClick={() => void exportPdf()} disabled={exporting}><Download size={15} aria-hidden="true" /> {exporting ? "جارٍ تجهيز PDF..." : "تحميل PDF من المتصفح"}</button>
             <button type="button" className="text-button" onClick={close}><X size={15} aria-hidden="true" /> إغلاق</button>
           </div>
         </div>
-        <div className="exam-preview-scroll"><ExamPaper template={template} /></div>
+        <div className="exam-preview-scroll"><ExamPaper template={template} paperRef={paperRef} /></div>
       </div>
     </div>
   );

@@ -124,3 +124,5 @@ nav{display:flex;flex-direction:column;gap:6px}.nav-item{color:#a5c1bc;backgroun
 .exam-paper-question{overflow:hidden}.exam-paper-question-watermark{position:absolute;inset:35% 0 auto 0;z-index:-1;text-align:center;transform:rotate(-24deg);font-size:30px;font-weight:900;color:#b87945;opacity:.08;white-space:nowrap;pointer-events:none}.exam-paper-question>*:not(.exam-paper-question-watermark){position:relative;z-index:1}
 
 .exam-option-checkbox{width:16px;height:16px;border:1.5px solid #16846d;border-radius:4px;display:inline-block;flex:0 0 auto;background:#fff}.exam-paper-options li .exam-option-checkbox{margin-inline-start:2px}
+
+.exam-paper-options li{display:flex;align-items:center;flex-wrap:nowrap;gap:14px;white-space:nowrap}.exam-paper-options li .exam-option-checkbox{margin:0;flex:0 0 16px}.exam-paper-options li{direction:rtl}

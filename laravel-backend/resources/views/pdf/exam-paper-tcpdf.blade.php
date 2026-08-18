@@ -10,8 +10,8 @@ h1 { color: #173f46; font-size: 18pt; margin: 3pt 0; }
 .question-head { border-bottom: 1px dashed #d9cdbd; padding-bottom: 5pt; margin-bottom: 6pt; }
 .question-number { color: #16846d; font-weight: bold; }
 .question-points { color: #a56d39; font-size: 9pt; }
-.option { border: 1px solid #e4dace; padding: 5pt; margin-top: 4pt; }
-.checkbox { font-size: 14pt; color: #16846d; }
+.option { display: flex; align-items: center; gap: 10pt; direction: rtl; border: 1px solid #e4dace; padding: 5pt; margin-top: 4pt; white-space: nowrap; }
+.checkbox { display: inline-block; flex: 0 0 auto; font-size: 14pt; line-height: 1; color: #16846d; }
 .answer-lines { border-bottom: 1px solid #d8ccbb; height: 52pt; }
 .watermark { color: #b87945; font-size: 25pt; font-weight: bold; opacity: 0.1; text-align: center; }
 .footer { color: #8a8175; font-size: 8pt; text-align: center; border-top: 1px solid #dfd3c2; padding-top: 5pt; }
@@ -32,7 +32,7 @@ h1 { color: #173f46; font-size: 18pt; margin: 3pt 0; }
         <div>{!! $question->prompt_html !!}</div>
         @if($question->type === 'mcq' && is_array($question->options))
             @foreach($question->options as $option)
-                <div class="option"><span class="checkbox">☐</span>&nbsp;{{ $option }}</div>
+                <div class="option"><span class="checkbox">☐</span><span>{{ $option }}</span></div>
             @endforeach
         @else
             <div class="answer-lines"></div>

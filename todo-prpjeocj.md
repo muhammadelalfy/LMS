@@ -60,3 +60,7 @@
 - [x] Fix Arabic text rendering/crash in server-side exam PDF generation using a compatible embedded font and RTL-safe layout.
 - [x] Replace option check icons with empty checkbox controls in the exam preview and generated PDF.
 - [x] Add supplied-PDF regression inspection, regenerate output, and rerun full verification.
+- [x] Restore clearly visible watermark layers inside each rendered exam question.
+- [x] Make browser-side image-PDF export the primary preview action so the PDF matches the rendered exam paper.
+- [x] Add browser-export tests, fallback behavior, responsive verification, and documentation.
+- [x] Keep each multiple-choice checkbox on the same horizontal line as its option text with clear spacing in preview and PDF.
