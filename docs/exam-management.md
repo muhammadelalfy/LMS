@@ -2,13 +2,15 @@
 
 The LMS now has an additive exam-management layer that preserves the existing `/api/exams` result CRUD contract. New entities cover departments, reusable exam templates, rich-text questions, student sessions, autosaved answers, and auditable session events.
 
-Administrators and teachers can create a template from the Arabic dashboard, select a department, set the grade and duration, add a question type, edit the prompt with Tiptap, define multiple-choice options, and configure a custom watermark. Templates remain drafts until a separate publishing action is added; the current authoring flow intentionally saves safely as a draft.
+Administrators and teachers can create a template from the Arabic dashboard, select a department, set the grade and duration, and build the paper one question at a time. The `إضافة سؤال` action opens a focused composer with question-type selection for MCQ, true/false, written, mathematical, and dimensioned geometry questions. Each question uses a Tiptap rich-text editor; MCQ options and geometry dimensions appear conditionally. Saved questions can be edited, deleted, and reordered before the template is saved. Templates remain drafts until a separate publishing action is added; the current authoring flow intentionally saves safely as a draft.
+
+When an existing template is edited, `PUT /api/exam-templates/{template}` accepts an ordered `questions` array. Existing question IDs are updated in place, omitted IDs are deleted, and new question records are created inside the same database transaction. The server assigns canonical `sort_order` values and rejects IDs that do not belong to the requested template, keeping the child collection consistent and authorization-safe.
 
 Students and parents can see published templates. Starting a session requests camera permission, records the camera event, requests fullscreen when supported, and begins an exam session. The runner autosaves answers and records visibility changes, focus loss/restoration, fullscreen events, heartbeat events, and final submission. A visible warning appears when the browser loses focus, and the session is flagged in the database.
 
 A browser cannot reliably prevent a user from leaving a tab or switching applications. The implementation therefore uses the strongest available cooperative controls—camera permission, fullscreen request, visibility/focus detection, event auditing, and immediate warnings—without pretending that client-side JavaScript is a secure proctoring boundary. High-stakes assessments should pair this mode with human supervision and server-side review of flagged sessions.
 
-Verification completed locally: 20 Laravel tests with 84 assertions, 8 frontend tests, TypeScript, production build, PHP syntax checks, route discovery, local SQLite migration, and an authenticated Arabic dashboard review of the authoring surface.
+Verification completed locally: the exam feature suite passes with question-collection update coverage, the frontend suite covers geometry parsing, payload ordering, and add/edit/delete/reorder transformations, TypeScript passes, and the production build completes.
 
 ## Final verification notes
 

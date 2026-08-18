@@ -107,6 +107,28 @@ class ExamManagementTest extends TestCase
         $publishedResponse->assertOk()->assertHeader('Content-Type', 'application/pdf');
     }
 
+    public function test_staff_can_update_question_collection_with_edit_delete_add_and_reorder(): void
+    {
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $template = ExamTemplate::create(['created_by' => $teacher->id, 'title' => 'قالب قابل للتعديل', 'duration_minutes' => 30, 'status' => 'draft']);
+        $first = $template->questions()->create(['type' => 'mcq', 'prompt_html' => '<p>الأول</p>', 'options' => ['أ', 'ب'], 'points' => 1, 'sort_order' => 0]);
+        $second = $template->questions()->create(['type' => 'essay', 'prompt_html' => '<p>الثاني</p>', 'options' => null, 'points' => 2, 'sort_order' => 1]);
+
+        $response = $this->actingAs($teacher, 'sanctum')->putJson("/api/exam-templates/{$template->id}", [
+            'title' => 'قالب قابل للتعديل بعد الحفظ',
+            'questions' => [
+                ['id' => $second->id, 'type' => 'essay', 'prompt_html' => '<p>الثاني بعد التعديل</p>', 'options' => null, 'points' => 3],
+                ['id' => $first->id, 'type' => 'mcq', 'prompt_html' => '<p>الأول بعد النقل</p>', 'options' => ['أ', 'ب', 'ج'], 'points' => 2],
+                ['type' => 'geometry', 'prompt_html' => '<p>أضف شكلاً</p>', 'options' => ['shape' => 'circle', 'dimensions' => ['radius' => '٣']], 'points' => 4],
+            ],
+        ]);
+
+        $response->assertOk()->assertJsonPath('questions.0.id', $second->id)->assertJsonPath('questions.1.id', $first->id)->assertJsonCount(3, 'questions');
+        $this->assertDatabaseHas('exam_questions', ['id' => $second->id, 'prompt_html' => '<p>الثاني بعد التعديل</p>', 'sort_order' => 0]);
+        $this->assertDatabaseHas('exam_questions', ['id' => $first->id, 'prompt_html' => '<p>الأول بعد النقل</p>', 'sort_order' => 1]);
+        $this->assertDatabaseHas('exam_questions', ['template_id' => $template->id, 'type' => 'geometry', 'sort_order' => 2]);
+    }
+
     public function test_student_focus_loss_is_recorded_and_flags_session(): void
     {
         $student = Student::factory()->create();

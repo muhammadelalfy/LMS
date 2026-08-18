@@ -320,7 +320,7 @@ export const laravelApi = {
   async createExamTemplate(payload: Omit<ExamTemplate, "id" | "department" | "questions"> & { questions: Omit<ExamQuestion, "id">[] }) {
     return request<ExamTemplate>("/exam-templates", { method: "POST", body: JSON.stringify(payload) });
   },
-  async updateExamTemplate(id: number, payload: Partial<Omit<ExamTemplate, "id" | "department" | "questions">>) {
+  async updateExamTemplate(id: number, payload: Partial<Omit<ExamTemplate, "id" | "department" | "questions">> & { questions?: ExamQuestion[] }) {
     return request<ExamTemplate>(`/exam-templates/${id}`, { method: "PUT", body: JSON.stringify(payload) });
   },
   async deleteExamTemplate(id: number) {

@@ -80,9 +80,39 @@ class ExamManagementController extends Controller
     public function updateTemplate(Request $request, ExamTemplate $template)
     {
         $this->authorizeStaff($request);
-        $data = $request->validate(['department_id' => 'nullable|exists:exam_departments,id', 'title' => 'sometimes|string|max:255', 'grade' => 'nullable|string|max:255', 'duration_minutes' => 'sometimes|integer|min:1|max:600', 'instructions' => 'nullable|string', 'watermark_text' => 'nullable|string|max:255', 'watermark_opacity' => 'nullable|integer|min:0|max:50', 'status' => 'sometimes|in:draft,published,archived']);
-        $template->update($data);
-        return $template->fresh(['department', 'questions']);
+        $data = $request->validate([
+            'department_id' => 'nullable|exists:exam_departments,id', 'title' => 'sometimes|string|max:255', 'grade' => 'nullable|string|max:255',
+            'duration_minutes' => 'sometimes|integer|min:1|max:600', 'instructions' => 'nullable|string', 'watermark_text' => 'nullable|string|max:255',
+            'watermark_opacity' => 'nullable|integer|min:0|max:50', 'status' => 'sometimes|in:draft,published,archived',
+            'questions' => 'sometimes|array', 'questions.*.id' => 'nullable|integer', 'questions.*.type' => 'required_with:questions|in:mcq,true_false,essay,math,geometry',
+            'questions.*.prompt_html' => 'required_with:questions|string', 'questions.*.options' => 'nullable|array', 'questions.*.correct_answer' => 'nullable|string',
+            'questions.*.points' => 'required_with:questions|integer|min:1|max:100', 'questions.*.sort_order' => 'nullable|integer|min:0',
+        ]);
+
+        return DB::transaction(function () use ($data, $template) {
+            $questions = $data['questions'] ?? null;
+            unset($data['questions']);
+            $template->update($data);
+
+            if ($questions !== null) {
+                $existingIds = $template->questions()->pluck('id')->all();
+                $incomingIds = [];
+                foreach ($questions as $index => $question) {
+                    $questionId = $question['id'] ?? null;
+                    if ($questionId !== null) {
+                        abort_unless(in_array($questionId, $existingIds, true), 422, 'السؤال لا ينتمي إلى هذا القالب.');
+                        $incomingIds[] = $questionId;
+                        $template->questions()->whereKey($questionId)->update([...$question, 'sort_order' => $index]);
+                    } else {
+                        $createdQuestion = $template->questions()->create([...$question, 'sort_order' => $index]);
+                        $incomingIds[] = $createdQuestion->id;
+                    }
+                }
+                $template->questions()->whereNotIn('id', $incomingIds)->delete();
+            }
+
+            return $template->fresh(['department', 'questions']);
+        });
     }
 
     public function destroyTemplate(Request $request, ExamTemplate $template)

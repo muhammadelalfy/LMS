@@ -85,3 +85,10 @@
 - [x] Add README, CI workflows, branch protection guidance, and pull-request templates.
 - [ ] Commit and push the repository branches and open pull requests when GitHub access permits. Local commit and branch creation completed; remote push/PR creation remains blocked because the authorized connector is not exposed to Git CLI in this session.
 - [x] Verify the CI configuration and document any access or branch-protection limitations.
+- [x] Refactor exam authoring to show one question at a time with a clear add-question action.
+- [x] Add question-type selection with conditional MCQ, geometry, and written-question fields using the rich-text editor.
+- [x] Preserve edit, delete, reorder, payload serialization, and add focused authoring regression coverage.
+- [x] Extend the Laravel exam-template update contract to persist question arrays transactionally, including edit, delete, and reorder behavior.
+- [x] Add focused authoring regression coverage for add, edit, delete, reorder, and update payload flows.
+- [ ] Add frontend component tests for the actual one-question authoring flow: create, edit, delete, and reorder through rendered controls.
+- [ ] Add a panel-level save/update payload test proving existing question IDs and ordered questions reach the Laravel client mutation.

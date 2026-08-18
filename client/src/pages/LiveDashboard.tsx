@@ -13,6 +13,7 @@ import MathUniverseBackground from "@/components/MathUniverseBackground";
 import ExamWarningBanner from "@/components/ExamWarningBanner";
 import ExamTemplateActions from "@/components/ExamTemplateActions";
 import ExamPaperPreview from "@/components/ExamPaperPreview";
+import NewExamManagementPanel from "@/components/ExamManagementPanel";
 import { GeometryDiagram, isGeometryDiagram } from "@/components/GeometryDiagram";
 
 type Tab = "overview" | "classes" | "students" | "attendance" | "qr" | "exams" | "payments" | "worksheets" | "reports" | "plugins" | "settings";
@@ -72,7 +73,7 @@ function AdminView({ tab, students, attendance, exams, payments, worksheets, onR
   if (tab === "settings") return <SettingsView />;
   if (tab === "attendance") return <CrudPanel title="إدارة الحضور" icon={<CalendarCheck/>} rows={attendance} fields={["student_id","date_at","status","note"]} onRefresh={onRefresh} create={laravelApi.createAttendance} update={laravelApi.updateAttendance} remove={laravelApi.deleteAttendance}/>;
   if (tab === "qr") return <section className="live-page"><QrAttendancePanel students={students} onRefresh={onRefresh}/></section>;
-  if (tab === "exams") return <ExamManagementPanel onRefresh={onRefresh}/>;
+  if (tab === "exams") return <NewExamManagementPanel onRefresh={onRefresh}/>;
   if (tab === "payments") return <CrudPanel title="الاشتراكات والمدفوعات" icon={<CreditCard/>} rows={payments} fields={["student_id","amount","status","due_at"]} onRefresh={onRefresh} create={laravelApi.createPayment} update={laravelApi.updatePayment} remove={laravelApi.deletePayment}/>;
   return <OverviewDashboard students={students} attendance={attendance} exams={exams} payments={payments} worksheets={worksheets}/>;
 }
