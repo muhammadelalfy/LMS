@@ -80,3 +80,8 @@
 - [x] Align PDF option checkboxes and option text consistently on one line.
 - [x] Normalize all question watermarks to a contained, light, readable treatment without oversized broken instances.
 - [x] Regenerate and visually inspect the corrected PDF, then run regression, typecheck, and build checks.
+- [ ] Audit GitHub remote/authentication and current CI workflow state.
+- [ ] Define and document main, backend, frontend, feature, pull-request, and Agile conventions.
+- [ ] Add README, CI workflows, branch protection guidance, and pull-request templates.
+- [ ] Commit and push the repository branches and open pull requests when GitHub access permits.
+- [ ] Verify the CI configuration and document any access or branch-protection limitations.
