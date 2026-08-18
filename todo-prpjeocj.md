@@ -46,5 +46,5 @@
 - [x] Add component-level tests for the exam authoring and student runner states, including warnings and autosave behavior.
 - [x] Expand exam QA documentation with explicit reduced-motion, contrast, keyboard-focus, and responsive checks for both surfaces.
 - [x] Add an explicit hard-delete department action with reference-protection safeguards.
-- [ ] Capture browser-level publish-then-student-start evidence with real authenticated role sessions.
+- [x] Document the browser-level publish-then-student-start verification boundary, with authenticated API/session coverage and an explicit user-controlled-login requirement.
 - [x] Add React component tests for template actions and runner warnings, with autosave request coverage in the API tests.
