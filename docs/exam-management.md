@@ -16,7 +16,9 @@ Verification completed locally: the exam feature suite passes with question-coll
 
 The admin library now exposes edit, delete, publish, and archive actions for templates, and the editor loads the first question back into the authoring form for revision. Department endpoints now support create, update, and soft-delete. Frontend API tests cover the full template/session request map, while Laravel feature tests cover staff template creation, student session creation, and focus-loss flagging.
 
-The authoring surface was reviewed in Arabic RTL at desktop width with the Tiptap toolbar, watermark fields, question-type selector, and template action group visible. The mobile stylesheet collapses the authoring grid to one column, makes action controls wrap, and keeps the exam runner answer cards and warning banner readable. Form controls use native labels, visible focus rings from the shared design system, keyboard-usable buttons, and semantic alert markup for focus-loss warnings. The runner intentionally does not claim to prevent tab switching absolutely; it records and surfaces those events instead.
+The authoring surface was reviewed in Arabic RTL at desktop width with the Tiptap toolbar, watermark fields, question-type selector, and template action group visible. Math questions now expose a dedicated notation field alongside the rich-text prompt editor. Geometry questions show the internal SVG diagram and dimension labels while the teacher edits shape and measurements.
+
+The authoring form includes a searchable question bank. Staff can create, edit, search, and delete reusable MCQ, true/false, written, math, and geometry records through `/api/question-bank`. Selecting `إضافة للامتحان` copies the question content into the current template as a local snapshot, so later bank edits do not unexpectedly mutate an already authored exam. Student and parent roles are denied access to this management resource. The mobile stylesheet collapses the authoring grid to one column, makes action controls wrap, and keeps the exam runner answer cards and warning banner readable. Form controls use native labels, visible focus rings from the shared design system, keyboard-usable buttons, and semantic alert markup for focus-loss warnings. The runner intentionally does not claim to prevent tab switching absolutely; it records and surfaces those events instead.
 
 ### Accessibility and responsive checklist
 
@@ -43,6 +45,10 @@ The preview is not a proctoring boundary and does not create an exam session. Ca
 ### Verification for this slice
 
 The `ExamPaper` component has rendering regression tests covering Arabic metadata, watermark text, ordered questions, empty option checkboxes, essay answer space, browser image-PDF generation, and fallback behavior. Laravel feature tests cover the fallback PDF endpoint, PDF signature and headers, published-only student access, and monitored-session behavior. The authenticated browser preview confirms the checkbox and option text remain on one line with visible spacing. The frontend suite passes with 20 tests, TypeScript passes, and the production build completes. The preview overlay uses a responsive one-column layout below 700px, a scrollable paper surface, repeated question watermarks, and browser image-PDF export.
+
+## Question bank and conditional authoring fields
+
+Question-bank records are persisted separately from exam-template questions with ownership, department, grade, tags, active state, rich-text HTML, typed options, and point value. The list endpoint supports bounded pagination plus search by title, prompt, or tags and filtering by type or grade. CRUD writes are restricted to administrators and teachers; foreign keys use nullable ownership and department references so deleting a user or department does not corrupt the bank.
 
 ## Dimensioned geometry questions
 

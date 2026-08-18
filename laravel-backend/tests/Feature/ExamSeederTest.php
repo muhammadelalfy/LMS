@@ -8,6 +8,7 @@ use App\Models\ExamSession;
 use App\Models\ExamSessionAnswer;
 use App\Models\ExamSessionEvent;
 use App\Models\ExamTemplate;
+use App\Models\QuestionBankQuestion;
 use Database\Seeders\ArabicDemoSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -35,6 +36,8 @@ class ExamSeederTest extends TestCase
         $this->assertDatabaseHas('exam_templates', ['title' => 'اختبار الجبر الأول', 'status' => 'published']);
         $this->assertDatabaseHas('exam_sessions', ['status' => 'submitted']);
         $this->assertDatabaseHas('exam_session_events', ['type' => 'camera_granted']);
+        $this->assertSame(3, QuestionBankQuestion::count());
+        $this->assertDatabaseHas('question_bank_questions', ['type' => 'geometry', 'title' => 'مساحة مستطيل']);
     }
 
     private function counts(): array

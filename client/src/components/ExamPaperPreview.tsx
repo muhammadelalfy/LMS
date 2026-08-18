@@ -2,7 +2,7 @@ import React, { useRef, useState } from "react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import { CheckCircle2, Download, X } from "lucide-react";
-import type { ExamTemplate } from "@/lib/laravelApi";
+import type { ExamQuestion, ExamTemplate, MathQuestionOptions } from "@/lib/laravelApi";
 import { GeometryDiagram, isGeometryDiagram } from "./GeometryDiagram";
 
 type ExamPaperProps = {
@@ -15,6 +15,11 @@ type ExamPaperPreviewProps = ExamPaperProps & {
   onClose: () => void;
   onExportPdf?: () => Promise<void>;
 };
+
+export function getMathNotation(question: ExamQuestion): string | null {
+  if (question.type !== "math" || !question.options || Array.isArray(question.options) || isGeometryDiagram(question.options)) return null;
+  return (question.options as MathQuestionOptions).notation || (question.options as MathQuestionOptions).latex || null;
+}
 
 type BrowserPdfDependencies = {
   capture: (element: HTMLElement, options: Record<string, unknown>) => Promise<{ width: number; height: number; toDataURL: (type: string) => string }>;
@@ -107,6 +112,7 @@ export function ExamPaper({ template, mode = "preview", paperRef }: ExamPaperPro
             </div>
             <div className="exam-question-prompt" dangerouslySetInnerHTML={{ __html: question.prompt_html }} />
             {question.type === "geometry" && isGeometryDiagram(question.options) && <GeometryDiagram spec={question.options} />}
+            {getMathNotation(question) && <div className="exam-paper-math-notation" dir="ltr" aria-label="الترميز الرياضي">{getMathNotation(question)}</div>}
             {question.type === "mcq" && Array.isArray(question.options) && (
               <ol className="exam-paper-options">
                 {question.options.map((option) => <li key={option}><span className="exam-option-checkbox" aria-hidden="true" /><span className="exam-option-text" dir="rtl">{option}</span></li>)}

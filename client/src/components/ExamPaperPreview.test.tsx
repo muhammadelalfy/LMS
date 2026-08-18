@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ExamPaper, exportExamPaperFromBrowser, exportExamPaperWithFallback } from "./ExamPaperPreview";
+import { ExamPaper, exportExamPaperFromBrowser, exportExamPaperWithFallback, getMathNotation } from "./ExamPaperPreview";
 import type { ExamTemplate } from "@/lib/laravelApi";
 
 const template: ExamTemplate = {
@@ -29,6 +29,14 @@ describe("ExamPaper", () => {
     expect(html).toContain("أ");
     expect(html).toContain("exam-option-checkbox");
     expect(html).toContain("exam-paper-answer-lines");
+  });
+
+  it("renders persisted math notation and extracts it from typed options", () => {
+    const mathTemplate = { ...template, questions: [{ id: 12, type: "math" as const, prompt_html: "<p>أوجد القيمة.</p>", options: { notation: "س^2 + 2س + 1" }, points: 3 }] };
+    const html = renderToStaticMarkup(<ExamPaper template={mathTemplate} />);
+    expect(getMathNotation(mathTemplate.questions[0])).toBe("س^2 + 2س + 1");
+    expect(html).toContain("س^2 + 2س + 1");
+    expect(html).toContain("exam-paper-math-notation");
   });
 });
 

@@ -83,8 +83,10 @@ export type ExamResult = {
 };
 export type ExamDepartment = { id: number; name: string; slug: string; description?: string | null; is_active: boolean };
 export type GeometryDiagramSpec = { shape: "rectangle" | "triangle" | "circle" | "angle"; dimensions: Record<string, string>; labels?: Record<string, string> };
-export type ExamQuestion = { id?: number; type: "mcq" | "true_false" | "essay" | "math" | "geometry"; prompt_html: string; options?: string[] | GeometryDiagramSpec | null; correct_answer?: string | null; points: number; sort_order?: number };
+export type MathQuestionOptions = { notation?: string; latex?: string };
+export type ExamQuestion = { id?: number; type: "mcq" | "true_false" | "essay" | "math" | "geometry"; prompt_html: string; options?: string[] | GeometryDiagramSpec | MathQuestionOptions | null; correct_answer?: string | null; points: number; sort_order?: number };
 export type ExamTemplate = { id: number; department_id?: number | null; title: string; grade?: string | null; duration_minutes: number; instructions?: string | null; watermark_text?: string | null; watermark_opacity: number; status: "draft" | "published" | "archived"; department?: ExamDepartment | null; questions: ExamQuestion[] };
+export type QuestionBankQuestion = Omit<ExamQuestion, "id"> & { id: number; title?: string | null; grade?: string | null; tags?: string | null; is_active: boolean; department_id?: number | null; department?: ExamDepartment | null };
 export type ExamSession = { id: number; template_id: number; student_id: number; status: "ready" | "active" | "submitted" | "flagged" | "expired"; started_at?: string | null; submitted_at?: string | null; camera_required: boolean; fullscreen_required: boolean; focus_loss_count: number; template: ExamTemplate; answers: { id: number; question_id: number; answer?: string | null }[] };
 
 export type Payment = {
@@ -299,6 +301,20 @@ export const laravelApi = {
   async examTemplates() {
     const result = await request<{ data: ExamTemplate[] }>("/exam-templates");
     return result.data;
+  },
+  async questionBank(filters: { search?: string; type?: ExamQuestion["type"]; grade?: string } = {}) {
+    const query = new URLSearchParams(Object.entries(filters).filter(([, value]) => value).map(([key, value]) => [key, String(value)])).toString();
+    const result = await request<{ data: QuestionBankQuestion[] }>(`/question-bank${query ? `?${query}` : ""}`);
+    return result.data;
+  },
+  async createQuestionBankQuestion(payload: Omit<QuestionBankQuestion, "id" | "department" | "created_by">) {
+    return request<QuestionBankQuestion>("/question-bank", { method: "POST", body: JSON.stringify(payload) });
+  },
+  async updateQuestionBankQuestion(id: number, payload: Partial<QuestionBankQuestion>) {
+    return request<QuestionBankQuestion>(`/question-bank/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+  },
+  async deleteQuestionBankQuestion(id: number) {
+    return request<void>(`/question-bank/${id}`, { method: "DELETE" });
   },
   async downloadExamPdf(templateId: number) {
     const token = window.localStorage.getItem(TOKEN_KEY);

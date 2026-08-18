@@ -3,6 +3,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\ExamResultController;
 use App\Http\Controllers\Api\ExamManagementController;
+use App\Http\Controllers\Api\QuestionBankController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PluginStoreController;
 use App\Http\Controllers\Api\ReportController;
@@ -29,6 +30,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/exam-departments', [ExamManagementController::class, 'storeDepartment']);
     Route::put('/exam-departments/{department}', [ExamManagementController::class, 'updateDepartment']);
     Route::delete('/exam-departments/{department}', [ExamManagementController::class, 'destroyDepartment']);
+    Route::apiResource('question-bank', QuestionBankController::class)->only(['index', 'store', 'show', 'update', 'destroy'])->parameters(['question-bank' => 'questionBankQuestion']);
     Route::get('/exam-templates', [ExamManagementController::class, 'templates']);
     Route::post('/exam-templates', [ExamManagementController::class, 'storeTemplate']);
     Route::put('/exam-templates/{template}', [ExamManagementController::class, 'updateTemplate']);

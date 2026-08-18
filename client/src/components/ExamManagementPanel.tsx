@@ -4,11 +4,22 @@ import { toast } from "sonner";
 import { ApiError, laravelApi, type ExamDepartment, type ExamQuestion, type ExamTemplate } from "@/lib/laravelApi";
 import ExamPaperPreview from "@/components/ExamPaperPreview";
 import ExamQuestionComposer, { type AuthoringQuestion } from "@/components/ExamQuestionComposer";
+import QuestionBankPanel from "@/components/QuestionBankPanel";
 import ExamTemplateActions from "@/components/ExamTemplateActions";
 
 type Props = { onRefresh: () => Promise<void> };
 
-export function buildExamTemplatePayload(input: { editingId: number | null; departmentId: string; title: string; grade: string; duration: string; instructions: string; watermark: string; questions: AuthoringQuestion[] }) {
+export function appendQuestionToExam(current: AuthoringQuestion[], question: Omit<ExamQuestion, "id">): AuthoringQuestion[] {
+  return [...current, { ...question, sort_order: current.length }];
+}
+
+export type ExamTemplatePayload = Parameters<typeof laravelApi.createExamTemplate>[0];
+
+export async function persistExamTemplate(editingId: number | null, payload: ExamTemplatePayload) {
+  return editingId ? laravelApi.updateExamTemplate(editingId, payload) : laravelApi.createExamTemplate(payload);
+}
+
+export function buildExamTemplatePayload(input: { editingId: number | null; departmentId: string; title: string; grade: string; duration: string; instructions: string; watermark: string; questions: AuthoringQuestion[] }): ExamTemplatePayload {
   return {
     department_id: input.departmentId ? Number(input.departmentId) : null,
     title: input.title.trim(),
@@ -84,10 +95,10 @@ export default function ExamManagementPanel({ onRefresh }: Props) {
     const payload = buildExamTemplatePayload({ editingId, departmentId, title, grade, duration, instructions, watermark, questions });
     try {
       if (editingId) {
-        await laravelApi.updateExamTemplate(editingId, payload);
+        await persistExamTemplate(editingId, payload);
         setMessage("تم تحديث الامتحان والأسئلة وترتيبها.");
       } else {
-        await laravelApi.createExamTemplate(payload);
+        await persistExamTemplate(null, payload);
         setMessage("تم حفظ قالب الامتحان كمسودة.");
         resetAuthoring();
       }
@@ -170,7 +181,8 @@ export default function ExamManagementPanel({ onRefresh }: Props) {
           {editingId && <button type="button" className="text-button" onClick={resetAuthoring}>بدء قالب جديد</button>}
           <div className="exam-form-grid"><label>عنوان الامتحان<input required value={title} onChange={event => setTitle(event.target.value)} placeholder="اختبار الوحدة الأولى" /></label><label>القسم<select value={departmentId} onChange={event => setDepartmentId(event.target.value)}><option value="">بدون قسم</option>{departments.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>الصف<input value={grade} onChange={event => setGrade(event.target.value)} placeholder="الأول الإعدادي" /></label><label>المدة بالدقائق<input type="number" min="1" max="600" value={duration} onChange={event => setDuration(event.target.value)} /></label><label>العلامة المائية<input value={watermark} onChange={event => setWatermark(event.target.value)} /></label></div>
           <label>التعليمات<textarea value={instructions} onChange={event => setInstructions(event.target.value)} placeholder="تعليمات الطالب قبل البدء" /></label>
-          <ExamQuestionComposer initialQuestions={initialQuestions} onChange={setQuestions} />
+          <ExamQuestionComposer initialQuestions={questions} onChange={setQuestions} />
+          <QuestionBankPanel departments={departments} onSelect={question => setQuestions(current => appendQuestionToExam(current, question))} />
           {message && <p className="qr-result">{message}</p>}
           <button className="primary" disabled={saving}>{saving ? "جارٍ الحفظ..." : editingId ? "حفظ بيانات الامتحان" : "حفظ الامتحان كمسودة"}</button>
         </form>

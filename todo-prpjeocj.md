@@ -91,4 +91,11 @@
 - [x] Extend the Laravel exam-template update contract to persist question arrays transactionally, including edit, delete, and reorder behavior.
 - [x] Add focused authoring regression coverage for add, edit, delete, reorder, and update payload flows.
 - [ ] Add frontend component tests for the actual one-question authoring flow: create, edit, delete, and reorder through rendered controls.
-- [ ] Add a panel-level save/update payload test proving existing question IDs and ordered questions reach the Laravel client mutation.
+- [x] Add a panel-level save/update payload test proving existing question IDs and ordered questions reach the Laravel client mutation.
+- [x] Make the math question type show a dedicated rich-text/math editor and conditional math fields.
+- [x] Make geometry question authoring visibly render the shape and dimensions while editing.
+- [x] Add a searchable Laravel question-bank CRUD with role-safe persistence, factory, seeder, and tests.
+- [x] Integrate question-bank search and selection into exam authoring without duplicating question data incorrectly.
+- [x] Render math notation/options in exam paper and preview flows and add math-specific serialization/display coverage.
+- [x] Add loading and empty states to the question-bank search results.
+- [x] Add frontend coverage for question-bank selection reaching the ordered exam create/update payload.

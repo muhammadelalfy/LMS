@@ -11,6 +11,7 @@ use App\Models\ExamSessionAnswer;
 use App\Models\ExamSessionEvent;
 use App\Models\ExamTemplate;
 use App\Models\Payment;
+use App\Models\QuestionBankQuestion;
 use App\Models\PluginProduct;
 use App\Models\PluginPurchase;
 use App\Models\Student;
@@ -41,6 +42,7 @@ class ArabicDemoSeeder extends Seeder
         $teacher = $this->user(self::TEACHER_EMAIL, 'أستاذ الرياضيات', 'teacher', self::TEACHER_PASSWORD);
         $students = $this->seedStudents();
         $this->seedExams($teacher, $students);
+        $this->seedQuestionBank($teacher);
         $this->seedPlugins($admin);
 
         $worksheets = collect([
@@ -84,6 +86,18 @@ class ArabicDemoSeeder extends Seeder
         $this->command?->info('Admin: '.self::ADMIN_EMAIL.' / '.self::ADMIN_PASSWORD);
         $this->command?->info('Teacher: '.self::TEACHER_EMAIL.' / '.self::TEACHER_PASSWORD);
         $this->command?->info('Parent password: '.self::PARENT_PASSWORD.' · Student password: '.self::STUDENT_PASSWORD);
+    }
+
+    private function seedQuestionBank(User $teacher): void
+    {
+        $questions = [
+            ['title' => 'تبسيط تعبير جبري', 'type' => 'math', 'grade' => 'الأول الإعدادي', 'prompt_html' => '<p>بسّط التعبير الجبري التالي.</p>', 'options' => ['notation' => 'س^2 + 2س + 1'], 'correct_answer' => '(س + 1)^2', 'points' => 3, 'tags' => 'جبر،تبسيط'],
+            ['title' => 'مساحة مستطيل', 'type' => 'geometry', 'grade' => 'الأول الإعدادي', 'prompt_html' => '<p>احسب مساحة المستطيل الموضح في الرسم.</p>', 'options' => ['shape' => 'rectangle', 'dimensions' => ['width' => '6 سم', 'height' => '4 سم']], 'correct_answer' => '24 سم²', 'points' => 4, 'tags' => 'هندسة،مساحة'],
+            ['title' => 'قيمة تعبير', 'type' => 'mcq', 'grade' => 'الثاني الإعدادي', 'prompt_html' => '<p>ما قيمة ٣ × ٤؟</p>', 'options' => ['١٠', '١٢', '١٤'], 'correct_answer' => '١٢', 'points' => 1, 'tags' => 'حساب'],
+        ];
+        foreach ($questions as $question) {
+            QuestionBankQuestion::updateOrCreate(['title' => $question['title']], [...$question, 'created_by' => $teacher->id, 'is_active' => true]);
+        }
     }
 
     private function seedExams(User $teacher, array $students): void

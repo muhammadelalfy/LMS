@@ -2,8 +2,8 @@ import React, { useEffect, useMemo, useState } from "react";
 import { ArrowDown, ArrowUp, Check, Pencil, Plus, Trash2, X } from "lucide-react";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
-import type { ExamQuestion } from "@/lib/laravelApi";
-import type { GeometryDiagramSpec } from "./GeometryDiagram";
+import type { ExamQuestion, MathQuestionOptions } from "@/lib/laravelApi";
+import { GeometryDiagram, isGeometryDiagram, type GeometryDiagramSpec } from "./GeometryDiagram";
 
 export type AuthoringQuestionType = "mcq" | "true_false" | "essay" | "math" | "geometry";
 export type AuthoringQuestion = Omit<ExamQuestion, "id"> & { id?: number };
@@ -32,7 +32,7 @@ const questionTypeLabels: Record<AuthoringQuestionType, string> = {
   geometry: "شكل هندسي بالأبعاد",
 };
 
-function RichEditor({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+export function RichEditor({ value, onChange }: { value: string; onChange: (value: string) => void }) {
   const editor = useEditor({
     extensions: [StarterKit],
     content: value,
@@ -57,9 +57,13 @@ function RichEditor({ value, onChange }: { value: string; onChange: (value: stri
 }
 
 function geometryFromQuestion(question?: ExamQuestion): { shape: GeometryDiagramSpec["shape"]; dimensions: string } {
-  if (!question || question.type !== "geometry" || !question.options || Array.isArray(question.options)) return { shape: "rectangle", dimensions: "width=6\nheight=4" };
-  const options = question.options as GeometryDiagramSpec;
-  return { shape: options.shape, dimensions: Object.entries(options.dimensions).map(([key, value]) => `${key}=${value}`).join("\n") };
+  if (!question || question.type !== "geometry" || !isGeometryDiagram(question.options)) return { shape: "rectangle", dimensions: "width=6\nheight=4" };
+  return { shape: question.options.shape, dimensions: Object.entries(question.options.dimensions).map(([key, value]) => `${key}=${value}`).join("\n") };
+}
+
+function mathFromQuestion(question?: ExamQuestion): MathQuestionOptions {
+  if (!question || question.type !== "math" || !question.options || Array.isArray(question.options) || isGeometryDiagram(question.options)) return { notation: "" };
+  return question.options as MathQuestionOptions;
 }
 
 export function parseGeometryDimensions(value: string): Record<string, string> {
@@ -121,6 +125,8 @@ export default function ExamQuestionComposer({ initialQuestions = [], onChange }
   const remove = (index: number) => commit(removeAuthoringQuestion(questions, index));
   const move = (index: number, direction: -1 | 1) => commit(moveAuthoringQuestion(questions, index, direction));
   const geometry = useMemo(() => geometryFromQuestion(draft?.type === "geometry" ? draft as ExamQuestion : undefined), [draft]);
+  const math = useMemo(() => mathFromQuestion(draft?.type === "math" ? draft as ExamQuestion : undefined), [draft]);
+  const geometrySpec = draft?.type === "geometry" && isGeometryDiagram(draft.options) ? draft.options : { shape: geometry.shape, dimensions: parseGeometryDimensions(geometry.dimensions) };
 
   return (
     <div className="exam-question-composer">
@@ -141,12 +147,13 @@ export default function ExamQuestionComposer({ initialQuestions = [], onChange }
         <div className="exam-question-editor card">
           <div className="card-head"><div><span className="eyebrow">{editingIndex === null ? "سؤال جديد" : `تعديل السؤال ${editingIndex + 1}`}</span><h3>بيانات السؤال</h3></div><button type="button" className="icon-button" onClick={cancel} title="إلغاء"><X size={16} /></button></div>
           <div className="exam-question-editor-grid">
-            <label>نوع السؤال<select value={draft.type} onChange={event => setDraft(current => current ? { ...current, type: event.target.value as AuthoringQuestionType, options: event.target.value === "mcq" ? ["الإجابة الأولى", "الإجابة الثانية"] : null } : current)}>{Object.entries(questionTypeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
+            <label>نوع السؤال<select value={draft.type} onChange={event => setDraft(current => current ? { ...current, type: event.target.value as AuthoringQuestionType, options: event.target.value === "mcq" ? ["الإجابة الأولى", "الإجابة الثانية"] : event.target.value === "geometry" ? { shape: "rectangle", dimensions: { width: "6", height: "4" } } : event.target.value === "math" ? { notation: "" } : null } : current)}>{Object.entries(questionTypeLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></label>
             <label>الدرجة<input type="number" min="1" max="100" value={draft.points} onChange={event => setDraft(current => current ? { ...current, points: Number(event.target.value) } : current)} /></label>
           </div>
           <label>نص السؤال — محرر غني<RichEditor value={draft.prompt_html} onChange={value => setDraft(current => current ? { ...current, prompt_html: value } : current)} /></label>
           {draft.type === "mcq" && <label>الخيارات، خيار في كل سطر<textarea value={Array.isArray(draft.options) ? draft.options.join("\n") : ""} onChange={event => setDraft(current => current ? { ...current, options: event.target.value.split("\n").map(item => item.trim()).filter(Boolean) } : current)} placeholder="الخيار الأول\nالخيار الثاني" /></label>}
-          {draft.type === "geometry" && <div className="geometry-authoring-fields"><label>نوع الشكل<select value={geometry.shape} onChange={event => setDraft(current => current ? { ...current, options: { shape: event.target.value as GeometryDiagramSpec["shape"], dimensions: parseGeometryDimensions(geometry.dimensions) } } : current)}><option value="rectangle">مستطيل</option><option value="triangle">مثلث</option><option value="circle">دائرة</option><option value="angle">زاوية</option></select></label><label>الأبعاد، اسم=قيمة في كل سطر<textarea value={geometry.dimensions} onChange={event => setDraft(current => current ? { ...current, options: { shape: geometry.shape, dimensions: parseGeometryDimensions(event.target.value) } } : current)} placeholder="width=6\nheight=4" /></label></div>}
+          {draft.type === "math" && <div className="math-authoring-fields"><label>الترميز الرياضي<textarea dir="ltr" value={math.notation || ""} onChange={event => setDraft(current => current ? { ...current, options: { ...(math as MathQuestionOptions), notation: event.target.value } } : current)} placeholder="س^2 + 2س + 1" /></label><p className="muted">استخدم محرر السؤال للنص العربي، واكتب الترميز هنا ليظهر للطالب كجزء من السؤال الرياضي.</p></div>}
+          {draft.type === "geometry" && <div className="geometry-authoring-fields"><div><label>نوع الشكل<select value={geometry.shape} onChange={event => setDraft(current => current ? { ...current, options: { shape: event.target.value as GeometryDiagramSpec["shape"], dimensions: parseGeometryDimensions(geometry.dimensions) } } : current)}><option value="rectangle">مستطيل</option><option value="triangle">مثلث</option><option value="circle">دائرة</option><option value="angle">زاوية</option></select></label><GeometryDiagram spec={geometrySpec} /></div><label>الأبعاد، اسم=قيمة في كل سطر<textarea value={geometry.dimensions} onChange={event => setDraft(current => current ? { ...current, options: { shape: geometry.shape, dimensions: parseGeometryDimensions(event.target.value) } } : current)} placeholder="width=6\nheight=4" /></label></div>}
           {error && <p className="live-error">{error}</p>}
           <div className="exam-question-editor-actions"><button type="button" className="primary" onClick={saveDraft}><Check size={15} /> حفظ السؤال</button><button type="button" className="text-button" onClick={cancel}>إلغاء</button></div>
         </div>
