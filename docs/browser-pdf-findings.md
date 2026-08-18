@@ -1,0 +1,3 @@
+# Browser PDF Verification Findings
+
+The regenerated `/home/ubuntu/Downloads/exam-1.pdf` is produced by jsPDF and contains two A4 pages. The first-page Arabic headlines are now readable and connected, including «اختبار الجبر الأول» and the header labels. Empty checkboxes remain visible beside the options on one line. Watermark text is visibly restored inside all three question cards, including the first multiple-choice card and the two written-answer cards. The second page contains only the footer because the captured paper height exceeds one A4 page; this is a layout-efficiency issue, not an Arabic rendering failure. Final post-fix verification passed: 23 Laravel tests with 99 assertions, 20 frontend tests, TypeScript, and production build.

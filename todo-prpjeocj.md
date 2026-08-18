@@ -64,3 +64,6 @@
 - [x] Make browser-side image-PDF export the primary preview action so the PDF matches the rendered exam paper.
 - [x] Add browser-export tests, fallback behavior, responsive verification, and documentation.
 - [x] Keep each multiple-choice checkbox on the same horizontal line as its option text with clear spacing in preview and PDF.
+- [x] Fix the first two Arabic exam headlines in browser-captured PDF output.
+- [x] Restore clearly visible watermarks inside every question box in browser preview and exported PDF.
+- [x] Add supplied-PDF inspection, export regression coverage, and full verification.

@@ -40,7 +40,7 @@ it("exports the exact paper image through the browser PDF helper", async () => {
     addImage() { calls.push("image"); }
     save(filename: string) { calls.push(filename); }
   };
-  await exportExamPaperFromBrowser({ scrollWidth: 600 } as HTMLElement, 7, {
+  await exportExamPaperFromBrowser({ scrollWidth: 600, classList: { add() {}, remove() {} } } as unknown as HTMLElement, 7, {
     capture: async () => ({ width: 600, height: 1200, toDataURL: () => "data:image/png;base64,exam" }),
     Pdf: fakePdf,
   });

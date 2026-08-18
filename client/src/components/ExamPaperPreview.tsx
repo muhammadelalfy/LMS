@@ -30,15 +30,18 @@ export async function exportExamPaperFromBrowser(
   templateId: number,
   dependencies: BrowserPdfDependencies = { capture: html2canvas, Pdf: jsPDF },
 ) {
-  const canvas = await dependencies.capture(element, {
+  element.classList.add("exam-paper-capture");
+  if (typeof document !== "undefined" && "fonts" in document) await document.fonts.ready;
+  try {
+    const canvas = await dependencies.capture(element, {
     backgroundColor: "#fffdf8",
     scale: Math.min((typeof window === "undefined" ? 1 : window.devicePixelRatio) * 1.5, 3),
     useCORS: true,
     logging: false,
     windowWidth: element.scrollWidth,
-  });
-  const image = canvas.toDataURL("image/png");
-  const pdf = new dependencies.Pdf({ unit: "pt", format: "a4", orientation: "portrait", compress: true });
+    });
+    const image = canvas.toDataURL("image/png");
+    const pdf = new dependencies.Pdf({ unit: "pt", format: "a4", orientation: "portrait", compress: true });
   const pageWidth = pdf.internal.pageSize.getWidth();
   const pageHeight = pdf.internal.pageSize.getHeight();
   const imageHeight = canvas.height * (pageWidth / canvas.width);
@@ -47,7 +50,10 @@ export async function exportExamPaperFromBrowser(
     if (page > 0) pdf.addPage();
     pdf.addImage(image, "PNG", 0, -(page * pageHeight), pageWidth, imageHeight, undefined, "FAST");
   }
-  pdf.save(`exam-${templateId}.pdf`);
+    pdf.save(`exam-${templateId}.pdf`);
+  } finally {
+    element.classList.remove("exam-paper-capture");
+  }
 }
 
 export async function exportExamPaperWithFallback(
