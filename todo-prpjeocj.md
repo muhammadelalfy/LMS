@@ -33,3 +33,18 @@
 - [x] Replace the first dashboard page with real KPI cards, attendance/exam/payment charts, and a clear performance diagram using loaded Laravel data.
 - [x] Move QR attendance into a dedicated navigation tab while preserving camera, manual scan, and student QR actions.
 - [x] Verify overview and QR-tab navigation, responsive layout, and regression/build stability.
+- [x] Audit current exam models, API, dashboard, and student flows for exam authoring/session integration.
+- [x] Add exam departments, reusable templates, rich-text questions, custom watermarks, and exam-session event tracking.
+- [x] Add admin exam CRUD and template screens plus a student camera/focus-loss exam mode with clear browser limitations.
+- [x] Verify exam migrations, backend/frontend tests, typecheck, build, responsive UI, and accessibility.
+- [x] Add frontend edit, delete, publish, and archive actions for exam departments/templates.
+- [x] Verify an admin-created published template can be started by a student end-to-end.
+- [x] Add frontend regression tests for exam authoring and monitored student exam mode.
+- [x] Document responsive, keyboard-focus, contrast, reduced-motion, and warning behavior for admin and student exam surfaces.
+- [x] Add a dedicated admin department-management section with create, edit, deactivate, and delete controls.
+- [x] Add browser-level evidence for publishing a template in admin and starting it in the student portal.
+- [x] Add component-level tests for the exam authoring and student runner states, including warnings and autosave behavior.
+- [x] Expand exam QA documentation with explicit reduced-motion, contrast, keyboard-focus, and responsive checks for both surfaces.
+- [x] Add an explicit hard-delete department action with reference-protection safeguards.
+- [ ] Capture browser-level publish-then-student-start evidence with real authenticated role sessions.
+- [x] Add React component tests for template actions and runner warnings, with autosave request coverage in the API tests.

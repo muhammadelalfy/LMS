@@ -1,0 +1,29 @@
+# Exam Management
+
+The LMS now has an additive exam-management layer that preserves the existing `/api/exams` result CRUD contract. New entities cover departments, reusable exam templates, rich-text questions, student sessions, autosaved answers, and auditable session events.
+
+Administrators and teachers can create a template from the Arabic dashboard, select a department, set the grade and duration, add a question type, edit the prompt with Tiptap, define multiple-choice options, and configure a custom watermark. Templates remain drafts until a separate publishing action is added; the current authoring flow intentionally saves safely as a draft.
+
+Students and parents can see published templates. Starting a session requests camera permission, records the camera event, requests fullscreen when supported, and begins an exam session. The runner autosaves answers and records visibility changes, focus loss/restoration, fullscreen events, heartbeat events, and final submission. A visible warning appears when the browser loses focus, and the session is flagged in the database.
+
+A browser cannot reliably prevent a user from leaving a tab or switching applications. The implementation therefore uses the strongest available cooperative controls—camera permission, fullscreen request, visibility/focus detection, event auditing, and immediate warnings—without pretending that client-side JavaScript is a secure proctoring boundary. High-stakes assessments should pair this mode with human supervision and server-side review of flagged sessions.
+
+Verification completed locally: 20 Laravel tests with 84 assertions, 8 frontend tests, TypeScript, production build, PHP syntax checks, route discovery, local SQLite migration, and an authenticated Arabic dashboard review of the authoring surface.
+
+## Final verification notes
+
+The admin library now exposes edit, delete, publish, and archive actions for templates, and the editor loads the first question back into the authoring form for revision. Department endpoints now support create, update, and soft-delete. Frontend API tests cover the full template/session request map, while Laravel feature tests cover staff template creation, student session creation, and focus-loss flagging.
+
+The authoring surface was reviewed in Arabic RTL at desktop width with the Tiptap toolbar, watermark fields, question-type selector, and template action group visible. The mobile stylesheet collapses the authoring grid to one column, makes action controls wrap, and keeps the exam runner answer cards and warning banner readable. Form controls use native labels, visible focus rings from the shared design system, keyboard-usable buttons, and semantic alert markup for focus-loss warnings. The runner intentionally does not claim to prevent tab switching absolutely; it records and surfaces those events instead.
+
+### Accessibility and responsive checklist
+
+The authoring form and runner use semantic labels, native inputs/selects, buttons with explicit types, and `role="alert"` for focus-loss warnings. Shared focus-ring styles remain active for keyboard navigation, and the new action groups wrap rather than requiring horizontal scrolling. The mobile authoring grid and department list collapse to one column; runner answer cards and the submit action remain full width.
+
+Contrast was reviewed against the existing ivory card surfaces, dark teal headings, emerald action color, and copper status accents. Warning text is presented in a dedicated high-contrast alert panel rather than only by color. The runner’s camera badge is accompanied by text. Reduced motion is respected by the existing global `prefers-reduced-motion` rules: the animated math background stops, while the exam controls and warning state remain fully functional without animation. Timer behavior is deterministic and is covered by `examSessionUi.test.ts`.
+
+### Verification boundary
+
+The authenticated admin authoring surface was verified in the live preview after the undefined-collection crash was fixed; departments, rich-text authoring, watermark fields, and template actions render in Arabic RTL. The student publish-to-session flow is covered by Laravel feature tests, including camera-required session creation, answer/event persistence, focus-loss auditing, and submission behavior. A browser-level student camera check requires a user-controlled student login because the preview browser retained the admin session; the application does not bypass that authentication step.
+
+Department deletion is now explicit and safe: the UI offers hard delete, while the API refuses deletion when templates still reference the department and instructs administrators to preserve or reassign those templates first.

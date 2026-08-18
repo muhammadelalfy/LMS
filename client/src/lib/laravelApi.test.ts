@@ -171,3 +171,20 @@ describe("laravelApi", () => {
     ).toHaveLength(1);
   });
 });
+
+
+  it("maps exam template CRUD and monitored session actions to Laravel endpoints", async () => {
+    const fetchMock = vi.fn().mockImplementation(() => new Response(JSON.stringify({ data: [], id: 3, camera_required: true }), { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    await laravelApi.examTemplates();
+    await laravelApi.createExamTemplate({ department_id: null, title: "جبر", grade: "أولى", duration_minutes: 30, instructions: "ابدأ", watermark_text: "الامتياز", watermark_opacity: 12, status: "draft", questions: [] });
+    await laravelApi.updateExamTemplate(3, { status: "published" });
+    await laravelApi.deleteExamTemplate(3);
+    await laravelApi.startExamSession(3);
+    await laravelApi.recordExamEvent(4, "focus_lost");
+    await laravelApi.saveExamAnswer(4, 8, "٤");
+    await laravelApi.submitExam(4);
+    expect(fetchMock.mock.calls.map(([url, init]) => [url, init?.method])).toEqual([
+      ["/api/exam-templates", undefined], ["/api/exam-templates", "POST"], ["/api/exam-templates/3", "PUT"], ["/api/exam-templates/3", "DELETE"], ["/api/exam-templates/3/start", "POST"], ["/api/exam-sessions/4/events", "POST"], ["/api/exam-sessions/4/answers", "POST"], ["/api/exam-sessions/4/submit", "POST"],
+    ]);
+  });

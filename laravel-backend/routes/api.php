@@ -2,6 +2,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\ExamResultController;
+use App\Http\Controllers\Api\ExamManagementController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PluginStoreController;
 use App\Http\Controllers\Api\ReportController;
@@ -24,6 +25,18 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('attendance', AttendanceController::class)->only(['index','store','update','destroy']);
     Route::post('/attendance/scan', [AttendanceController::class, 'scan']);
     Route::apiResource('exams', ExamResultController::class)->only(['index','store','update','destroy']);
+    Route::get('/exam-departments', [ExamManagementController::class, 'departments']);
+    Route::post('/exam-departments', [ExamManagementController::class, 'storeDepartment']);
+    Route::put('/exam-departments/{department}', [ExamManagementController::class, 'updateDepartment']);
+    Route::delete('/exam-departments/{department}', [ExamManagementController::class, 'destroyDepartment']);
+    Route::get('/exam-templates', [ExamManagementController::class, 'templates']);
+    Route::post('/exam-templates', [ExamManagementController::class, 'storeTemplate']);
+    Route::put('/exam-templates/{template}', [ExamManagementController::class, 'updateTemplate']);
+    Route::delete('/exam-templates/{template}', [ExamManagementController::class, 'destroyTemplate']);
+    Route::post('/exam-templates/{template}/start', [ExamManagementController::class, 'startSession']);
+    Route::post('/exam-sessions/{session}/events', [ExamManagementController::class, 'event']);
+    Route::post('/exam-sessions/{session}/answers', [ExamManagementController::class, 'answer']);
+    Route::post('/exam-sessions/{session}/submit', [ExamManagementController::class, 'submit']);
     Route::apiResource('payments', PaymentController::class)->only(['index','store','update','destroy']);
     Route::get('/reports/summary', [ReportController::class, 'summary']);
     Route::get('/plugins', [PluginStoreController::class, 'index']);

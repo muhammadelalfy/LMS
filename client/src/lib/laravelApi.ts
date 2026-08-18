@@ -81,6 +81,11 @@ export type ExamResult = {
   taken_at: string;
   student?: Student;
 };
+export type ExamDepartment = { id: number; name: string; slug: string; description?: string | null; is_active: boolean };
+export type ExamQuestion = { id?: number; type: "mcq" | "true_false" | "essay" | "math"; prompt_html: string; options?: string[] | null; correct_answer?: string | null; points: number; sort_order?: number };
+export type ExamTemplate = { id: number; department_id?: number | null; title: string; grade?: string | null; duration_minutes: number; instructions?: string | null; watermark_text?: string | null; watermark_opacity: number; status: "draft" | "published" | "archived"; department?: ExamDepartment | null; questions: ExamQuestion[] };
+export type ExamSession = { id: number; template_id: number; student_id: number; status: "ready" | "active" | "submitted" | "flagged" | "expired"; started_at?: string | null; submitted_at?: string | null; camera_required: boolean; fullscreen_required: boolean; focus_loss_count: number; template: ExamTemplate; answers: { id: number; question_id: number; answer?: string | null }[] };
+
 export type Payment = {
   id: number;
   student_id: number;
@@ -277,6 +282,43 @@ export const laravelApi = {
   },
   async payments() {
     return requestCollection<Payment>("/payments");
+  },
+  async examDepartments() {
+    return requestCollection<ExamDepartment>("/exam-departments");
+  },
+  async createExamDepartment(payload: Pick<ExamDepartment, "name" | "slug"> & { description?: string }) {
+    return request<ExamDepartment>("/exam-departments", { method: "POST", body: JSON.stringify(payload) });
+  },
+  async updateExamDepartment(id: number, payload: Partial<ExamDepartment>) {
+    return request<ExamDepartment>(`/exam-departments/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+  },
+  async deleteExamDepartment(id: number) {
+    return request<void>(`/exam-departments/${id}`, { method: "DELETE" });
+  },
+  async examTemplates() {
+    const result = await request<{ data: ExamTemplate[] }>("/exam-templates");
+    return result.data;
+  },
+  async createExamTemplate(payload: Omit<ExamTemplate, "id" | "department" | "questions"> & { questions: Omit<ExamQuestion, "id">[] }) {
+    return request<ExamTemplate>("/exam-templates", { method: "POST", body: JSON.stringify(payload) });
+  },
+  async updateExamTemplate(id: number, payload: Partial<Omit<ExamTemplate, "id" | "department" | "questions">>) {
+    return request<ExamTemplate>(`/exam-templates/${id}`, { method: "PUT", body: JSON.stringify(payload) });
+  },
+  async deleteExamTemplate(id: number) {
+    return request<void>(`/exam-templates/${id}`, { method: "DELETE" });
+  },
+  async startExamSession(templateId: number) {
+    return request<ExamSession>(`/exam-templates/${templateId}/start`, { method: "POST" });
+  },
+  async recordExamEvent(sessionId: number, type: string, metadata?: Record<string, unknown>) {
+    return request(`/exam-sessions/${sessionId}/events`, { method: "POST", body: JSON.stringify({ type, metadata }) });
+  },
+  async saveExamAnswer(sessionId: number, questionId: number, answer: string) {
+    return request(`/exam-sessions/${sessionId}/answers`, { method: "POST", body: JSON.stringify({ question_id: questionId, answer }) });
+  },
+  async submitExam(sessionId: number) {
+    return request<ExamSession>(`/exam-sessions/${sessionId}/submit`, { method: "POST" });
   },
   async createAttendance(payload: Omit<Attendance, "id" | "student">) {
     return request<Attendance>("/attendance", {
