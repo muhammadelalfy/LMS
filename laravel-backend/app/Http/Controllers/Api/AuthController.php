@@ -31,7 +31,7 @@ class AuthController extends Controller
 
     public function loginAsRole(Request $request, string $role)
     {
-        abort_unless(in_array($role, ['admin', 'parent', 'student'], true), 404);
+        abort_unless(in_array($role, ['admin', 'teacher', 'parent', 'student'], true), 404);
 
         return $this->loginForRole($request, $role);
     }
@@ -55,6 +55,8 @@ class AuthController extends Controller
 
         if ($role === 'admin') {
             $query->whereIn('role', ['admin', 'teacher']);
+        } elseif ($role === 'teacher') {
+            $query->where('role', 'teacher');
         } elseif ($role !== 'general') {
             $query->where('role', $role);
         }
@@ -62,7 +64,7 @@ class AuthController extends Controller
         $user = $query->first();
         abort_unless($user && Hash::check($data['password'], $user->password), 422, 'بيانات الدخول غير صحيحة لهذا النوع من الحسابات.');
 
-        return $this->tokenResponse($user, $role === 'admin' ? 'admin' : $role);
+        return $this->tokenResponse($user, $role);
     }
 
     private function tokenResponse(User $user, ?string $loginType = null): array

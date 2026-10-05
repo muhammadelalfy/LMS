@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\AttendanceRecord;
+use App\Notifications\SchoolUpdateNotification;
 use App\Models\ExamDepartment;
 use App\Models\ExamQuestion;
 use App\Models\ExamResult;
@@ -56,6 +57,11 @@ class ArabicDemoSeeder extends Seeder
             $learner = $this->user("student{$index}@local.test", $student->name, 'student', self::STUDENT_PASSWORD);
             StudentAccount::updateOrCreate(['user_id' => $parent->id], ['student_id' => $student->id, 'relationship' => 'parent']);
             StudentAccount::updateOrCreate(['user_id' => $learner->id], ['student_id' => $student->id, 'relationship' => 'student']);
+            foreach ([$parent, $learner] as $account) {
+                if (! $account->notifications()->exists()) {
+                    $account->notify(new SchoolUpdateNotification('مرحباً بك في زويل', 'تابع الحضور والواجبات والنتائج والمدفوعات من مكان واحد.', 'welcome'));
+                }
+            }
 
             $worksheet = $worksheets[$index % count($worksheets)];
             WorksheetAssignment::updateOrCreate(

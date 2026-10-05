@@ -52,7 +52,8 @@ class ExamManagementController extends Controller
     public function templates(Request $request)
     {
         if ($request->user()->isAnyRole('student', 'parent')) {
-            return ExamTemplate::with(['department', 'questions'])->where('status', 'published')->latest()->paginate(50);
+            return ExamTemplate::with(['department', 'questions'])->where('status', 'published')->latest()->paginate(50)
+                ->through(fn (ExamTemplate $template) => $this->withoutAnswerKeys($template));
         }
         $this->authorizeStaff($request);
         return ExamTemplate::with(['department', 'questions'])->latest()->paginate(50);
@@ -146,7 +147,10 @@ class ExamManagementController extends Controller
         abort_unless($account, 403);
         abort_unless($template->status === 'published', 422, 'الامتحان غير منشور.');
         $session = ExamSession::firstOrCreate(['template_id' => $template->id, 'student_id' => $account->student_id], ['camera_required' => true, 'fullscreen_required' => true]);
-        return $session->load(['template.questions', 'answers']);
+        $session->load(['template.questions', 'answers']);
+        $this->withoutAnswerKeys($session->template);
+
+        return $session;
     }
 
     public function event(Request $request, ExamSession $session)
@@ -176,7 +180,17 @@ class ExamManagementController extends Controller
         abort_if(in_array($session->status, ['submitted', 'expired']), 422, 'تم إنهاء هذا الامتحان بالفعل.');
         $session->update(['status' => 'submitted', 'submitted_at' => now(), 'last_event_at' => now()]);
         $session->events()->create(['type' => 'submitted', 'occurred_at' => now()]);
-        return $session->fresh(['template.questions', 'answers', 'events']);
+        $session = $session->fresh(['template.questions', 'answers', 'events']);
+        $this->withoutAnswerKeys($session->template);
+
+        return $session;
+    }
+
+    private function withoutAnswerKeys(ExamTemplate $template): ExamTemplate
+    {
+        $template->questions->each->makeHidden('correct_answer');
+
+        return $template;
     }
 
     private function authorizeSessionOwner(Request $request, ExamSession $session): void
