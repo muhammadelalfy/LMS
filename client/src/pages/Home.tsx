@@ -38,7 +38,7 @@ export default function Home() {
   const [group, setGroup] = useState("الكل");
   const [roster, setRoster] = useState<Student[]>(() => {
     if (typeof window === "undefined") return initialStudents;
-    try { return JSON.parse(window.localStorage.getItem("al-imtiaz-students") || "null") || initialStudents; } catch { return initialStudents; }
+    try { return JSON.parse(window.localStorage.getItem("zewal-students") || "null") || initialStudents; } catch { return initialStudents; }
   });
   const [selected, setSelected] = useState<Student | null>(null);
   const [editingStudent, setEditingStudent] = useState<Student | null>(null);
@@ -49,12 +49,12 @@ export default function Home() {
   const [role, setRole] = useState<"admin" | "parent" | "student">("admin");
   const [notifications, setNotifications] = useState<Notification[]>(() => {
     if (typeof window === "undefined") return initialNotifications;
-    try { return JSON.parse(window.localStorage.getItem("al-imtiaz-notifications") || "null") || initialNotifications; } catch { return initialNotifications; }
+    try { return JSON.parse(window.localStorage.getItem("zewal-notifications") || "null") || initialNotifications; } catch { return initialNotifications; }
   });
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 
-  useEffect(() => { window.localStorage.setItem("al-imtiaz-students", JSON.stringify(roster)); }, [roster]);
-  useEffect(() => { window.localStorage.setItem("al-imtiaz-notifications", JSON.stringify(notifications)); }, [notifications]);
+  useEffect(() => { window.localStorage.setItem("zewal-students", JSON.stringify(roster)); }, [roster]);
+  useEffect(() => { window.localStorage.setItem("zewal-notifications", JSON.stringify(notifications)); }, [notifications]);
 
   const addStudent = (student: Student) => { setRoster(prev => [...prev, student]); setStudentFormOpen(false); setActive("students"); toast("تمت إضافة الطالب إلى القائمة"); };
   const updateStudent = (student: Student) => { setRoster(prev => prev.map(item => item.id === student.id ? student : item)); setSelected(student); setEditingStudent(null); toast("تم حفظ تعديلات الطالب"); };
@@ -67,7 +67,7 @@ export default function Home() {
 
   return <div className="app-shell" dir="rtl">
     <aside className="sidebar">
-      <div className="brand-block"><img src="/manus-storage/al-imtiaz-mark_99680b5d.png" alt="شعار الامتياز" /><div><strong>الامتياز</strong><span>في الرياضيات</span></div></div>
+      <div className="brand-block"><img src="/manus-storage/zewal-mark_99680b5d.png" alt="شعار زويل" /><div><strong>زويل</strong><span>للتعليم</span></div></div>
       <button className="profile-mini" onClick={() => toast("تم فتح قائمة الحساب") }><div className="avatar">أ</div><div><b>أحمد عاطف الشافعى</b><small>مدير النظام</small></div><MoreHorizontal size={18}/></button>
       <nav>{menu.map(item => { const Icon = item.icon; return <button key={item.id} className={active === item.id ? "nav-item active" : "nav-item"} onClick={() => { setActive(item.id); if (item.id !== "students") setSelected(null); }}><Icon size={19}/><span>{item.label}</span>{item.id === "students" && <em>٤٨</em>}</button> })}</nav>
       <div className="sidebar-bottom"><div className="tip"><Sparkles size={18}/><div><b>ملاحظة اليوم</b><span>تابع الطلاب المتأخرين في الدفع</span></div></div><button className="logout" onClick={() => setEntered(false)}><LogIn size={18}/> تسجيل الخروج</button></div>
@@ -91,7 +91,7 @@ export default function Home() {
   </div>;
 }
 
-function Login({ onEnter }: { onEnter: () => void }) { const [mode, setMode] = useState("admin"); return <div className="login-page" dir="rtl"><div className="login-art"><div className="art-overlay"><img src="/manus-storage/al-imtiaz-mark_99680b5d.png" alt=""/><p>كل طالب أمامك.<br/><strong>كل خطوة أوضح.</strong></p><span>إدارة تعليمية هادئة، مبنية على فهم التفاصيل.</span></div></div><div className="login-panel"><div className="login-brand"><img src="/manus-storage/al-imtiaz-mark_99680b5d.png" alt="شعار الامتياز"/><div><b>الامتياز</b><span>في الرياضيات</span><i>منصة الأستاذ أحمد عاطف الشافعى</i></div></div><div className="login-copy"><span className="eyebrow">منصة الإدارة التعليمية</span><h1>مرحباً بعودتك</h1><p>سجّل الدخول لترى كل طالب بوضوح، وتقرر خطوته التالية بثقة.</p></div><div className="login-tabs"><button className={mode === "admin" ? "active" : ""} onClick={() => setMode("admin")}>إدارة المنصة</button><button className={mode === "parent" ? "active" : ""} onClick={() => setMode("parent")}>ولي أمر / طالب</button></div><label>البريد الإلكتروني أو رقم الهاتف<input placeholder="أدخل البريد أو رقم الهاتف" /></label><label>كلمة المرور<input type="password" placeholder="أدخل كلمة المرور" /></label><div className="login-meta"><label className="check"><input type="checkbox"/> تذكرني</label><a href="#" onClick={e => { e.preventDefault(); toast("سيتم إرسال رابط الاستعادة إلى بيانات التواصل المسجلة") }}>نسيت كلمة المرور؟</a></div><button className="primary large" onClick={onEnter}>دخول <ChevronLeft size={18}/></button><div className="login-foot"><ShieldCheck size={16}/> بياناتك التعليمية محفوظة وآمنة</div></div></div> }
+function Login({ onEnter }: { onEnter: () => void }) { const [mode, setMode] = useState("admin"); return <div className="login-page" dir="rtl"><div className="login-art"><div className="art-overlay"><img src="/manus-storage/zewal-mark_99680b5d.png" alt=""/><p>كل طالب أمامك.<br/><strong>كل خطوة أوضح.</strong></p><span>إدارة تعليمية هادئة، مبنية على فهم التفاصيل.</span></div></div><div className="login-panel"><div className="login-brand"><img src="/manus-storage/zewal-mark_99680b5d.png" alt="شعار زويل"/><div><b>زويل</b><span>للتعليم</span><i>منصة الأستاذ أحمد عاطف الشافعى</i></div></div><div className="login-copy"><span className="eyebrow">منصة الإدارة التعليمية</span><h1>مرحباً بعودتك</h1><p>سجّل الدخول لترى كل طالب بوضوح، وتقرر خطوته التالية بثقة.</p></div><div className="login-tabs"><button className={mode === "admin" ? "active" : ""} onClick={() => setMode("admin")}>إدارة المنصة</button><button className={mode === "parent" ? "active" : ""} onClick={() => setMode("parent")}>ولي أمر / طالب</button></div><label>البريد الإلكتروني أو رقم الهاتف<input placeholder="أدخل البريد أو رقم الهاتف" /></label><label>كلمة المرور<input type="password" placeholder="أدخل كلمة المرور" /></label><div className="login-meta"><label className="check"><input type="checkbox"/> تذكرني</label><a href="#" onClick={e => { e.preventDefault(); toast("سيتم إرسال رابط الاستعادة إلى بيانات التواصل المسجلة") }}>نسيت كلمة المرور؟</a></div><button className="primary large" onClick={onEnter}>دخول <ChevronLeft size={18}/></button><div className="login-foot"><ShieldCheck size={16}/> بياناتك التعليمية محفوظة وآمنة</div></div></div> }
 
 function Overview({ onStudents }: { onStudents: () => void }) { const [range, setRange] = useState("هذا الأسبوع"); const [showAll, setShowAll] = useState(false); return <section className="page"><div className="page-head"><div><span className="eyebrow">الأحد، ١٥ أغسطس</span><h1>صباح الخير، أستاذ أحمد <span>✦</span></h1><p>إليك ملخص سريع لما يحدث في المنصة اليوم.</p></div><button className="primary" onClick={onStudents}><Plus size={18}/> إضافة طالب</button></div><div className="stat-grid"><Stat title="إجمالي الطلاب" value="٤٨" detail="+ ٦ هذا الشهر" tone="green" icon={<Users/>}/><Stat title="نسبة الحضور" value="٩٢٪" detail="+ ٤٪ عن الأسبوع الماضي" tone="blue" icon={<CalendarDays/>}/><Stat title="الاشتراكات المدفوعة" value="٣٦" detail="من أصل ٤٨ طالب" tone="copper" icon={<ShieldCheck/>}/><Stat title="نماذج الامتحانات" value="١٢" detail="٣ تحتاج مراجعة" tone="purple" icon={<ClipboardList/>}/></div><div className="overview-grid"><div className="card chart-card"><div className="card-head"><div><h3>الحضور والغياب</h3><span>{range === "هذا الأسبوع" ? "آخر ٧ أيام" : "آخر ٣٠ يوماً"}</span></div><button className="ghost" onClick={() => { const next = range === "هذا الأسبوع" ? "هذا الشهر" : "هذا الأسبوع"; setRange(next); toast(`تم تبديل نطاق الرسم إلى ${next}`); }}>{range} <ChevronLeft size={15}/></button></div><div className="chart"><div className="chart-labels"><span>100%</span><span>75%</span><span>50%</span><span>25%</span><span>0%</span></div><div className="bars">{[72,85,68,92,78,95,88].map((v,i)=><div className="bar-col" key={i}><div className="bar" style={{height: `${v}%`}}><i style={{height: `${Math.max(v-12,20)}%`}}/></div><small>{["الإث","الثلا","الأرب","الخمي","الجمع","السبت","الأحد"][i]}</small></div>)}</div></div></div><div className="card activity-card"><div className="card-head"><h3>آخر الأنشطة</h3><button className="text-button" onClick={() => { setShowAll(value => !value); toast(showAll ? "تم تصغير سجل الأنشطة" : "تم عرض سجل الأنشطة بالكامل"); }}>عرض الكل</button></div>{[{icon:<UserRound/>, text:"تمت إضافة طالب جديد", name:"سيف محمود", time:"منذ ١٠ دقائق", c:"green"},{icon:<ClipboardList/>, text:"تم تصحيح امتحان", name:"الجبر — ثانية إعدادى", time:"منذ ٤٥ دقيقة", c:"blue"},{icon:<Bell/>, text:"تم إرسال إشعار إلى", name:"أولياء أمور ثالثة ثانوي", time:"منذ ساعة", c:"copper"}].slice(0, showAll ? 3 : 2).map((a,i)=><div className="activity" key={i}><div className={`activity-icon ${a.c}`}>{a.icon}</div><div><b>{a.text}</b><span>{a.name}</span></div><time>{a.time}</time></div>)}</div></div><div className="quick-row"><button onClick={onStudents}><Users size={20}/><div><b>إدارة الطلاب</b><span>عرض وإضافة وتعديل الطلاب</span></div><ChevronLeft/></button><button onClick={() => toast("سيتم فتح منشئ نماذج الامتحانات") }><ClipboardList size={20}/><div><b>نموذج امتحان جديد</b><span>أنشئ نموذجاً في دقائق</span></div><ChevronLeft/></button><button onClick={() => toast("تم فتح مركز الإشعارات") }><Bell size={20}/><div><b>إرسال إشعار</b><span>للطالب أو ولي الأمر</span></div><ChevronLeft/></button></div></section> }
 
@@ -125,19 +125,19 @@ const initialWorksheets: Worksheet[] = [
 
 function Worksheets() {
   const [worksheets, setWorksheets] = useState<Worksheet[]>(() => {
-    try { return JSON.parse(window.localStorage.getItem("al-imtiaz-worksheets") || "null") || initialWorksheets; } catch { return initialWorksheets; }
+    try { return JSON.parse(window.localStorage.getItem("zewal-worksheets") || "null") || initialWorksheets; } catch { return initialWorksheets; }
   });
   const [filter, setFilter] = useState<"الكل" | Worksheet["status"]>("الكل");
   const [creating, setCreating] = useState(false);
   const [draftTitle, setDraftTitle] = useState("");
   const [draftGrade, setDraftGrade] = useState("ثانية إعدادى");
 
-  useEffect(() => { window.localStorage.setItem("al-imtiaz-worksheets", JSON.stringify(worksheets)); }, [worksheets]);
+  useEffect(() => { window.localStorage.setItem("zewal-worksheets", JSON.stringify(worksheets)); }, [worksheets]);
   const visible = worksheets.filter(item => filter === "الكل" || item.status === filter);
   const addWorksheet = (event: FormEvent) => {
     event.preventDefault();
     if (!draftTitle.trim()) { toast("اكتب اسم الشيت أولاً"); return; }
-    setWorksheets(prev => [{ id: Date.now(), title: draftTitle.trim(), subject: "رياضيات", grade: draftGrade, questions: 0, assigned: 0, due: "لم يحدد بعد", status: "مسودة" }, ...prev]);
+    setWorksheets(prev => [{ id: Date.now(), title: draftTitle.trim(), subject: "عام", grade: draftGrade, questions: 0, assigned: 0, due: "لم يحدد بعد", status: "مسودة" }, ...prev]);
     setDraftTitle(""); setCreating(false); toast("تم إنشاء مسودة الشيت");
   };
   return <section className="page"><div className="page-head"><div><span className="eyebrow">مكتبة المحتوى</span><h1>الشيتات</h1><p>أنشئ أوراق عمل، تابع التسليم، واحتفظ بمحتوى كل صف في مكان واحد.</p></div><button className="primary" onClick={() => setCreating(value => !value)}><Plus size={18}/> {creating ? "إلغاء الإنشاء" : "إضافة شيت جديد"}</button></div>
@@ -148,10 +148,10 @@ function Worksheets() {
 }
 
 function SettingsPanel() {
-  const [centerName, setCenterName] = useState(() => window.localStorage.getItem("al-imtiaz-center-name") || "الامتياز في الرياضيات");
-  const [emailAlerts, setEmailAlerts] = useState(() => window.localStorage.getItem("al-imtiaz-email-alerts") !== "off");
+  const [centerName, setCenterName] = useState(() => window.localStorage.getItem("zewal-center-name") || "زويل التعليمية");
+  const [emailAlerts, setEmailAlerts] = useState(() => window.localStorage.getItem("zewal-email-alerts") !== "off");
   const [paymentReminders, setPaymentReminders] = useState(true);
-  const save = (event: FormEvent) => { event.preventDefault(); window.localStorage.setItem("al-imtiaz-center-name", centerName.trim() || "الامتياز في الرياضيات"); window.localStorage.setItem("al-imtiaz-email-alerts", emailAlerts ? "on" : "off"); toast("تم حفظ إعدادات المنصة"); };
+  const save = (event: FormEvent) => { event.preventDefault(); window.localStorage.setItem("zewal-center-name", centerName.trim() || "زويل التعليمية"); window.localStorage.setItem("zewal-email-alerts", emailAlerts ? "on" : "off"); toast("تم حفظ إعدادات المنصة"); };
   return <section className="page"><div className="page-head"><div><span className="eyebrow">مساحة التحكم</span><h1>الإعدادات</h1><p>اضبط هوية المنصة والتنبيهات التي تساعدك على متابعة الطلاب.</p></div><button className="primary" onClick={save}><FileText size={16}/> حفظ التغييرات</button></div><form className="settings-layout" onSubmit={save}><div className="card settings-main"><div className="card-head"><div><h3>بيانات المركز</h3><span>تظهر هذه المعلومات في واجهة الإدارة والتقارير.</span></div><Settings size={18} color="#147d68"/></div><label>اسم المركز أو المنصة<input value={centerName} onChange={event => setCenterName(event.target.value)} /></label><label>اسم مدير النظام<input value="أحمد عاطف الشافعى" readOnly /></label><label>اللغة الافتراضية<select defaultValue="العربية"><option>العربية</option><option>English</option></select></label></div><div className="settings-side"><div className="card"><div className="card-head"><div><h3>التنبيهات</h3><span>اختر ما تريد متابعته يومياً.</span></div><Bell size={18} color="#147d68"/></div><label className="setting-toggle"><span><b>تنبيهات البريد</b><small>ملخص أسبوعي عن نشاط الطلاب</small></span><input type="checkbox" checked={emailAlerts} onChange={event => setEmailAlerts(event.target.checked)} /></label><label className="setting-toggle"><span><b>تذكير الاشتراكات</b><small>إشعار عند وجود اشتراك متأخر</small></span><input type="checkbox" checked={paymentReminders} onChange={event => setPaymentReminders(event.target.checked)} /></label></div><div className="card settings-note"><Sparkles size={18}/><div><b>اقتراح سريع</b><p>فعّل تذكير الاشتراكات حتى لا تفوتك المتابعات المهمة.</p></div></div></div></form></section>;
 }
 
@@ -182,10 +182,10 @@ function downloadStudentsExcel(rows: Student[]) {
   const header = "اسم الطالب\tالمجموعة\tالصف\tالحالة\tالاشتراك\tالهاتف\tآخر امتحان\n";
   const body = rows.map(s => [s.name, s.group, s.grade, s.status, s.paid ? "دفع" : "لم يدفع", s.phone, s.exam].join("\t")).join("\n");
   const blob = new Blob(["\ufeff" + header + body], { type: "application/vnd.ms-excel;charset=utf-8" });
-  const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "طلاب-الامتياز.xls"; link.click(); URL.revokeObjectURL(url); toast("تم تصدير بيانات الطلاب إلى Excel");
+  const url = URL.createObjectURL(blob); const link = document.createElement("a"); link.href = url; link.download = "طلاب-زويل.xls"; link.click(); URL.revokeObjectURL(url); toast("تم تصدير بيانات الطلاب إلى Excel");
 }
 
 function printStudentsPdf(rows: Student[]) {
-  const content = `<html dir="rtl"><head><meta charset="utf-8"><title>تقرير طلاب الامتياز</title><style>body{font-family:Arial;padding:32px;color:#173b49}h1{color:#147d68}table{width:100%;border-collapse:collapse;margin-top:22px}th,td{border:1px solid #dfe5de;padding:9px;text-align:right;font-size:12px}th{background:#e4f2eb}</style></head><body><h1>تقرير طلاب الامتياز في الرياضيات</h1><p>عدد الطلاب: ${rows.length}</p><table><tr><th>الاسم</th><th>المجموعة</th><th>الصف</th><th>الحالة</th><th>الاشتراك</th><th>آخر امتحان</th></tr>${rows.map(s => `<tr><td>${s.name}</td><td>${s.group}</td><td>${s.grade}</td><td>${s.status}</td><td>${s.paid ? "دفع" : "لم يدفع"}</td><td>${s.exam}</td></tr>`).join("")}</table><script>window.onload=()=>window.print()</script></body></html>`;
+  const content = `<html dir="rtl"><head><meta charset="utf-8"><title>تقرير طلاب زويل</title><style>body{font-family:Arial;padding:32px;color:#173b49}h1{color:#147d68}table{width:100%;border-collapse:collapse;margin-top:22px}th,td{border:1px solid #dfe5de;padding:9px;text-align:right;font-size:12px}th{background:#e4f2eb}</style></head><body><h1>تقرير طلاب زويل التعليمية</h1><p>عدد الطلاب: ${rows.length}</p><table><tr><th>الاسم</th><th>المجموعة</th><th>الصف</th><th>الحالة</th><th>الاشتراك</th><th>آخر امتحان</th></tr>${rows.map(s => `<tr><td>${s.name}</td><td>${s.group}</td><td>${s.grade}</td><td>${s.status}</td><td>${s.paid ? "دفع" : "لم يدفع"}</td><td>${s.exam}</td></tr>`).join("")}</table><script>window.onload=()=>window.print()</script></body></html>`;
   const win = window.open("", "_blank"); if (win) { win.document.write(content); win.document.close(); toast("تم فتح تقرير PDF للطباعة أو الحفظ"); }
 }

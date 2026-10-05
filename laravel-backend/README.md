@@ -1,6 +1,6 @@
-# Al Imtiaz LMS Laravel Backend
+# Al Zewal LMS Laravel Backend
 
-This directory contains the Laravel 13 API for the Al Imtiaz Arabic mathematics LMS. It uses Eloquent models and migrations for MySQL and Laravel Sanctum for token-based authentication.
+This directory contains the Laravel 13 API for the Al Zewal Arabic mathematics LMS. It uses Eloquent models and migrations for MySQL and Laravel Sanctum for token-based authentication.
 
 ## Domain model
 
@@ -17,7 +17,7 @@ APP_URL=https://api.example.com
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=al_imtiaz
+DB_DATABASE=al_zewal
 DB_USERNAME=...
 DB_PASSWORD=...
 SESSION_DRIVER=database

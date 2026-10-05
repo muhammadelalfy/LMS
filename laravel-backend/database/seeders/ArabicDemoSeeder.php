@@ -38,8 +38,8 @@ class ArabicDemoSeeder extends Seeder
             throw new RuntimeException('ArabicDemoSeeder is restricted to local and testing environments.');
         }
 
-        $admin = $this->user(self::ADMIN_EMAIL, 'مدير الامتياز', 'admin', self::ADMIN_PASSWORD);
-        $teacher = $this->user(self::TEACHER_EMAIL, 'أستاذ الرياضيات', 'teacher', self::TEACHER_PASSWORD);
+        $admin = $this->user(self::ADMIN_EMAIL, 'مدير زويل', 'admin', self::ADMIN_PASSWORD);
+        $teacher = $this->user(self::TEACHER_EMAIL, 'أستاذ المادة', 'teacher', self::TEACHER_PASSWORD);
         $students = $this->seedStudents();
         $this->seedExams($teacher, $students);
         $this->seedQuestionBank($teacher);
@@ -123,7 +123,7 @@ class ArabicDemoSeeder extends Seeder
                     'grade' => $templateData['grade'],
                     'duration_minutes' => 45,
                     'instructions' => 'اقرأ الأسئلة جيداً، واكتب خطوات الحل بوضوح قبل التسليم.',
-                    'watermark_text' => 'الامتياز في الرياضيات · '.$templateData['grade'],
+                    'watermark_text' => 'زويل التعليمية · '.$templateData['grade'],
                     'watermark_opacity' => 12,
                     'status' => $templateData['status'],
                 ],

@@ -28,7 +28,7 @@ class ExamManagementTest extends TestCase
             'grade' => 'الأول الإعدادي',
             'duration_minutes' => 45,
             'instructions' => 'أجب بهدوء.',
-            'watermark_text' => 'الامتياز في الرياضيات',
+            'watermark_text' => 'زويل التعليمية',
             'status' => 'published',
             'questions' => [[
                 'type' => 'mcq', 'prompt_html' => '<p>كم يساوي ٢ + ٢؟</p>', 'options' => ['٣', '٤'], 'correct_answer' => '٤', 'points' => 2,

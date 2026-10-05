@@ -1,7 +1,7 @@
 {
   "name": "Attendance",
   "alias": "attendance",
-  "description": "Attendance domain services for the Al-Imtiaz LMS.",
+  "description": "Attendance domain services for the Zewal LMS.",
   "keywords": ["attendance", "qr", "reports"],
   "priority": 10,
   "providers": [

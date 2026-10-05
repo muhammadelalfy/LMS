@@ -104,7 +104,7 @@ const API_URL = (import.meta.env.VITE_LARAVEL_API_URL || "/api").replace(
   /\/$/,
   ""
 );
-const TOKEN_KEY = "al-imtiaz-laravel-token";
+const TOKEN_KEY = "zewal-laravel-token";
 
 function saveToken(token: string): void {
   window.localStorage.setItem(TOKEN_KEY, token);

@@ -45,7 +45,7 @@ describe("laravelApi", () => {
     });
     await laravelApi.attendance();
 
-    expect(storage.get("al-imtiaz-laravel-token")).toBe("sanctum-token");
+    expect(storage.get("zewal-laravel-token")).toBe("sanctum-token");
     expect(fetchMock.mock.calls[1]?.[1]).toMatchObject({
       headers: expect.objectContaining({
         Authorization: "Bearer sanctum-token",
@@ -167,7 +167,7 @@ describe("laravelApi", () => {
       status: 0,
     });
     expect(
-      JSON.parse(storage.get("al-imtiaz-offline-mutations") || "[]")
+      JSON.parse(storage.get("zewal-offline-mutations") || "[]")
     ).toHaveLength(1);
   });
 });
@@ -177,7 +177,7 @@ describe("laravelApi", () => {
     const fetchMock = vi.fn().mockImplementation(() => new Response(JSON.stringify({ data: [], id: 3, camera_required: true }), { status: 200 }));
     vi.stubGlobal("fetch", fetchMock);
     await laravelApi.examTemplates();
-    await laravelApi.createExamTemplate({ department_id: null, title: "جبر", grade: "أولى", duration_minutes: 30, instructions: "ابدأ", watermark_text: "الامتياز", watermark_opacity: 12, status: "draft", questions: [] });
+    await laravelApi.createExamTemplate({ department_id: null, title: "جبر", grade: "أولى", duration_minutes: 30, instructions: "ابدأ", watermark_text: "زويل", watermark_opacity: 12, status: "draft", questions: [] });
     await laravelApi.updateExamTemplate(3, { status: "published" });
     await laravelApi.deleteExamTemplate(3);
     await laravelApi.startExamSession(3);
@@ -191,7 +191,7 @@ describe("laravelApi", () => {
 
 describe("exam PDF download", () => {
   it("downloads the protected PDF blob with the Sanctum token", async () => {
-    storage.set("al-imtiaz-laravel-token", "student-token");
+    storage.set("zewal-laravel-token", "student-token");
     const fetchMock = vi.fn().mockResolvedValue(new Response(new Blob(["%PDF-1.7"]), { status: 200 }));
     const click = vi.fn();
     vi.stubGlobal("fetch", fetchMock);

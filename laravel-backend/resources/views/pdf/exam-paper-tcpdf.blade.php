@@ -20,7 +20,7 @@ h1 { color: #173f46; font-size: 18pt; margin: 3pt 0; }
 <div class="watermark">{{ $watermark }}</div>
 <table class="header" cellpadding="2" cellspacing="0" width="100%">
     <tr>
-        <td width="58%"><span class="brand">الامتياز في الرياضيات</span><h1>{{ $template->title }}</h1><span class="muted">{{ $template->department?->name ?: 'اختبار رياضيات' }}</span></td>
+        <td width="58%"><span class="brand">زويل التعليمية</span><h1>{{ $template->title }}</h1><span class="muted">{{ $template->department?->name ?: 'اختبار' }}</span></td>
         <td width="42%" class="meta"><b>الصف:</b> {{ $template->grade ?: 'كل الصفوف' }}<br/><b>المدة:</b> {{ $template->duration_minutes }} دقيقة<br/><b>عدد الأسئلة:</b> {{ $template->questions->count() }}</td>
     </tr>
 </table>
