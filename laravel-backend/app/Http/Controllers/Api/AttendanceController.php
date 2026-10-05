@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\Concerns\AuthorizesStaff;
 use App\Models\AttendanceRecord;
+use App\Services\StudentLedger;
 use Illuminate\Http\Request;
 use Modules\Attendance\Services\AttendanceDomainService;
 
@@ -34,7 +35,9 @@ class AttendanceController extends Controller
             'note' => 'nullable|string',
         ]);
 
-        return response()->json($this->attendance->create($data, $request->user()->id), 201);
+        $record = $this->attendance->create($data, $request->user()->id);
+
+        return response()->json($record, $record->wasRecentlyCreated ? 201 : 200);
     }
 
     public function scan(Request $request)
@@ -42,6 +45,7 @@ class AttendanceController extends Controller
         $this->authorizeStaff($request);
         $payload = $request->validate(['payload' => 'required|string|min:32|max:96'])['payload'];
         $result = $this->attendance->scan($payload, $request->user()->id);
+        $result += app(StudentLedger::class)->outstanding($result['attendance']->student);
 
         return response()->json($result, $result['already_recorded'] ? 200 : 201);
     }

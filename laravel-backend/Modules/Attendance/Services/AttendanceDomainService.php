@@ -5,6 +5,7 @@ namespace Modules\Attendance\Services;
 use App\Models\AttendanceRecord;
 use App\Models\Student;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -20,13 +21,20 @@ final class AttendanceDomainService
         return $this->query()->where('student_id', $studentId);
     }
 
+    /**
+     * Records manual attendance. A student has one record per calendar day, so
+     * recording the same day again corrects the existing record.
+     */
     public function create(array $attributes, int $recordedBy): AttendanceRecord
     {
-        return AttendanceRecord::create([
-            ...$attributes,
-            'attendance_date' => now()->toDateString(),
-            'recorded_by' => $recordedBy,
-        ]);
+        $date = Carbon::parse($attributes['date_at'])->toDateString();
+
+        $record = AttendanceRecord::updateOrCreate(
+            ['student_id' => $attributes['student_id'], 'attendance_date' => $date],
+            [...$attributes, 'recorded_by' => $recordedBy],
+        );
+
+        return $record->load('student');
     }
 
     public function scan(string $payload, int $recordedBy): array

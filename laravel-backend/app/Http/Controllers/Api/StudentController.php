@@ -63,6 +63,13 @@ class StudentController extends Controller
         return ['student_id' => $student->id, 'payload' => $student->ensureQrToken(), 'generated_at' => now()->toISOString()];
     }
 
+    public function regenerateQr(Request $request, Student $student)
+    {
+        abort_unless($request->user()->isAnyRole('admin', 'teacher'), 403);
+
+        return ['student_id' => $student->id, 'payload' => $student->regenerateQrToken(), 'generated_at' => now()->toISOString()];
+    }
+
     private function authorizeStudentAccess(Request $request, Student $student): void
     {
         if ($request->user()->isAnyRole('student', 'parent')) {

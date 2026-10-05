@@ -25,6 +25,14 @@ class Student extends Model
         return $this->qr_token;
     }
 
+    /** Rotates the attendance QR so a lost or shared card stops working. */
+    public function regenerateQrToken(): string
+    {
+        $this->forceFill(['qr_token' => Str::random(64)])->save();
+
+        return $this->qr_token;
+    }
+
     public function account(): HasOne
     {
         return $this->hasOne(StudentAccount::class);
