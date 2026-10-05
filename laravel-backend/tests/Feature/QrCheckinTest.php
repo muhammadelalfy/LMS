@@ -117,6 +117,21 @@ class QrCheckinTest extends TestCase
         $this->postJson("/api/students/{$student->id}/qr/regenerate")->assertForbidden();
     }
 
+    public function test_qr_attendance_after_midnight_uses_the_cairo_calendar_day(): void
+    {
+        $this->assertSame('Africa/Cairo', config('app.timezone'));
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $student = Student::factory()->create();
+        Sanctum::actingAs($teacher);
+
+        // 22:30 UTC on 5 October is 01:30 on 6 October in Cairo.
+        $this->travelTo(\Illuminate\Support\Carbon::parse('2026-10-05 22:30:00', 'UTC'));
+
+        $this->postJson('/api/attendance/scan', ['payload' => $student->ensureQrToken()])
+            ->assertCreated()
+            ->assertJsonPath('attendance.attendance_date', '2026-10-06');
+    }
+
     public function test_manual_attendance_uses_its_own_date_and_one_record_per_day(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher']);
