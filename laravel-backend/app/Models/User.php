@@ -37,6 +37,11 @@ class User extends Authenticatable
         return $this->hasOne(StudentAccount::class);
     }
 
+    public function deviceTokens(): HasMany
+    {
+        return $this->hasMany(DeviceToken::class);
+    }
+
     public function pluginPurchases(): HasMany
     {
         return $this->hasMany(PluginPurchase::class);

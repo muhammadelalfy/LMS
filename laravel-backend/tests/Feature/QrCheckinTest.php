@@ -34,6 +34,29 @@ class QrCheckinTest extends TestCase
             ->assertJsonPath('outstanding_payments.0.status', 'overdue');
     }
 
+    public function test_payment_lookup_returns_dues_without_recording_attendance(): void
+    {
+        $teacher = User::factory()->create(['role' => 'teacher']);
+        $student = Student::factory()->create();
+        $payload = $student->ensureQrToken();
+        Payment::create(['student_id' => $student->id, 'amount' => 450, 'status' => 'pending', 'due_at' => now(), 'recorded_by' => $teacher->id]);
+
+        Sanctum::actingAs($teacher);
+        $this->postJson('/api/payments/qr-lookup', ['payload' => $payload])
+            ->assertOk()
+            ->assertJsonPath('student.id', $student->id)
+            ->assertJsonPath('outstanding_total', 450)
+            ->assertJsonCount(1, 'outstanding_payments');
+        $this->assertSame(0, AttendanceRecord::query()->where('student_id', $student->id)->count());
+
+        $this->postJson('/api/payments/qr-lookup', ['payload' => str_repeat('x', 48)])
+            ->assertStatus(422)
+            ->assertJsonValidationErrors('payload');
+
+        Sanctum::actingAs(User::factory()->create(['role' => 'parent']));
+        $this->postJson('/api/payments/qr-lookup', ['payload' => $payload])->assertForbidden();
+    }
+
     public function test_staff_confirm_an_outstanding_payment_with_the_students_qr(): void
     {
         $teacher = User::factory()->create(['role' => 'teacher']);

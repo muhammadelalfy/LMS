@@ -3,7 +3,9 @@
 namespace Modules\Attendance\Services;
 
 use App\Models\AttendanceRecord;
+use App\Models\ClassGroup;
 use App\Models\Student;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -37,16 +39,26 @@ final class AttendanceDomainService
         return $record->load('student');
     }
 
-    public function scan(string $payload, int $recordedBy): array
+    /**
+     * Records today's attendance for a QR card. [$localTime] is the scanning
+     * device's wall-clock time; it decides the day and, against the student's
+     * group timetable, whether the arrival is on time or late.
+     */
+    public function scan(string $payload, int $recordedBy, ?CarbonInterface $localTime = null): array
     {
         $student = Student::where('qr_token', $payload)->first();
         if (!$student) {
-            throw ValidationException::withMessages(['payload' => 'Invalid student QR code.']);
+            throw ValidationException::withMessages(['payload' => 'رمز QR غير صالح لهذا الطالب.']);
         }
+        // A wildly wrong device clock must not move attendance to another day.
+        if ($localTime === null || abs($localTime->diffInHours(now(), true)) > 36) {
+            $localTime = now();
+        }
+        $status = ClassGroup::query()->where('name', $student->group)->first()?->statusAt($localTime) ?? 'present';
 
-        return DB::transaction(function () use ($student, $recordedBy): array {
+        return DB::transaction(function () use ($student, $recordedBy, $localTime, $status): array {
             $lockedStudent = Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
-            $today = now()->toDateString();
+            $today = $localTime->toDateString();
             $existing = AttendanceRecord::where('student_id', $lockedStudent->id)
                 ->where('attendance_date', $today)
                 ->first();
@@ -58,8 +70,8 @@ final class AttendanceDomainService
             $attendance = AttendanceRecord::create([
                 'student_id' => $lockedStudent->id,
                 'attendance_date' => $today,
-                'date_at' => now(),
-                'status' => 'present',
+                'date_at' => $localTime,
+                'status' => $status,
                 'note' => 'QR scan',
                 'recorded_by' => $recordedBy,
             ]);

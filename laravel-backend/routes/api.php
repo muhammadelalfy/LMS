@@ -1,6 +1,8 @@
 <?php
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AttendanceController;
+use App\Http\Controllers\Api\ClassGroupController;
+use App\Http\Controllers\Api\SchoolMessageController;
 use App\Http\Controllers\Api\ExamResultController;
 use App\Http\Controllers\Api\ExamManagementController;
 use App\Http\Controllers\Api\NotificationInboxController;
@@ -23,6 +25,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
     Route::get('/notifications', [NotificationInboxController::class, 'index']);
     Route::post('/notifications/{notification}/read', [NotificationInboxController::class, 'markRead']);
+    Route::post('/notifications/send', [SchoolMessageController::class, 'send']);
+    Route::post('/devices', [SchoolMessageController::class, 'registerDevice']);
+    Route::post('/devices/remove', [SchoolMessageController::class, 'unregisterDevice']);
+    Route::apiResource('groups', ClassGroupController::class)->only(['index', 'store', 'update', 'destroy']);
     Route::apiResource('students', StudentController::class)->only(['index','store','show','update','destroy']);
     Route::get('/students/{student}/qr', [StudentController::class, 'qr']);
     Route::post('/students/{student}/qr/regenerate', [StudentController::class, 'regenerateQr']);
@@ -31,6 +37,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/assignments/{assignment}/submit', [WorksheetController::class, 'submit']);
     Route::apiResource('attendance', AttendanceController::class)->only(['index','store','update','destroy']);
     Route::post('/attendance/scan', [AttendanceController::class, 'scan']);
+    Route::post('/attendance/sweep', [AttendanceController::class, 'sweep']);
+    Route::post('/payments/qr-lookup', [QrCheckinController::class, 'lookup']);
     Route::post('/payments/qr-checkin', [QrCheckinController::class, 'payment']);
     Route::apiResource('exams', ExamResultController::class)->only(['index','store','update','destroy']);
     Route::get('/exam-departments', [ExamManagementController::class, 'departments']);

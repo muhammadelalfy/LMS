@@ -5,7 +5,10 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Api\Concerns\AuthorizesStaff;
 use App\Models\AttendanceRecord;
+use App\Services\AbsenceSweeper;
 use App\Services\StudentLedger;
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Modules\Attendance\Services\AttendanceDomainService;
 
@@ -43,11 +46,42 @@ class AttendanceController extends Controller
     public function scan(Request $request)
     {
         $this->authorizeStaff($request);
-        $payload = $request->validate(['payload' => 'required|string|min:32|max:96'])['payload'];
-        $result = $this->attendance->scan($payload, $request->user()->id);
+        $data = $request->validate([
+            'payload' => 'required|string|min:32|max:96',
+            'scanned_at' => 'nullable|date',
+        ]);
+        $result = $this->attendance->scan(
+            $data['payload'],
+            $request->user()->id,
+            $this->deviceTime($data['scanned_at'] ?? null),
+        );
         $result += app(StudentLedger::class)->outstanding($result['attendance']->student);
 
         return response()->json($result, $result['already_recorded'] ? 200 : 201);
+    }
+
+    /**
+     * Marks absent every student whose group session has ended today without
+     * a check-in, and notifies their parents. Runs on the scheduler too; the
+     * app calls it so absences are recorded without anyone pressing a button.
+     */
+    public function sweep(Request $request)
+    {
+        $this->authorizeStaff($request);
+        $data = $request->validate(['now' => 'nullable|date']);
+
+        return ['marked_absent' => app(AbsenceSweeper::class)->sweep($this->deviceTime($data['now'] ?? null))];
+    }
+
+    /** The device's wall-clock time with its UTC offset, as sent by the app. */
+    private function deviceTime(?string $value): ?CarbonInterface
+    {
+        if ($value === null) {
+            return null;
+        }
+        $time = CarbonImmutable::parse($value);
+
+        return abs($time->diffInHours(now(), true)) > 36 ? null : $time;
     }
 
     public function update(Request $request, AttendanceRecord $attendance)

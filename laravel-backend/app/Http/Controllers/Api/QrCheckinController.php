@@ -27,6 +27,26 @@ class QrCheckinController extends Controller
     ) {
     }
 
+    /**
+     * Front-desk payment lookup: the student behind a QR card and their unpaid
+     * dues, without recording attendance.
+     */
+    public function lookup(Request $request)
+    {
+        $this->authorizeStaff($request);
+        $payload = $request->validate(['payload' => 'required|string|min:32|max:96'])['payload'];
+
+        $student = Student::query()->where('qr_token', $payload)->first();
+        if (! $student) {
+            throw ValidationException::withMessages(['payload' => 'رمز QR غير صالح لهذا الطالب.']);
+        }
+
+        return response()->json([
+            'student' => ['id' => $student->id, 'name' => $student->name, 'grade' => $student->grade, 'group' => $student->group],
+            ...$this->ledger->outstanding($student),
+        ]);
+    }
+
     public function payment(Request $request)
     {
         $this->authorizeStaff($request);

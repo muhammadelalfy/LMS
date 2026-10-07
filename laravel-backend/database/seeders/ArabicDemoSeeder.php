@@ -3,6 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\AttendanceRecord;
+use App\Models\ClassGroup;
 use App\Notifications\SchoolUpdateNotification;
 use App\Models\ExamDepartment;
 use App\Models\ExamQuestion;
@@ -42,6 +43,14 @@ class ArabicDemoSeeder extends Seeder
         $admin = $this->user(self::ADMIN_EMAIL, 'مدير زويل', 'admin', self::ADMIN_PASSWORD);
         $teacher = $this->user(self::TEACHER_EMAIL, 'أستاذ المادة', 'teacher', self::TEACHER_PASSWORD);
         $students = $this->seedStudents();
+        // Weekly timetables (ISO weekdays: 6 = Saturday … 4 = Thursday).
+        foreach ([
+            ['name' => 'المجموعة الأولى', 'start_time' => '15:00', 'end_time' => '16:30', 'days' => [6, 1, 3]],
+            ['name' => 'المجموعة الثانية', 'start_time' => '17:00', 'end_time' => '18:30', 'days' => [7, 2, 4]],
+            ['name' => 'المجموعة الثالثة', 'start_time' => '19:00', 'end_time' => '20:30', 'days' => [6, 1, 3]],
+        ] as $group) {
+            ClassGroup::updateOrCreate(['name' => $group['name']], [...$group, 'late_after_minutes' => 10]);
+        }
         $this->seedExams($teacher, $students);
         $this->seedQuestionBank($teacher);
         $this->seedPlugins($admin);

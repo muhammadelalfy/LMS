@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    // Firebase Cloud Messaging push (free). Path to a service-account JSON key
+    // from Firebase console → Project settings → Service accounts.
+    'fcm' => [
+        'credentials' => env('FIREBASE_CREDENTIALS'),
+    ],
+
 ];
