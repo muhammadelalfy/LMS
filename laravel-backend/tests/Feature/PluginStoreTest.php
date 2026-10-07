@@ -9,6 +9,7 @@ use App\Models\PluginProduct;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Storage;
 use Nwidart\Modules\Facades\Module;
 use RuntimeException;
 use Laravel\Sanctum\Sanctum;
@@ -24,8 +25,20 @@ class PluginStoreTest extends TestCase
         parent::tearDown();
     }
 
+    /**
+     * The signed module archive is a build artifact that is not stored in git
+     * (storage/app is ignored), so these tests can only run where it exists.
+     */
+    private function requireModuleArtifact(): void
+    {
+        if (! Storage::disk('local')->exists('plugins/artifacts/attendance-insights.zip')) {
+            $this->markTestSkipped('plugins/artifacts/attendance-insights.zip is not present in this checkout.');
+        }
+    }
+
     public function test_admin_can_purchase_and_install_a_valid_module_zip(): void
     {
+        $this->requireModuleArtifact();
         $admin = User::factory()->create(['role' => 'admin']);
         $plugin = PluginProduct::create([
             'slug' => 'attendance-insights',
@@ -55,6 +68,7 @@ class PluginStoreTest extends TestCase
 
     public function test_failed_replacement_restores_the_previous_module(): void
     {
+        $this->requireModuleArtifact();
         $admin = User::factory()->create(['role' => 'admin']);
         $plugin = PluginProduct::create([
             'slug' => 'attendance-insights', 'name' => 'تحليلات الحضور', 'version' => '1.0.0',
