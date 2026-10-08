@@ -76,6 +76,62 @@ class GroupScheduleNotificationsTest extends TestCase
         $this->assertSame('2026-10-05', AttendanceRecord::query()->where('student_id', $late->id)->value('attendance_date'));
     }
 
+    public function test_arriving_outside_the_group_time_asks_for_confirmation_before_recording(): void
+    {
+        $this->groupA(); // Mon/Wed 15:00-16:30
+        [$student] = $this->student();
+        Sanctum::actingAs(User::factory()->create(['role' => 'teacher']));
+        $payload = $student->ensureQrToken();
+
+        // Monday 17:00 is after the session: nothing is recorded yet.
+        $this->postJson('/api/attendance/scan', ['payload' => $payload, 'scanned_at' => '2026-10-05T17:00:00+03:00'])
+            ->assertOk()
+            ->assertJsonPath('requires_confirmation', true)
+            ->assertJsonPath('reason', 'outside_session')
+            ->assertJsonPath('student.name', $student->name)
+            ->assertJsonPath('group.name', 'أ')
+            ->assertJsonPath('group.start_time', '15:00');
+        $this->assertSame(0, AttendanceRecord::query()->where('student_id', $student->id)->count());
+
+        // Tuesday has no lesson: also outside, and still nothing recorded.
+        $this->postJson('/api/attendance/scan', ['payload' => $payload, 'scanned_at' => '2026-10-06T15:30:00+03:00'])
+            ->assertOk()->assertJsonPath('requires_confirmation', true);
+        $this->assertSame(0, AttendanceRecord::query()->where('student_id', $student->id)->count());
+
+        // Staff confirm on the phone: recorded as present, with a note.
+        $this->postJson('/api/attendance/scan', [
+            'payload' => $payload, 'scanned_at' => '2026-10-05T17:00:00+03:00', 'confirm_outside_session' => true,
+        ])->assertCreated()
+            ->assertJsonPath('attendance.status', 'present')
+            ->assertJsonPath('attendance.note', 'حضور خارج موعد المجموعة');
+
+        // Once recorded the day is settled; no further question is asked.
+        $this->postJson('/api/attendance/scan', ['payload' => $payload, 'scanned_at' => '2026-10-05T17:05:00+03:00'])
+            ->assertOk()->assertJsonPath('already_recorded', true);
+    }
+
+    public function test_early_arrival_up_to_thirty_minutes_before_the_start_is_accepted(): void
+    {
+        $this->groupA();
+        [$early] = $this->student();
+        [$tooEarly] = $this->student();
+        Sanctum::actingAs(User::factory()->create(['role' => 'teacher']));
+
+        $this->postJson('/api/attendance/scan', ['payload' => $early->ensureQrToken(), 'scanned_at' => '2026-10-05T14:30:00+03:00'])
+            ->assertCreated()->assertJsonPath('attendance.status', 'present');
+        $this->postJson('/api/attendance/scan', ['payload' => $tooEarly->ensureQrToken(), 'scanned_at' => '2026-10-05T14:29:00+03:00'])
+            ->assertOk()->assertJsonPath('requires_confirmation', true);
+    }
+
+    public function test_students_without_a_known_group_are_never_questioned(): void
+    {
+        [$student] = $this->student('بدون جدول');
+        Sanctum::actingAs(User::factory()->create(['role' => 'teacher']));
+
+        $this->postJson('/api/attendance/scan', ['payload' => $student->ensureQrToken(), 'scanned_at' => '2026-10-05T23:00:00+03:00'])
+            ->assertCreated()->assertJsonMissingPath('requires_confirmation');
+    }
+
     public function test_absences_are_recorded_after_the_session_and_parents_alerted_once(): void
     {
         $this->groupA();

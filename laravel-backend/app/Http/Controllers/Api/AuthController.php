@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
+use Illuminate\Validation\ValidationException;
+use Laravel\Sanctum\PersonalAccessToken;
 
 class AuthController extends Controller
 {
@@ -39,6 +42,42 @@ class AuthController extends Controller
     public function me(Request $request)
     {
         return $request->user()->load('studentAccount.student');
+    }
+
+    /** Updates the signed-in account's own name and email. */
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'name' => 'required|string|max:120',
+            'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')->ignore($user->id)],
+        ]);
+        $user->update($data);
+
+        return $user->fresh()->load('studentAccount.student');
+    }
+
+    /** Changes the password; every other device is signed out, this one stays. */
+    public function changePassword(Request $request)
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'current_password' => 'required|string',
+            'password' => ['required', Password::defaults(), 'confirmed', 'different:current_password'],
+        ]);
+        if (! Hash::check($data['current_password'], $user->password)) {
+            throw ValidationException::withMessages(['current_password' => 'كلمة المرور الحالية غير صحيحة.']);
+        }
+        $user->update(['password' => $data['password']]);
+
+        $current = $user->currentAccessToken();
+        $others = $user->tokens();
+        if ($current instanceof PersonalAccessToken) {
+            $others->whereKeyNot($current->id);
+        }
+        $others->delete();
+
+        return ['success' => true];
     }
 
     public function logout(Request $request)

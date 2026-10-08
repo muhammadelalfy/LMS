@@ -11,6 +11,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ClassGroup extends Model
 {
+    /** How long before its start a group's students may already check in. */
+    public const EARLY_ARRIVAL_MINUTES = 30;
+
     protected $fillable = ['name', 'start_time', 'end_time', 'days', 'late_after_minutes'];
 
     protected function casts(): array
@@ -40,6 +43,22 @@ class ClassGroup extends Model
         $now = $localTime->hour * 60 + $localTime->minute;
 
         return $now > self::minutesOf($this->start_time) + $this->late_after_minutes ? 'late' : 'present';
+    }
+
+    /**
+     * Whether a student of this group is expected at the door at [$localTime]:
+     * on a lesson day, from [EARLY_ARRIVAL_MINUTES] before the start until the
+     * end. Any other arrival is "not your group's time" and needs confirming.
+     */
+    public function acceptsArrivalAt(CarbonInterface $localTime): bool
+    {
+        if (! $this->meetsOn($localTime)) {
+            return false;
+        }
+        $now = $localTime->hour * 60 + $localTime->minute;
+
+        return $now >= self::minutesOf($this->start_time) - self::EARLY_ARRIVAL_MINUTES
+            && $now < self::minutesOf($this->end_time);
     }
 
     public function hasEndedAt(CarbonInterface $localTime): bool

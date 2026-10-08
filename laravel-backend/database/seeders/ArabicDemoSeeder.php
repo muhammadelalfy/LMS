@@ -51,6 +51,12 @@ class ArabicDemoSeeder extends Seeder
         ] as $group) {
             ClassGroup::updateOrCreate(['name' => $group['name']], [...$group, 'late_after_minutes' => 10]);
         }
+        foreach ([
+            ['group' => 'المجموعة الأولى', 'title' => 'حل تمارين المعادلات صفحة ٤٢', 'details' => 'من التمرين ١ إلى ٨.', 'due_on' => now()->toDateString()],
+            ['group' => 'المجموعة الثانية', 'title' => 'مراجعة النسبة والتناسب', 'details' => null, 'due_on' => now()->toDateString()],
+        ] as $duty) {
+            \App\Models\Duty::updateOrCreate(['group' => $duty['group'], 'title' => $duty['title']], [...$duty, 'created_by' => $teacher->id]);
+        }
         $this->seedExams($teacher, $students);
         $this->seedQuestionBank($teacher);
         $this->seedPlugins($admin);

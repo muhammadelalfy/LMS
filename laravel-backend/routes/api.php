@@ -2,6 +2,8 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\ClassGroupController;
+use App\Http\Controllers\Api\DutyController;
+use App\Http\Controllers\Api\FaceTemplateController;
 use App\Http\Controllers\Api\SchoolMessageController;
 use App\Http\Controllers\Api\ExamResultController;
 use App\Http\Controllers\Api\ExamManagementController;
@@ -23,13 +25,20 @@ Route::post('/auth/student/login', fn (\Illuminate\Http\Request $request, AuthCo
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+    Route::put('/auth/profile', [AuthController::class, 'updateProfile']);
+    Route::post('/auth/password', [AuthController::class, 'changePassword']);
     Route::get('/notifications', [NotificationInboxController::class, 'index']);
     Route::post('/notifications/{notification}/read', [NotificationInboxController::class, 'markRead']);
     Route::post('/notifications/send', [SchoolMessageController::class, 'send']);
     Route::post('/devices', [SchoolMessageController::class, 'registerDevice']);
     Route::post('/devices/remove', [SchoolMessageController::class, 'unregisterDevice']);
     Route::apiResource('groups', ClassGroupController::class)->only(['index', 'store', 'update', 'destroy']);
+    Route::post('/duties/remind', [DutyController::class, 'remind']);
+    Route::apiResource('duties', DutyController::class)->only(['index', 'store', 'update', 'destroy'])->parameters(['duties' => 'duty']);
     Route::apiResource('students', StudentController::class)->only(['index','store','show','update','destroy']);
+    Route::get('/face-templates', [FaceTemplateController::class, 'index']);
+    Route::put('/students/{student}/face-template', [FaceTemplateController::class, 'update']);
+    Route::delete('/students/{student}/face-template', [FaceTemplateController::class, 'destroy']);
     Route::get('/students/{student}/qr', [StudentController::class, 'qr']);
     Route::post('/students/{student}/qr/regenerate', [StudentController::class, 'regenerateQr']);
     Route::apiResource('worksheets', WorksheetController::class)->only(['index','store','show']);

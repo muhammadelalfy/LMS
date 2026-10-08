@@ -43,8 +43,17 @@ final class AttendanceDomainService
      * Records today's attendance for a QR card. [$localTime] is the scanning
      * device's wall-clock time; it decides the day and, against the student's
      * group timetable, whether the arrival is on time or late.
+     *
+     * A student arriving outside their group's time is not recorded: the
+     * result asks for confirmation ('requires_confirmation') until the desk
+     * repeats the scan with [$confirmedOutsideSession].
      */
-    public function scan(string $payload, int $recordedBy, ?CarbonInterface $localTime = null): array
+    public function scan(
+        string $payload,
+        int $recordedBy,
+        ?CarbonInterface $localTime = null,
+        bool $confirmedOutsideSession = false,
+    ): array
     {
         $student = Student::where('qr_token', $payload)->first();
         if (!$student) {
@@ -54,9 +63,12 @@ final class AttendanceDomainService
         if ($localTime === null || abs($localTime->diffInHours(now(), true)) > 36) {
             $localTime = now();
         }
-        $status = ClassGroup::query()->where('name', $student->group)->first()?->statusAt($localTime) ?? 'present';
+        $group = ClassGroup::query()->where('name', $student->group)->first();
+        $outsideSession = $group !== null && ! $group->acceptsArrivalAt($localTime);
+        // Late-vs-on-time is about the session, so an off-schedule arrival is just present.
+        $status = $outsideSession ? 'present' : ($group?->statusAt($localTime) ?? 'present');
 
-        return DB::transaction(function () use ($student, $recordedBy, $localTime, $status): array {
+        return DB::transaction(function () use ($student, $recordedBy, $localTime, $status, $group, $outsideSession, $confirmedOutsideSession): array {
             $lockedStudent = Student::whereKey($student->id)->lockForUpdate()->firstOrFail();
             $today = $localTime->toDateString();
             $existing = AttendanceRecord::where('student_id', $lockedStudent->id)
@@ -67,12 +79,21 @@ final class AttendanceDomainService
                 return ['already_recorded' => true, 'attendance' => $existing->load('student')];
             }
 
+            if ($outsideSession && ! $confirmedOutsideSession) {
+                return [
+                    'requires_confirmation' => true,
+                    'reason' => 'outside_session',
+                    'student' => ['id' => $lockedStudent->id, 'name' => $lockedStudent->name, 'group' => $lockedStudent->group],
+                    'group' => $group->only(['name', 'start_time', 'end_time', 'days']),
+                ];
+            }
+
             $attendance = AttendanceRecord::create([
                 'student_id' => $lockedStudent->id,
                 'attendance_date' => $today,
                 'date_at' => $localTime,
                 'status' => $status,
-                'note' => 'QR scan',
+                'note' => $outsideSession ? 'حضور خارج موعد المجموعة' : 'QR scan',
                 'recorded_by' => $recordedBy,
             ]);
 

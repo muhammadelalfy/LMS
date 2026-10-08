@@ -49,12 +49,17 @@ class AttendanceController extends Controller
         $data = $request->validate([
             'payload' => 'required|string|min:32|max:96',
             'scanned_at' => 'nullable|date',
+            'confirm_outside_session' => 'nullable|boolean',
         ]);
         $result = $this->attendance->scan(
             $data['payload'],
             $request->user()->id,
             $this->deviceTime($data['scanned_at'] ?? null),
+            (bool) ($data['confirm_outside_session'] ?? false),
         );
+        if ($result['requires_confirmation'] ?? false) {
+            return response()->json($result);
+        }
         $result += app(StudentLedger::class)->outstanding($result['attendance']->student);
 
         return response()->json($result, $result['already_recorded'] ? 200 : 201);
