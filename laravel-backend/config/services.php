@@ -35,6 +35,28 @@ return [
         ],
     ],
 
+    // Reads handwriting in photos (homework). Server-side only; the key never
+    // reaches the app. The model can be swapped without code changes.
+    'anthropic' => [
+        'key' => env('ANTHROPIC_API_KEY'),
+        'ocr_model' => env('ANTHROPIC_OCR_MODEL', 'claude-opus-5-5'),
+    ],
+
+    // Fawry (Pay at Fawry reference numbers and e-wallets such as Vodafone
+    // Cash). Values come from the Fawry merchant account. Use the staging host
+    // https://atfawry.fawrystaging.com while testing and Fawry's production
+    // host when live; `webhook_url` must be reachable by Fawry.
+    'fawry' => [
+        'merchant_code' => env('FAWRY_MERCHANT_CODE'),
+        'secure_key' => env('FAWRY_SECURE_KEY'),
+        'base_url' => env('FAWRY_BASE_URL', 'https://atfawry.fawrystaging.com'),
+        'webhook_url' => env('FAWRY_WEBHOOK_URL'),
+        'reference_method' => env('FAWRY_REFERENCE_METHOD', 'PAYATFAWRY'),
+        'expiry_hours' => (int) env('FAWRY_EXPIRY_HOURS', 48),
+        // Fawry requires a customer e-mail; used when the payer has none.
+        'fallback_email' => env('FAWRY_FALLBACK_EMAIL', 'payments@example.com'),
+    ],
+
     // Firebase Cloud Messaging push (free). Path to a service-account JSON key
     // from Firebase console → Project settings → Service accounts.
     'fcm' => [

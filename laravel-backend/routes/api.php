@@ -4,6 +4,9 @@ use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\ClassGroupController;
 use App\Http\Controllers\Api\DutyController;
 use App\Http\Controllers\Api\FaceTemplateController;
+use App\Http\Controllers\Api\FawryWebhookController;
+use App\Http\Controllers\Api\HandwritingController;
+use App\Http\Controllers\Api\OnlinePaymentController;
 use App\Http\Controllers\Api\SchoolMessageController;
 use App\Http\Controllers\Api\ExamResultController;
 use App\Http\Controllers\Api\ExamManagementController;
@@ -22,6 +25,8 @@ Route::post('/auth/admin/login', fn (\Illuminate\Http\Request $request, AuthCont
 Route::post('/auth/teacher/login', fn (\Illuminate\Http\Request $request, AuthController $controller) => $controller->loginAsRole($request, 'teacher'));
 Route::post('/auth/parent/login', fn (\Illuminate\Http\Request $request, AuthController $controller) => $controller->loginAsRole($request, 'parent'));
 Route::post('/auth/student/login', fn (\Illuminate\Http\Request $request, AuthController $controller) => $controller->loginAsRole($request, 'student'));
+// FawryPay calls this itself; the notification's signature is the credential.
+Route::post('/webhooks/fawry', FawryWebhookController::class)->middleware('throttle:120,1');
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [AuthController::class, 'me']);
     Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -47,6 +52,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('attendance', AttendanceController::class)->only(['index','store','update','destroy']);
     Route::post('/attendance/scan', [AttendanceController::class, 'scan']);
     Route::post('/attendance/sweep', [AttendanceController::class, 'sweep']);
+    Route::post('/ocr/handwriting', HandwritingController::class);
+    Route::post('/payments/{payment}/online', [OnlinePaymentController::class, 'store']);
+    Route::get('/payments/{payment}/online', [OnlinePaymentController::class, 'show']);
     Route::post('/payments/qr-lookup', [QrCheckinController::class, 'lookup']);
     Route::post('/payments/qr-checkin', [QrCheckinController::class, 'payment']);
     Route::apiResource('exams', ExamResultController::class)->only(['index','store','update','destroy']);
