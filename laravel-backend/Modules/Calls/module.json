@@ -1,0 +1,14 @@
+{
+  "name": "Calls",
+  "alias": "calls",
+  "description": "Voice and video calls, online classes, and Google Meet / Zoom links.",
+  "keywords": [
+    "calls"
+  ],
+  "priority": 10,
+  "providers": [
+    "Modules\\Calls\\Providers\\CallsServiceProvider"
+  ],
+  "files": [],
+  "version": "1.0.0"
+}

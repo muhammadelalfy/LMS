@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\ExamResult;
-use App\Models\Student;
+use Modules\Exams\Models\ExamResult;
+use Modules\Students\Models\Student;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<ExamResult> */

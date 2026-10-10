@@ -1,0 +1,12 @@
+{
+  "name": "Tenancy",
+  "alias": "tenancy",
+  "description": "Schools as tenants: a database and a subdomain each, plans, suspension and the operator API.",
+  "keywords": ["tenancy", "saas"],
+  "priority": 0,
+  "providers": [
+    "Modules\\Tenancy\\Providers\\SchoolsServiceProvider"
+  ],
+  "files": [],
+  "version": "1.0.0"
+}

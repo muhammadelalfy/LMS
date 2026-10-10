@@ -9,8 +9,8 @@ type DashboardSnapshot = {
   savedAt: number;
 };
 
-const SNAPSHOT_KEY = "al-imtiaz-dashboard-snapshot";
-const QUEUE_KEY = "al-imtiaz-offline-mutations";
+const SNAPSHOT_KEY = "zewal-dashboard-snapshot";
+const QUEUE_KEY = "zewal-offline-mutations";
 
 export function cacheDashboardSnapshot(snapshot: Omit<DashboardSnapshot, "savedAt">): void {
   window.localStorage.setItem(SNAPSHOT_KEY, JSON.stringify({ ...snapshot, savedAt: Date.now() }));

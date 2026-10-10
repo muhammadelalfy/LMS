@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\Student;
-use App\Models\Worksheet;
-use App\Models\WorksheetAssignment;
+use Modules\Students\Models\Student;
+use Modules\Learning\Models\Worksheet;
+use Modules\Learning\Models\WorksheetAssignment;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<WorksheetAssignment> */

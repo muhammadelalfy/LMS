@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\AttendanceRecord;
-use App\Models\Student;
+use Modules\Attendance\Models\AttendanceRecord;
+use Modules\Students\Models\Student;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<AttendanceRecord> */

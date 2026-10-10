@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Payment;
-use App\Models\Student;
+use Modules\Payments\Models\Payment;
+use Modules\Students\Models\Student;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<Payment> */

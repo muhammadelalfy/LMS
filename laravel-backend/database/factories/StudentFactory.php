@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Student;
+use Modules\Students\Models\Student;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<Student> */

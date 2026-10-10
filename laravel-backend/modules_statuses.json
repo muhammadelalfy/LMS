@@ -1,4 +1,16 @@
 {
-    "AttendanceInsights": true,
-    "Attendance": true
+    "Core": true,
+    "Auth": true,
+    "Students": true,
+    "Groups": true,
+    "Attendance": true,
+    "Payments": true,
+    "Exams": true,
+    "Learning": true,
+    "Notifications": true,
+    "Chat": true,
+    "Calls": true,
+    "Reports": true,
+    "PluginStore": true,
+    "Tenancy": true
 }

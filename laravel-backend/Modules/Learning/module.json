@@ -1,0 +1,14 @@
+{
+  "name": "Learning",
+  "alias": "learning",
+  "description": "Worksheets, daily duties and reading handwriting from photos.",
+  "keywords": [
+    "learning"
+  ],
+  "priority": 10,
+  "providers": [
+    "Modules\\Learning\\Providers\\LearningServiceProvider"
+  ],
+  "files": [],
+  "version": "1.0.0"
+}

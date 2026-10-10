@@ -2,23 +2,25 @@
 
 namespace Database\Seeders;
 
-use App\Models\AttendanceRecord;
-use App\Models\ExamDepartment;
-use App\Models\ExamQuestion;
-use App\Models\ExamResult;
-use App\Models\ExamSession;
-use App\Models\ExamSessionAnswer;
-use App\Models\ExamSessionEvent;
-use App\Models\ExamTemplate;
-use App\Models\Payment;
-use App\Models\QuestionBankQuestion;
-use App\Models\PluginProduct;
-use App\Models\PluginPurchase;
-use App\Models\Student;
-use App\Models\StudentAccount;
-use App\Models\User;
-use App\Models\Worksheet;
-use App\Models\WorksheetAssignment;
+use Modules\Attendance\Models\AttendanceRecord;
+use Modules\Groups\Models\ClassGroup;
+use Modules\Notifications\Notifications\SchoolUpdateNotification;
+use Modules\Exams\Models\ExamDepartment;
+use Modules\Exams\Models\ExamQuestion;
+use Modules\Exams\Models\ExamResult;
+use Modules\Exams\Models\ExamSession;
+use Modules\Exams\Models\ExamSessionAnswer;
+use Modules\Exams\Models\ExamSessionEvent;
+use Modules\Exams\Models\ExamTemplate;
+use Modules\Payments\Models\Payment;
+use Modules\Exams\Models\QuestionBankQuestion;
+use Modules\PluginStore\Models\PluginProduct;
+use Modules\PluginStore\Models\PluginPurchase;
+use Modules\Students\Models\Student;
+use Modules\Students\Models\StudentAccount;
+use Modules\Auth\Models\User;
+use Modules\Learning\Models\Worksheet;
+use Modules\Learning\Models\WorksheetAssignment;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use RuntimeException;
@@ -38,9 +40,23 @@ class ArabicDemoSeeder extends Seeder
             throw new RuntimeException('ArabicDemoSeeder is restricted to local and testing environments.');
         }
 
-        $admin = $this->user(self::ADMIN_EMAIL, 'مدير الامتياز', 'admin', self::ADMIN_PASSWORD);
-        $teacher = $this->user(self::TEACHER_EMAIL, 'أستاذ الرياضيات', 'teacher', self::TEACHER_PASSWORD);
+        $admin = $this->user(self::ADMIN_EMAIL, 'مدير زويل', 'admin', self::ADMIN_PASSWORD);
+        $teacher = $this->user(self::TEACHER_EMAIL, 'أستاذ المادة', 'teacher', self::TEACHER_PASSWORD);
         $students = $this->seedStudents();
+        // Weekly timetables (ISO weekdays: 6 = Saturday … 4 = Thursday).
+        foreach ([
+            ['name' => 'المجموعة الأولى', 'start_time' => '15:00', 'end_time' => '16:30', 'days' => [6, 1, 3]],
+            ['name' => 'المجموعة الثانية', 'start_time' => '17:00', 'end_time' => '18:30', 'days' => [7, 2, 4]],
+            ['name' => 'المجموعة الثالثة', 'start_time' => '19:00', 'end_time' => '20:30', 'days' => [6, 1, 3]],
+        ] as $group) {
+            ClassGroup::updateOrCreate(['name' => $group['name']], [...$group, 'late_after_minutes' => 10]);
+        }
+        foreach ([
+            ['group' => 'المجموعة الأولى', 'title' => 'حل تمارين المعادلات صفحة ٤٢', 'details' => 'من التمرين ١ إلى ٨.', 'due_on' => now()->toDateString()],
+            ['group' => 'المجموعة الثانية', 'title' => 'مراجعة النسبة والتناسب', 'details' => null, 'due_on' => now()->toDateString()],
+        ] as $duty) {
+            \Modules\Learning\Models\Duty::updateOrCreate(['group' => $duty['group'], 'title' => $duty['title']], [...$duty, 'created_by' => $teacher->id]);
+        }
         $this->seedExams($teacher, $students);
         $this->seedQuestionBank($teacher);
         $this->seedPlugins($admin);
@@ -56,6 +72,11 @@ class ArabicDemoSeeder extends Seeder
             $learner = $this->user("student{$index}@local.test", $student->name, 'student', self::STUDENT_PASSWORD);
             StudentAccount::updateOrCreate(['user_id' => $parent->id], ['student_id' => $student->id, 'relationship' => 'parent']);
             StudentAccount::updateOrCreate(['user_id' => $learner->id], ['student_id' => $student->id, 'relationship' => 'student']);
+            foreach ([$parent, $learner] as $account) {
+                if (! $account->notifications()->exists()) {
+                    $account->notify(new SchoolUpdateNotification('مرحباً بك في زويل', 'تابع الحضور والواجبات والنتائج والمدفوعات من مكان واحد.', 'welcome'));
+                }
+            }
 
             $worksheet = $worksheets[$index % count($worksheets)];
             WorksheetAssignment::updateOrCreate(
@@ -123,7 +144,7 @@ class ArabicDemoSeeder extends Seeder
                     'grade' => $templateData['grade'],
                     'duration_minutes' => 45,
                     'instructions' => 'اقرأ الأسئلة جيداً، واكتب خطوات الحل بوضوح قبل التسليم.',
-                    'watermark_text' => 'الامتياز في الرياضيات · '.$templateData['grade'],
+                    'watermark_text' => 'زويل التعليمية · '.$templateData['grade'],
                     'watermark_opacity' => 12,
                     'status' => $templateData['status'],
                 ],

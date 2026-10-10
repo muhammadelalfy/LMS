@@ -4,7 +4,7 @@ The regenerated `/home/ubuntu/Downloads/exam-1.pdf` is produced by jsPDF and con
 
 The refreshed authenticated dashboard loads the exam selector normally after the title, checkbox, and watermark CSS corrections. A new preview export will be used for final artifact inspection.
 
-The corrected preview now shows the isolated Arabic brand line «الامتياز في الرياضيات» above the paper title, option controls in a consistent right-to-left row, and a lighter contained watermark behind question content. A fresh browser export was triggered from this state for artifact inspection.
+The corrected preview now shows the isolated Arabic brand line «زويل التعليمية» above the paper title, option controls in a consistent right-to-left row, and a lighter contained watermark behind question content. A fresh browser export was triggered from this state for artifact inspection.
 
 ## Final corrected artifact
 

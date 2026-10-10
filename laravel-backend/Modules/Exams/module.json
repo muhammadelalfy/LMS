@@ -1,0 +1,14 @@
+{
+  "name": "Exams",
+  "alias": "exams",
+  "description": "Exam templates, question bank, timed sessions and recorded results.",
+  "keywords": [
+    "exams"
+  ],
+  "priority": 10,
+  "providers": [
+    "Modules\\Exams\\Providers\\ExamsServiceProvider"
+  ],
+  "files": [],
+  "version": "1.0.0"
+}

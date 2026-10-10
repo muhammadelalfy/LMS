@@ -45,7 +45,7 @@ describe("laravelApi", () => {
     });
     await laravelApi.attendance();
 
-    expect(storage.get("al-imtiaz-laravel-token")).toBe("sanctum-token");
+    expect(storage.get("zewal-laravel-token")).toBe("sanctum-token");
     expect(fetchMock.mock.calls[1]?.[1]).toMatchObject({
       headers: expect.objectContaining({
         Authorization: "Bearer sanctum-token",
@@ -167,56 +167,115 @@ describe("laravelApi", () => {
       status: 0,
     });
     expect(
-      JSON.parse(storage.get("al-imtiaz-offline-mutations") || "[]")
+      JSON.parse(storage.get("zewal-offline-mutations") || "[]")
     ).toHaveLength(1);
   });
 });
 
-
-  it("maps exam template CRUD and monitored session actions to Laravel endpoints", async () => {
-    const fetchMock = vi.fn().mockImplementation(() => new Response(JSON.stringify({ data: [], id: 3, camera_required: true }), { status: 200 }));
-    vi.stubGlobal("fetch", fetchMock);
-    await laravelApi.examTemplates();
-    await laravelApi.createExamTemplate({ department_id: null, title: "جبر", grade: "أولى", duration_minutes: 30, instructions: "ابدأ", watermark_text: "الامتياز", watermark_opacity: 12, status: "draft", questions: [] });
-    await laravelApi.updateExamTemplate(3, { status: "published" });
-    await laravelApi.deleteExamTemplate(3);
-    await laravelApi.startExamSession(3);
-    await laravelApi.recordExamEvent(4, "focus_lost");
-    await laravelApi.saveExamAnswer(4, 8, "٤");
-    await laravelApi.submitExam(4);
-    expect(fetchMock.mock.calls.map(([url, init]) => [url, init?.method])).toEqual([
-      ["/api/exam-templates", undefined], ["/api/exam-templates", "POST"], ["/api/exam-templates/3", "PUT"], ["/api/exam-templates/3", "DELETE"], ["/api/exam-templates/3/start", "POST"], ["/api/exam-sessions/4/events", "POST"], ["/api/exam-sessions/4/answers", "POST"], ["/api/exam-sessions/4/submit", "POST"],
-    ]);
+it("maps exam template CRUD and monitored session actions to Laravel endpoints", async () => {
+  const fetchMock = vi
+    .fn()
+    .mockImplementation(
+      () =>
+        new Response(
+          JSON.stringify({ data: [], id: 3, camera_required: true }),
+          { status: 200 }
+        )
+    );
+  vi.stubGlobal("fetch", fetchMock);
+  await laravelApi.examTemplates();
+  await laravelApi.createExamTemplate({
+    department_id: null,
+    title: "جبر",
+    grade: "أولى",
+    duration_minutes: 30,
+    instructions: "ابدأ",
+    watermark_text: "زويل",
+    watermark_opacity: 12,
+    status: "draft",
+    questions: [],
   });
+  await laravelApi.updateExamTemplate(3, { status: "published" });
+  await laravelApi.deleteExamTemplate(3);
+  await laravelApi.startExamSession(3);
+  await laravelApi.recordExamEvent(4, "focus_lost");
+  await laravelApi.saveExamAnswer(4, 8, "٤");
+  await laravelApi.submitExam(4);
+  expect(
+    fetchMock.mock.calls.map(([url, init]) => [url, init?.method])
+  ).toEqual([
+    ["/api/exam-templates", undefined],
+    ["/api/exam-templates", "POST"],
+    ["/api/exam-templates/3", "PUT"],
+    ["/api/exam-templates/3", "DELETE"],
+    ["/api/exam-templates/3/start", "POST"],
+    ["/api/exam-sessions/4/events", "POST"],
+    ["/api/exam-sessions/4/answers", "POST"],
+    ["/api/exam-sessions/4/submit", "POST"],
+  ]);
+});
 
 describe("exam PDF download", () => {
   it("downloads the protected PDF blob with the Sanctum token", async () => {
-    storage.set("al-imtiaz-laravel-token", "student-token");
-    const fetchMock = vi.fn().mockResolvedValue(new Response(new Blob(["%PDF-1.7"]), { status: 200 }));
+    storage.set("zewal-laravel-token", "student-token");
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(new Response(new Blob(["%PDF-1.7"]), { status: 200 }));
     const click = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
-    vi.stubGlobal("URL", { createObjectURL: vi.fn(() => "blob:exam"), revokeObjectURL: vi.fn() });
+    vi.stubGlobal("URL", {
+      createObjectURL: vi.fn(() => "blob:exam"),
+      revokeObjectURL: vi.fn(),
+    });
     vi.stubGlobal("document", { createElement: vi.fn(() => ({ click })) });
 
     await laravelApi.downloadExamPdf(12);
 
-    expect(fetchMock).toHaveBeenCalledWith("/api/exam-templates/12/pdf", expect.objectContaining({
-      headers: { Accept: "application/pdf", Authorization: "Bearer student-token" },
-    }));
+    expect(fetchMock).toHaveBeenCalledWith(
+      "/api/exam-templates/12/pdf",
+      expect.objectContaining({
+        headers: {
+          Accept: "application/pdf",
+          Authorization: "Bearer student-token",
+        },
+      })
+    );
     expect(click).toHaveBeenCalled();
   });
 });
 
 describe("question bank API", () => {
   it("maps searchable CRUD operations to the Laravel resource", async () => {
-    const fetchMock = vi.fn().mockImplementation(() => new Response(JSON.stringify({ data: [], id: 11 }), { status: 200 }));
+    const fetchMock = vi
+      .fn()
+      .mockImplementation(
+        () =>
+          new Response(JSON.stringify({ data: [], id: 11 }), { status: 200 })
+      );
     vi.stubGlobal("fetch", fetchMock);
     await laravelApi.questionBank({ search: "هندسة", type: "geometry" });
-    await laravelApi.createQuestionBankQuestion({ type: "math", title: "جبر", grade: "أولى", prompt_html: "<p>سؤال</p>", options: { notation: "س^2" }, correct_answer: "٩", points: 2, sort_order: 0, tags: "جبر", is_active: true, department_id: null });
+    await laravelApi.createQuestionBankQuestion({
+      type: "math",
+      title: "جبر",
+      grade: "أولى",
+      prompt_html: "<p>سؤال</p>",
+      options: { notation: "س^2" },
+      correct_answer: "٩",
+      points: 2,
+      sort_order: 0,
+      tags: "جبر",
+      is_active: true,
+      department_id: null,
+    });
     await laravelApi.updateQuestionBankQuestion(11, { title: "معدل" });
     await laravelApi.deleteQuestionBankQuestion(11);
-    expect(fetchMock.mock.calls.map(([url, init]) => [url, init?.method])).toEqual([
-      ["/api/question-bank?search=%D9%87%D9%86%D8%AF%D8%B3%D8%A9&type=geometry", undefined],
+    expect(
+      fetchMock.mock.calls.map(([url, init]) => [url, init?.method])
+    ).toEqual([
+      [
+        "/api/question-bank?search=%D9%87%D9%86%D8%AF%D8%B3%D8%A9&type=geometry",
+        undefined,
+      ],
       ["/api/question-bank", "POST"],
       ["/api/question-bank/11", "PUT"],
       ["/api/question-bank/11", "DELETE"],

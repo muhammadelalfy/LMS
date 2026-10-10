@@ -7,11 +7,14 @@
     "license": "MIT",
     "require": {
         "php": "^8.3",
+        "anthropic-ai/sdk": "^0.56.0",
         "dompdf/dompdf": "^3.1",
         "laravel/framework": "^13.17",
+        "laravel/reverb": "^1.12",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^3.0",
         "nwidart/laravel-modules": "^6.0",
+        "stancl/tenancy": "^3.10",
         "tecnickcom/tcpdf": "^6.8"
     },
     "require-dev": {

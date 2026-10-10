@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\ExamSession;
-use App\Models\ExamTemplate;
-use App\Models\Student;
+use Modules\Exams\Models\ExamSession;
+use Modules\Exams\Models\ExamTemplate;
+use Modules\Students\Models\Student;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<ExamSession> */

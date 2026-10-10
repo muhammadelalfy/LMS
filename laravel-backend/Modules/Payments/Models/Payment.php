@@ -1,0 +1,20 @@
+<?php
+namespace Modules\Payments\Models;
+
+use Modules\Students\Models\Student;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+class Payment extends Model {
+    use HasFactory, \Modules\Reports\Models\Concerns\BumpsReportVersion;
+
+    protected static function newFactory(): \Database\Factories\PaymentFactory
+    {
+        return \Database\Factories\PaymentFactory::new();
+    }
+    protected $fillable = ['student_id', 'amount', 'status', 'due_at', 'paid_at', 'note', 'recorded_by'];
+    protected function casts(): array { return ['due_at' => 'datetime', 'paid_at' => 'datetime']; }
+    public function student(): BelongsTo { return $this->belongsTo(Student::class); }
+    public function attempts(): HasMany { return $this->hasMany(PaymentAttempt::class); }
+}

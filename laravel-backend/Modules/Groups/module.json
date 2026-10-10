@@ -1,0 +1,14 @@
+{
+  "name": "Groups",
+  "alias": "groups",
+  "description": "Groups, their weekly timetables and the 'session starts soon' reminders.",
+  "keywords": [
+    "groups"
+  ],
+  "priority": 10,
+  "providers": [
+    "Modules\\Groups\\Providers\\GroupsServiceProvider"
+  ],
+  "files": [],
+  "version": "1.0.0"
+}

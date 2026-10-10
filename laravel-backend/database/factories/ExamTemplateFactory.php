@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\ExamDepartment;
-use App\Models\ExamTemplate;
-use App\Models\User;
+use Modules\Exams\Models\ExamDepartment;
+use Modules\Exams\Models\ExamTemplate;
+use Modules\Auth\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<ExamTemplate> */
@@ -21,7 +21,7 @@ class ExamTemplateFactory extends Factory
             'grade' => $this->faker->randomElement(['الأول الإعدادي', 'الثاني الإعدادي', 'الثالث الإعدادي']),
             'duration_minutes' => $this->faker->randomElement([30, 45, 60]),
             'instructions' => 'اقرأ السؤال جيداً، واكتب خطوات الحل بوضوح.',
-            'watermark_text' => 'الامتياز في الرياضيات',
+            'watermark_text' => 'زويل التعليمية',
             'watermark_opacity' => 12,
             'status' => 'draft',
         ];

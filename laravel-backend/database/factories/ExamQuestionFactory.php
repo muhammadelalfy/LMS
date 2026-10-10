@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\ExamQuestion;
-use App\Models\ExamTemplate;
+use Modules\Exams\Models\ExamQuestion;
+use Modules\Exams\Models\ExamTemplate;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<ExamQuestion> */

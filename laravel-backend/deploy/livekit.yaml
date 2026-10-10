@@ -1,0 +1,22 @@
+# LiveKit server configuration (self-hosted, open source). A template: set the
+# keys to match LIVEKIT_API_KEY / LIVEKIT_API_SECRET in the API's environment,
+# and point the webhook at the API. Not exercised on the development machine.
+port: 7880
+rtc:
+  tcp_port: 7881
+  port_range_start: 50000
+  port_range_end: 60000
+  use_external_ip: true
+turn:
+  enabled: true
+  domain: turn.example.com   # a TLS certificate for this name; clients fall back to TCP/443
+  tls_port: 5349
+  udp_port: 3478
+redis:
+  address: redis-realtime:6379   # shared by every LiveKit node, so rooms spread across nodes
+keys:
+  lk-api-key: change-me-to-a-long-random-secret
+webhook:
+  api_key: lk-api-key
+  urls:
+    - https://api.example.com/api/webhooks/livekit

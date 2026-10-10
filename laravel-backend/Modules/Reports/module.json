@@ -1,0 +1,14 @@
+{
+  "name": "Reports",
+  "alias": "reports",
+  "description": "School-wide report figures for the statistics screens.",
+  "keywords": [
+    "reports"
+  ],
+  "priority": 10,
+  "providers": [
+    "Modules\\Reports\\Providers\\ReportsServiceProvider"
+  ],
+  "files": [],
+  "version": "1.0.0"
+}
