@@ -12,6 +12,7 @@ use Modules\Payments\Services\StudentLedger;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Modules\Attendance\Services\AttendanceDomainService;
 
 class AttendanceController extends Controller
@@ -53,11 +54,15 @@ class AttendanceController extends Controller
             'scanned_at' => 'nullable|date',
             'confirm_outside_session' => 'nullable|boolean',
         ]);
+        // A scan the phone kept while offline and is now sending (see
+        // IdempotentRequests): its own time is the only record of the arrival.
+        $replayed = $request->header('X-Offline-Replay') === '1';
         $result = $this->attendance->scan(
             $data['payload'],
             $request->user()->id,
-            $this->deviceTime($data['scanned_at'] ?? null),
+            $this->deviceTime($data['scanned_at'] ?? null, $replayed),
             (bool) ($data['confirm_outside_session'] ?? false),
+            $replayed,
         );
         if ($result['requires_confirmation'] ?? false) {
             return response()->json($result);
@@ -94,12 +99,24 @@ class AttendanceController extends Controller
     }
 
     /** The device's wall-clock time with its UTC offset, as sent by the app. */
-    private function deviceTime(?string $value): ?CarbonInterface
+    private function deviceTime(?string $value, bool $replayed = false): ?CarbonInterface
     {
         if ($value === null) {
             return null;
         }
         $time = CarbonImmutable::parse($value);
+        if ($replayed) {
+            // A scan kept offline is trusted up to a week back. Beyond that it
+            // is refused rather than quietly dated today: the person records
+            // it by hand with the right day.
+            if ($time->lessThan(now()->subDays(AttendanceDomainService::REPLAY_DAYS))) {
+                throw ValidationException::withMessages([
+                    'scanned_at' => 'مرّ وقت طويل على هذا المسح. سجّل الحضور يدوياً بالتاريخ الصحيح.',
+                ]);
+            }
+
+            return $time->greaterThan(now()->addHours(36)) ? null : $time;
+        }
 
         return abs($time->diffInHours(now(), true)) > 36 ? null : $time;
     }

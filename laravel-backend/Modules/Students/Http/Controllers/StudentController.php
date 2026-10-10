@@ -73,6 +73,31 @@ class StudentController extends Controller
         return ['student_id' => $student->id, 'payload' => $student->ensureQrToken(), 'generated_at' => now()->toISOString()];
     }
 
+    /**
+     * Who each QR card belongs to, for staff phones. A phone keeps it so a
+     * desk with no connection can still greet the student by name; without
+     * it an offline scan can only say it was saved. Staff can already read
+     * any student's card one at a time, so this hands out nothing new, only
+     * in one request.
+     */
+    public function qrDirectory(Request $request)
+    {
+        abort_unless($request->user()->isAnyRole('admin', 'teacher'), 403);
+
+        $cards = [];
+        Student::query()->orderBy('id')->each(function (Student $student) use (&$cards): void {
+            $cards[] = [
+                'id' => $student->id,
+                'name' => $student->name,
+                'grade' => $student->grade,
+                'group' => $student->group,
+                'payload' => $student->ensureQrToken(),
+            ];
+        });
+
+        return ['generated_at' => now()->toISOString(), 'cards' => $cards];
+    }
+
     public function regenerateQr(Request $request, Student $student)
     {
         abort_unless($request->user()->isAnyRole('admin', 'teacher'), 403);
