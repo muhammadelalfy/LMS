@@ -4,6 +4,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Modules\Core\Http\Middleware\IdempotentRequests;
 use Modules\Tenancy\Http\Middleware\EnsureSchoolIsActive;
 use Modules\Tenancy\Http\Middleware\InitializeSchool;
 
@@ -27,6 +28,9 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->group('school', [
             InitializeSchool::class,
             EnsureSchoolIsActive::class,
+            // Last, so the school's cache prefix is already in place: a write
+            // sent again with the same Idempotency-Key is answered, not repeated.
+            IdempotentRequests::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

@@ -13,6 +13,9 @@ use Illuminate\Validation\ValidationException;
 
 final class AttendanceDomainService
 {
+    /** How many days back a scan the phone kept offline is still accepted. */
+    public const REPLAY_DAYS = 7;
+
     public function query(): Builder
     {
         return AttendanceRecord::query()->with('student')->latest('date_at');
@@ -53,6 +56,7 @@ final class AttendanceDomainService
         int $recordedBy,
         ?CarbonInterface $localTime = null,
         bool $confirmedOutsideSession = false,
+        bool $replayed = false,
     ): array
     {
         $student = Student::where('qr_token', $payload)->first();
@@ -60,7 +64,9 @@ final class AttendanceDomainService
             throw ValidationException::withMessages(['payload' => 'رمز QR غير صالح لهذا الطالب.']);
         }
         // A wildly wrong device clock must not move attendance to another day.
-        if ($localTime === null || abs($localTime->diffInHours(now(), true)) > 36) {
+        // A replayed scan was already checked against its own, longer window.
+        $window = $replayed ? self::REPLAY_DAYS * 24 : 36;
+        if ($localTime === null || abs($localTime->diffInHours(now(), true)) > $window) {
             $localTime = now();
         }
         $group = ClassGroup::query()->where('name', $student->group)->first();

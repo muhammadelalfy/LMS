@@ -8,6 +8,8 @@ use Modules\Payments\Models\Payment;
 use Modules\Students\Models\Student;
 use Modules\Payments\Services\StudentLedger;
 use Modules\Notifications\Services\StudentNotifier;
+use Carbon\CarbonImmutable;
+use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -20,6 +22,9 @@ use Illuminate\Validation\ValidationException;
 class QrCheckinController extends Controller
 {
     use AuthorizesStaff;
+
+    /** How many days back a payment the phone kept offline is dated to its own time. */
+    private const REPLAY_DAYS = 30;
 
     public function __construct(
         private readonly StudentLedger $ledger,
@@ -55,14 +60,16 @@ class QrCheckinController extends Controller
             'payment_id' => 'nullable|integer',
             'amount' => 'required_without:payment_id|nullable|integer|min:1',
             'note' => 'nullable|string|max:255',
+            'occurred_at' => 'nullable|date',
         ]);
 
         $student = Student::query()->where('qr_token', $data['payload'])->first();
         if (! $student) {
             throw ValidationException::withMessages(['payload' => 'رمز QR غير صالح لهذا الطالب.']);
         }
+        $when = $this->receivedAt($request, $data['occurred_at'] ?? null);
 
-        $payment = DB::transaction(function () use ($data, $student, $request): Payment {
+        $payment = DB::transaction(function () use ($data, $student, $request, $when): Payment {
             if (! empty($data['payment_id'])) {
                 $payment = Payment::query()
                     ->whereKey($data['payment_id'])
@@ -77,7 +84,7 @@ class QrCheckinController extends Controller
                 }
                 $payment->update([
                     'status' => 'paid',
-                    'paid_at' => now(),
+                    'paid_at' => $when,
                     'note' => trim(($payment->note ? $payment->note.' · ' : '').($data['note'] ?? 'تأكيد عبر QR')),
                 ]);
 
@@ -88,8 +95,8 @@ class QrCheckinController extends Controller
                 'student_id' => $student->id,
                 'amount' => $data['amount'],
                 'status' => 'paid',
-                'due_at' => now(),
-                'paid_at' => now(),
+                'due_at' => $when,
+                'paid_at' => $when,
                 'note' => $data['note'] ?? 'تحصيل عبر QR',
                 'recorded_by' => $request->user()->id,
             ]);
@@ -107,5 +114,22 @@ class QrCheckinController extends Controller
             'student' => ['id' => $student->id, 'name' => $student->name, 'grade' => $student->grade, 'group' => $student->group],
             ...$this->ledger->outstanding($student),
         ], $payment->wasRecentlyCreated ? 201 : 200);
+    }
+
+    /**
+     * When the money changed hands. A payment the phone kept while offline and
+     * is now sending (X-Offline-Replay) carries the time it was taken; any
+     * other request, or a time that cannot be right, is stamped now.
+     */
+    private function receivedAt(Request $request, ?string $value): CarbonInterface
+    {
+        if ($value === null || $request->header('X-Offline-Replay') !== '1') {
+            return now();
+        }
+        $time = CarbonImmutable::parse($value);
+        $tooOld = $time->lessThan(now()->subDays(self::REPLAY_DAYS));
+        $inTheFuture = $time->greaterThan(now()->addHours(36));
+
+        return $tooOld || $inTheFuture ? now() : $time;
     }
 }
