@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\User;
-use App\Models\Worksheet;
+use Modules\Auth\Models\User;
+use Modules\Learning\Models\Worksheet;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<Worksheet> */

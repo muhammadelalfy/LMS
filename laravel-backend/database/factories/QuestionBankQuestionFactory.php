@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\QuestionBankQuestion;
-use App\Models\User;
+use Modules\Exams\Models\QuestionBankQuestion;
+use Modules\Auth\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<QuestionBankQuestion> */

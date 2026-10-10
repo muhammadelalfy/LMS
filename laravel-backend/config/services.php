@@ -63,4 +63,58 @@ return [
         'credentials' => env('FIREBASE_CREDENTIALS'),
     ],
 
+    // SMS through a local aggregator's HTTP API. The gateway receives a JSON
+    // POST {"to": "+20…", "from": sender, "message": text} with the token as
+    // a bearer header, answers with {"id": …}, and reports delivery to
+    // POST /api/webhooks/sms with the header `X-Webhook-Secret`. Adjust
+    // Modules\Notifications\Services\SmsGatewayChannel for a vendor whose API
+    // differs.
+    'sms' => [
+        'url' => env('SMS_GATEWAY_URL'),
+        'token' => env('SMS_GATEWAY_TOKEN'),
+        'sender' => env('SMS_SENDER', 'Zewal'),
+        'webhook_secret' => env('SMS_WEBHOOK_SECRET'),
+    ],
+
+    // WhatsApp Business Cloud API (Meta). Messages outside a 24-hour customer
+    // window must use an approved template; `templates` maps a notice category
+    // to its approved template name (body parameters: title, text).
+    'whatsapp' => [
+        'token' => env('WHATSAPP_TOKEN'),
+        'phone_number_id' => env('WHATSAPP_PHONE_NUMBER_ID'),
+        'graph_url' => env('WHATSAPP_GRAPH_URL', 'https://graph.facebook.com/v20.0'),
+        'app_secret' => env('WHATSAPP_APP_SECRET'),
+        'verify_token' => env('WHATSAPP_VERIFY_TOKEN'),
+        'language' => env('WHATSAPP_TEMPLATE_LANGUAGE', 'ar'),
+        'templates' => [
+            'default' => env('WHATSAPP_TEMPLATE_DEFAULT', 'school_update'),
+        ],
+    ],
+
+    // Built-in voice and video: a self-hosted LiveKit server (open source, no
+    // per-minute fee). `url` is the wss:// address the apps connect to; the
+    // key and secret sign join tokens and verify its webhooks.
+    'livekit' => [
+        'url' => env('LIVEKIT_URL'),
+        'key' => env('LIVEKIT_API_KEY'),
+        'secret' => env('LIVEKIT_API_SECRET'),
+        'token_ttl' => (int) env('LIVEKIT_TOKEN_TTL', 600),
+    ],
+
+    // Lets a teacher create Google Meet / Zoom meetings from the app. Register
+    // an OAuth client with each provider and set its redirect to
+    // https://<server>/api/integrations/<google|zoom>/callback. Without these
+    // the teacher pastes a meeting link instead.
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => env('GOOGLE_REDIRECT_URI'),
+    ],
+
+    'zoom' => [
+        'client_id' => env('ZOOM_CLIENT_ID'),
+        'client_secret' => env('ZOOM_CLIENT_SECRET'),
+        'redirect' => env('ZOOM_REDIRECT_URI'),
+    ],
+
 ];

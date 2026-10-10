@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\ExamDepartment;
-use App\Models\ExamTemplate;
-use App\Models\User;
+use Modules\Exams\Models\ExamDepartment;
+use Modules\Exams\Models\ExamTemplate;
+use Modules\Auth\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<ExamTemplate> */

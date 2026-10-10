@@ -2,25 +2,25 @@
 
 namespace Database\Seeders;
 
-use App\Models\AttendanceRecord;
-use App\Models\ClassGroup;
-use App\Notifications\SchoolUpdateNotification;
-use App\Models\ExamDepartment;
-use App\Models\ExamQuestion;
-use App\Models\ExamResult;
-use App\Models\ExamSession;
-use App\Models\ExamSessionAnswer;
-use App\Models\ExamSessionEvent;
-use App\Models\ExamTemplate;
-use App\Models\Payment;
-use App\Models\QuestionBankQuestion;
-use App\Models\PluginProduct;
-use App\Models\PluginPurchase;
-use App\Models\Student;
-use App\Models\StudentAccount;
-use App\Models\User;
-use App\Models\Worksheet;
-use App\Models\WorksheetAssignment;
+use Modules\Attendance\Models\AttendanceRecord;
+use Modules\Groups\Models\ClassGroup;
+use Modules\Notifications\Notifications\SchoolUpdateNotification;
+use Modules\Exams\Models\ExamDepartment;
+use Modules\Exams\Models\ExamQuestion;
+use Modules\Exams\Models\ExamResult;
+use Modules\Exams\Models\ExamSession;
+use Modules\Exams\Models\ExamSessionAnswer;
+use Modules\Exams\Models\ExamSessionEvent;
+use Modules\Exams\Models\ExamTemplate;
+use Modules\Payments\Models\Payment;
+use Modules\Exams\Models\QuestionBankQuestion;
+use Modules\PluginStore\Models\PluginProduct;
+use Modules\PluginStore\Models\PluginPurchase;
+use Modules\Students\Models\Student;
+use Modules\Students\Models\StudentAccount;
+use Modules\Auth\Models\User;
+use Modules\Learning\Models\Worksheet;
+use Modules\Learning\Models\WorksheetAssignment;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use RuntimeException;
@@ -55,7 +55,7 @@ class ArabicDemoSeeder extends Seeder
             ['group' => 'المجموعة الأولى', 'title' => 'حل تمارين المعادلات صفحة ٤٢', 'details' => 'من التمرين ١ إلى ٨.', 'due_on' => now()->toDateString()],
             ['group' => 'المجموعة الثانية', 'title' => 'مراجعة النسبة والتناسب', 'details' => null, 'due_on' => now()->toDateString()],
         ] as $duty) {
-            \App\Models\Duty::updateOrCreate(['group' => $duty['group'], 'title' => $duty['title']], [...$duty, 'created_by' => $teacher->id]);
+            \Modules\Learning\Models\Duty::updateOrCreate(['group' => $duty['group'], 'title' => $duty['title']], [...$duty, 'created_by' => $teacher->id]);
         }
         $this->seedExams($teacher, $students);
         $this->seedQuestionBank($teacher);

@@ -2,6 +2,24 @@
 
 This directory contains the Laravel 13 API for the Al Zewal Arabic mathematics LMS. It uses Eloquent models and migrations for MySQL and Laravel Sanctum for token-based authentication.
 
+## Schools and modules
+
+One installation serves many schools. **Each school has its own database** and is reached at its own subdomain (`alnour.example.com`); the platform's own tables (schools, addresses, cache, jobs) live in the central database. Business code is split into feature modules under `Modules/` (`Auth`, `Students`, `Groups`, `Attendance`, `Payments`, `Exams`, `Learning`, `Notifications`, `Chat`, `Calls`, `Reports`, `PluginStore`, `Tenancy`), each with its own models, controllers, routes, migrations (`Database/Migrations`) and tests (`Tests`). Design: `zewal-mobile/docs/SYSTEM_DESIGN.md` §12.
+
+```bash
+php artisan migrate                                         # central tables only
+php artisan school:create alnour --name="مدرسة النور" --plan=basic --admin-email=owner@alnour.example
+php artisan school:adopt alnour --database=database.sqlite  # or: keep an existing single-school database as a school
+php artisan school:list
+php artisan school:status alnour suspended                  # turn a school away (or `active`)
+php artisan tenants:migrate                                 # run a release's migrations in every school
+```
+
+The operator can do the same over HTTP on a central address (`CENTRAL_DOMAINS`) with `Authorization: Bearer $CENTRAL_API_TOKEN`: `GET/POST /api/central/schools`, `PATCH/DELETE /api/central/schools/{id}`, `POST /api/central/schools/{id}/domains`. Without a token configured these routes do not exist.
+
+For local development set `DEFAULT_SCHOOL=demo` so a plain `http://127.0.0.1:8000` serves that school (ignored outside `local` and `testing`), and use `php artisan lms:reset-development-data` to open it with the Arabic demo data.
+
+Periodic work is queued once per active school (`schools:dispatch <command>` in `routes/console.php`) and needs a running queue worker besides `schedule:run`.
 ## Domain model
 
 The backend models users, students, student accounts, worksheets, worksheet assignments, attendance records, exam results, and payments. A worksheet assignment belongs to exactly one worksheet and student, and its lifecycle is `assigned`, `in_progress`, `submitted`, or `graded`.
@@ -35,7 +53,7 @@ The current report endpoint is `/api/reports/summary`; it aggregates student cou
 
 ## Local verification
 
-The feature suite runs against an in-memory SQLite database so it does not require local production credentials:
+The feature suite runs against SQLite (the central database in memory, and every school in a throwaway file) so it does not require local production credentials; every test runs inside a school:
 
 ```bash
 php artisan test --compact

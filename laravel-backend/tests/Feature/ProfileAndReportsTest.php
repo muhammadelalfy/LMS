@@ -2,10 +2,10 @@
 
 namespace Tests\Feature;
 
-use App\Models\AttendanceRecord;
-use App\Models\ExamResult;
-use App\Models\Student;
-use App\Models\User;
+use Modules\Attendance\Models\AttendanceRecord;
+use Modules\Exams\Models\ExamResult;
+use Modules\Students\Models\Student;
+use Modules\Auth\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;

@@ -41,9 +41,10 @@ return [
 
         'database' => [
             'driver' => 'database',
-            'connection' => env('DB_CACHE_CONNECTION'),
+            // Cache and locks are central; each school's keys carry its id.
+            'connection' => env('DB_CACHE_CONNECTION', env('DB_CONNECTION', 'sqlite')),
             'table' => env('DB_CACHE_TABLE', 'cache'),
-            'lock_connection' => env('DB_CACHE_LOCK_CONNECTION'),
+            'lock_connection' => env('DB_CACHE_LOCK_CONNECTION', env('DB_CONNECTION', 'sqlite')),
             'lock_table' => env('DB_CACHE_LOCK_TABLE'),
         ],
 

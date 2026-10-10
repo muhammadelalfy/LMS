@@ -2,9 +2,9 @@
 
 namespace Modules\Attendance\Services;
 
-use App\Models\AttendanceRecord;
-use App\Models\ClassGroup;
-use App\Models\Student;
+use Modules\Attendance\Models\AttendanceRecord;
+use Modules\Groups\Models\ClassGroup;
+use Modules\Students\Models\Student;
 use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;

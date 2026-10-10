@@ -1,0 +1,14 @@
+{
+  "name": "Chat",
+  "alias": "chat",
+  "description": "Chat between management, teachers and students, over REST and WebSockets.",
+  "keywords": [
+    "chat"
+  ],
+  "priority": 10,
+  "providers": [
+    "Modules\\Chat\\Providers\\ChatServiceProvider"
+  ],
+  "files": [],
+  "version": "1.0.0"
+}

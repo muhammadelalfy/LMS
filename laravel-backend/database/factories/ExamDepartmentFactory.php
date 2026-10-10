@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\ExamDepartment;
+use Modules\Exams\Models\ExamDepartment;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<ExamDepartment> */

@@ -1,0 +1,12 @@
+{
+  "name": "Core",
+  "alias": "core",
+  "description": "Shared kernel: base controller helpers and small support classes.",
+  "keywords": [
+    "core"
+  ],
+  "priority": 1,
+  "providers": [],
+  "files": [],
+  "version": "1.0.0"
+}

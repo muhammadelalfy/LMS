@@ -1,8 +1,10 @@
 {
   "name": "Attendance",
   "alias": "attendance",
-  "description": "Attendance domain services for the Zewal LMS.",
-  "keywords": ["attendance", "qr", "reports"],
+  "description": "Attendance records, the QR desk, automatic absences and the attendance domain service.",
+  "keywords": [
+    "attendance"
+  ],
   "priority": 10,
   "providers": [
     "Modules\\Attendance\\Providers\\AttendanceServiceProvider"

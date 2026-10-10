@@ -2,14 +2,15 @@
 
 namespace App\Console\Commands;
 
-use App\Models\User;
 use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Hash;
+use Modules\Auth\Models\User;
+use Modules\Tenancy\Models\School;
 
-#[Signature('lms:create-development-admin {--email=admin@local.test} {--password=AdminLocal!2026}')]
-#[Description('Create or update a local-development-only LMS administrator')]
+#[Signature('lms:create-development-admin {--school=demo : the school to add the administrator to} {--email=admin@local.test} {--password=AdminLocal!2026}')]
+#[Description('Create or update a local-development-only administrator in a school')]
 class CreateDevelopmentAdmin extends Command
 {
     public function handle(): int
@@ -27,7 +28,13 @@ class CreateDevelopmentAdmin extends Command
             return self::FAILURE;
         }
 
-        $admin = User::updateOrCreate(
+        $school = School::query()->find((string) $this->option('school'));
+        if ($school === null) {
+            $this->error("There is no school '{$this->option('school')}'. Open one first: php artisan school:create <slug> --demo");
+            return self::FAILURE;
+        }
+
+        $admin = $school->run(fn () => User::updateOrCreate(
             ['email' => $email],
             [
                 'name' => 'مدير التطوير',
@@ -35,9 +42,9 @@ class CreateDevelopmentAdmin extends Command
                 'role' => 'admin',
                 'email_verified_at' => now(),
             ],
-        );
+        ));
 
-        $this->info('Local development admin is ready.');
+        $this->info("Local development admin is ready in school '{$school->id}'.");
         $this->line("Email: {$admin->email}");
         $this->line("Password: {$password}");
         $this->warn('Do not use these credentials in production.');

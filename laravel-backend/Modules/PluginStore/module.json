@@ -1,0 +1,14 @@
+{
+  "name": "PluginStore",
+  "alias": "pluginstore",
+  "description": "Plugin store: browse, buy, install and remove add-on modules.",
+  "keywords": [
+    "pluginstore"
+  ],
+  "priority": 10,
+  "providers": [
+    "Modules\\PluginStore\\Providers\\PluginStoreServiceProvider"
+  ],
+  "files": [],
+  "version": "1.0.0"
+}

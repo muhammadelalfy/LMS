@@ -1,7 +1,9 @@
 <?php
 
-use App\Services\AbsenceSweeper;
-use App\Services\DutyReminders;
+use Modules\Attendance\Services\AbsenceSweeper;
+use Modules\Calls\Services\CallService;
+use Modules\Learning\Services\DutyReminders;
+use Modules\Groups\Services\SessionReminders;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -18,6 +20,17 @@ Artisan::command('duties:send-reminders', function (DutyReminders $reminders) {
     $this->info('Duties reminded: '.$reminders->send());
 })->purpose('Remind each group of the duties due on its lesson day');
 
+Artisan::command('sessions:send-reminders', function (SessionReminders $reminders) {
+    $this->info('Groups reminded: '.$reminders->send());
+})->purpose('Tell students and teachers that a session starts soon');
+
+Artisan::command('calls:expire', function (CallService $calls) {
+    $this->info('Missed calls: '.$calls->expireUnanswered());
+})->purpose('Mark calls nobody answered as missed and tell the person called');
+
 // Needs the standard cron entry: * * * * * php artisan schedule:run
-Schedule::command('attendance:sweep-absences')->everyFiveMinutes()->withoutOverlapping();
-Schedule::command('duties:send-reminders')->everyFiveMinutes()->withoutOverlapping();
+// Each task is queued once per active school and runs inside that school's database.
+Schedule::command('schools:dispatch attendance:sweep-absences')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('schools:dispatch duties:send-reminders')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('schools:dispatch sessions:send-reminders')->everyFiveMinutes()->withoutOverlapping();
+Schedule::command('schools:dispatch calls:expire')->everyMinute()->withoutOverlapping();

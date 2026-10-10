@@ -1,0 +1,14 @@
+{
+  "name": "Notifications",
+  "alias": "notifications",
+  "description": "Inbox, push, WhatsApp and SMS channels, preferences, phone verification and staff messages.",
+  "keywords": [
+    "notifications"
+  ],
+  "priority": 10,
+  "providers": [
+    "Modules\\Notifications\\Providers\\NotificationsServiceProvider"
+  ],
+  "files": [],
+  "version": "1.0.0"
+}

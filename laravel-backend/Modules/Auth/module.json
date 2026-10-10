@@ -1,0 +1,14 @@
+{
+  "name": "Auth",
+  "alias": "auth",
+  "description": "Accounts, role-specific sign-in, profile and password.",
+  "keywords": [
+    "auth"
+  ],
+  "priority": 10,
+  "providers": [
+    "Modules\\Auth\\Providers\\AuthServiceProvider"
+  ],
+  "files": [],
+  "version": "1.0.0"
+}

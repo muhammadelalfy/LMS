@@ -2,11 +2,11 @@
 
 namespace Tests\Feature;
 
-use App\Models\ExamTemplate;
-use App\Models\Student;
-use App\Models\StudentAccount;
-use App\Models\User;
-use App\Models\Worksheet;
+use Modules\Exams\Models\ExamTemplate;
+use Modules\Students\Models\Student;
+use Modules\Students\Models\StudentAccount;
+use Modules\Auth\Models\User;
+use Modules\Learning\Models\Worksheet;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
 use Laravel\Sanctum\Sanctum;

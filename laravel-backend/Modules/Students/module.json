@@ -1,0 +1,14 @@
+{
+  "name": "Students",
+  "alias": "students",
+  "description": "Students, their accounts, QR cards and face templates.",
+  "keywords": [
+    "students"
+  ],
+  "priority": 10,
+  "providers": [
+    "Modules\\Students\\Providers\\StudentsServiceProvider"
+  ],
+  "files": [],
+  "version": "1.0.0"
+}

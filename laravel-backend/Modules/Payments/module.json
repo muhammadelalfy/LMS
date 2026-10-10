@@ -1,0 +1,14 @@
+{
+  "name": "Payments",
+  "alias": "payments",
+  "description": "Fees, QR payment desk, and online payments through Fawry.",
+  "keywords": [
+    "payments"
+  ],
+  "priority": 10,
+  "providers": [
+    "Modules\\Payments\\Providers\\PaymentsServiceProvider"
+  ],
+  "files": [],
+  "version": "1.0.0"
+}

@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\ExamSession;
-use App\Models\ExamSessionEvent;
+use Modules\Exams\Models\ExamSession;
+use Modules\Exams\Models\ExamSessionEvent;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /** @extends Factory<ExamSessionEvent> */
