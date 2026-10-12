@@ -5,6 +5,7 @@ namespace Modules\Students\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Modules\Students\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class StudentController extends Controller
 {
@@ -39,7 +40,15 @@ class StudentController extends Controller
             ], 402);
         }
 
-        return response()->json(Student::create($data), 201);
+        // A staff phone makes the card's secret itself so the card works before
+        // the student reaches the server; the server only checks its shape.
+        $student = new Student($data);
+        if ($token = $this->cardToken($request)) {
+            $student->qr_token = $token;
+        }
+        $student->save();
+
+        return response()->json($student, 201);
     }
 
     public function show(Request $request, Student $student)
@@ -102,7 +111,10 @@ class StudentController extends Controller
     {
         abort_unless($request->user()->isAnyRole('admin', 'teacher'), 403);
 
-        return ['student_id' => $student->id, 'payload' => $student->regenerateQrToken(), 'generated_at' => now()->toISOString()];
+        // A phone may bring the new secret it already printed on the card.
+        $token = $this->cardToken($request, 'payload', $student->id);
+
+        return ['student_id' => $student->id, 'payload' => $student->regenerateQrToken($token), 'generated_at' => now()->toISOString()];
     }
 
     private function authorizeStudentAccess(Request $request, Student $student): void
@@ -111,6 +123,26 @@ class StudentController extends Controller
             $account = $request->user()->studentAccount;
             abort_unless($account && $account->student_id === $student->id, 403);
         }
+    }
+
+    /**
+     * The card secret a phone supplied, or null to let the server make one.
+     * It must look like the server's own (64 letters and digits) and not be
+     * another student's, or the request is refused.
+     */
+    private function cardToken(Request $request, string $field = 'qr_token', ?int $except = null): ?string
+    {
+        $data = $request->validate([
+            $field => [
+                'nullable',
+                'string',
+                'size:64',
+                'regex:/^[A-Za-z0-9]{64}$/',
+                Rule::unique('students', 'qr_token')->ignore($except),
+            ],
+        ]);
+
+        return $data[$field] ?? null;
     }
 
     private function validatedData(Request $request, bool $partial = false): array
