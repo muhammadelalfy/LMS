@@ -37,7 +37,7 @@ return [
     'default_school' => env('DEFAULT_SCHOOL'),
 
     // A new school is reachable at <slug>.<base_domain>.
-    'base_domain' => env('TENANT_BASE_DOMAIN', 'zewal.test'),
+    'base_domain' => env('TENANT_BASE_DOMAIN', 'mudarisy.test'),
 
     // Operator API token (Authorization: Bearer …) for /api/central/*.
     'operator_token' => env('CENTRAL_API_TOKEN'),

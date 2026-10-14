@@ -26,7 +26,7 @@ class SchoolIsolationTest extends TestCase
     private function enter(School $school): void
     {
         tenancy()->initialize($school);
-        URL::forceRootUrl("http://{$school->id}.zewal.test");
+        URL::forceRootUrl("http://{$school->id}.mudarisy.test");
     }
 
     public function test_each_school_keeps_its_own_rows(): void
@@ -99,7 +99,7 @@ class SchoolIsolationTest extends TestCase
 
     public function test_an_address_that_belongs_to_no_school_is_answered(): void
     {
-        URL::forceRootUrl('http://nobody.zewal.test');
+        URL::forceRootUrl('http://nobody.mudarisy.test');
 
         $this->getJson('/api/auth/me')->assertNotFound()->assertJsonPath('code', 'unknown_school');
     }

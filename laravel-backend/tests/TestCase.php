@@ -19,7 +19,7 @@ abstract class TestCase extends BaseTestCase
 {
     use RefreshDatabase;
 
-    /** The school the test runs in; its address is demo.zewal.test. */
+    /** The school the test runs in; its address is demo.mudarisy.test. */
     protected School $school;
 
     /** @var list<string> */
@@ -62,11 +62,11 @@ abstract class TestCase extends BaseTestCase
         $school = new School(['id' => $slug, 'name' => "مدرسة {$slug}", 'plan' => $plan, 'status' => School::ACTIVE]);
         $school->setInternal('db_name', '../storage/framework/testing/'.basename($file));
         $school->save();
-        $school->domains()->create(['domain' => "{$slug}.zewal.test"]);
+        $school->domains()->create(['domain' => "{$slug}.mudarisy.test"]);
 
         tenancy()->initialize($school);
         Artisan::call('migrate', config('tenancy.migration_parameters'));
-        URL::forceRootUrl("http://{$slug}.zewal.test");
+        URL::forceRootUrl("http://{$slug}.mudarisy.test");
 
         return $school;
     }

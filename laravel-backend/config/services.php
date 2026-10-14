@@ -72,7 +72,7 @@ return [
     'sms' => [
         'url' => env('SMS_GATEWAY_URL'),
         'token' => env('SMS_GATEWAY_TOKEN'),
-        'sender' => env('SMS_SENDER', 'Zewal'),
+        'sender' => env('SMS_SENDER', 'Mudarisy'),
         'webhook_secret' => env('SMS_WEBHOOK_SECRET'),
     ],
 
