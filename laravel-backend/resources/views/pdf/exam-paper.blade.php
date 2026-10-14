@@ -9,7 +9,7 @@
         .paper { position: relative; overflow: hidden; padding: 20px 22px; border: 1px solid #d7cbb9; border-radius: 14px; }
         .watermark { position: fixed; z-index: -1; top: 38%; right: 12%; width: 76%; text-align: center; color: #b87945; font-size: 48px; font-weight: bold; opacity: {{ $watermarkOpacity }}; transform: rotate(-28deg); white-space: nowrap; }
         .watermark-small { position: absolute; z-index: -1; top: 48%; right: 12%; width: 76%; text-align: center; color: #b87945; font-size: 28px; font-weight: bold; opacity: {{ min($watermarkOpacity * 0.8, 0.4) }}; transform: rotate(-28deg); white-space: nowrap; }
-        .brand { color: #ae7650; font-size: 9px; font-weight: bold; letter-spacing: 1px; }
+        .brand { color: #B08420; font-size: 9px; font-weight: bold; letter-spacing: 1px; }
         h1 { margin: 4px 0; font-size: 20px; color: #173f46; }
         .muted { color: #776f64; }
         .header { border-bottom: 2px solid #16846d; padding-bottom: 12px; margin-bottom: 14px; }
@@ -43,7 +43,7 @@
             <table class="header-table">
                 <tr>
                     <td>
-                        <div class="brand">زويل التعليمية</div>
+                        <div class="brand"><img src="{{ asset('brand/mudarisy_logo_navy.png') }}" alt="مدرسي" style="height: 38px;"></div>
                         <h1>{{ $template->title }}</h1>
                         <div class="muted">{{ $template->department?->name ?: 'اختبار' }}</div>
                     </td>

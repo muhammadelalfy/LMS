@@ -22,6 +22,12 @@ return Application::configure(basePath: dirname(__DIR__))
         ['prefix' => 'api', 'middleware' => ['api', 'school', 'auth:sanctum']],
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Behind a load balancer or tunnel the request arrives as plain http:
+        // trust the proxy's forwarded scheme and host when it is configured
+        // (TRUSTED_PROXIES=* or a comma-separated list of addresses).
+        if ($proxies = env('TRUSTED_PROXIES')) {
+            $middleware->trustProxies(at: $proxies === '*' ? '*' : array_map('trim', explode(',', $proxies)));
+        }
         $middleware->redirectGuestsTo(fn (Request $request) => $request->is('api/*') ? null : '/login');
         // Everything a school's people use: find the school from the address
         // (never on a central domain), and turn away a locked school.

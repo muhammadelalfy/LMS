@@ -1,6 +1,6 @@
 <style>
 body { font-family: dejavusans; color: #193f45; font-size: 10pt; direction: rtl; }
-.brand { color: #ae7650; font-size: 9pt; font-weight: bold; }
+.brand { color: #B08420; font-size: 9pt; font-weight: bold; }
 h1 { color: #173f46; font-size: 18pt; margin: 3pt 0; }
 .muted { color: #776f64; }
 .header { border-bottom: 2px solid #16846d; padding-bottom: 8pt; margin-bottom: 10pt; }
@@ -20,7 +20,7 @@ h1 { color: #173f46; font-size: 18pt; margin: 3pt 0; }
 <div class="watermark">{{ $watermark }}</div>
 <table class="header" cellpadding="2" cellspacing="0" width="100%">
     <tr>
-        <td width="58%"><span class="brand">زويل التعليمية</span><h1>{{ $template->title }}</h1><span class="muted">{{ $template->department?->name ?: 'اختبار' }}</span></td>
+        <td width="58%"><img src="{{ public_path('brand/mudarisy_logo_navy.png') }}" width="110"><h1>{{ $template->title }}</h1><span class="muted">{{ $template->department?->name ?: 'اختبار' }}</span></td>
         <td width="42%" class="meta"><b>الصف:</b> {{ $template->grade ?: 'كل الصفوف' }}<br/><b>المدة:</b> {{ $template->duration_minutes }} دقيقة<br/><b>عدد الأسئلة:</b> {{ $template->questions->count() }}</td>
     </tr>
 </table>
