@@ -11,7 +11,7 @@
 */
 
 return [
-    'name' => env('LANDING_NAME', 'Mudarisy'),
+    'name' => env('LANDING_NAME', 'مُدرّسى'),
     'android_url' => env('LANDING_ANDROID_URL', ''),
     'ios_url' => env('LANDING_IOS_URL', ''),
     'web_url' => env('LANDING_WEB_URL', ''),

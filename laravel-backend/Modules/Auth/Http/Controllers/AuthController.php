@@ -102,6 +102,7 @@ class AuthController extends Controller
 
         $user = $query->first();
         abort_unless($user && Hash::check($data['password'], $user->password), 422, 'بيانات الدخول غير صحيحة لهذا النوع من الحسابات.');
+        abort_unless($user->isUsable(), 403, 'هذا الحساب موقوف أو انتهت صلاحيته. تواصل مع الإدارة.');
 
         return $this->tokenResponse($user, $role);
     }

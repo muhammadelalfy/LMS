@@ -4,13 +4,13 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>{{ config('landing.name') }} — منصة إدارة المدارس والتعليم</title>
-    <meta name="description" content="مدرسي منصة عربية لإدارة المدارس والأكاديميات: الحضور بالـQR والوجه، الاختبارات، المحادثات والمكالمات، المدفوعات والتقارير، وتطبيق للجوال.">
+    <meta name="description" content="مُدرّسى منصة عربية لإدارة المدارس والأكاديميات: الحضور بالـQR والوجه، الاختبارات، المحادثات والمكالمات، المدفوعات والتقارير، وتطبيق للجوال.">
     <meta name="theme-color" content="#0b1d3a">
     <link rel="icon" type="image/png" sizes="64x64" href="{{ asset('brand/favicon.png') }}">
     <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('brand/favicon-32.png') }}">
     <link rel="apple-touch-icon" href="{{ asset('brand/apple-touch-icon.png') }}">
     <meta property="og:type" content="website">
-    <meta property="og:title" content="{{ config('landing.name') }} — مدرسي">
+    <meta property="og:title" content="{{ config('landing.name') }} — منصة إدارة المدارس والتعليم">
     <meta property="og:description" content="لكل معلّم وطالب غاية — منصة عربية لإدارة المدارس والأكاديميات.">
     <meta property="og:image" content="{{ asset('brand/og-image.png') }}">
     <meta name="twitter:card" content="summary_large_image">
@@ -353,7 +353,7 @@
     <div class="wrap">
         <div class="cols">
             <div>
-                <img class="brand-logo-footer" src="{{ asset('brand/mudarisy_logo_reversed.png') }}" alt="{{ $name }} — مدرسي" width="240" height="180">
+                <img class="brand-logo-footer" src="{{ asset('brand/mudarisy_logo_reversed.png') }}" alt="{{ $name }} — مُدرّسى" width="240" height="180">
                 <p>منصة عربية لإدارة المدارس والأكاديميات ومراكز التعليم.</p>
             </div>
             <div>

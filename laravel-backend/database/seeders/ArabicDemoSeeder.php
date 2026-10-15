@@ -40,7 +40,7 @@ class ArabicDemoSeeder extends Seeder
             throw new RuntimeException('ArabicDemoSeeder is restricted to local and testing environments.');
         }
 
-        $admin = $this->user(self::ADMIN_EMAIL, 'مدير مدرسي', 'admin', self::ADMIN_PASSWORD);
+        $admin = $this->user(self::ADMIN_EMAIL, 'مدير مُدرّسى', 'admin', self::ADMIN_PASSWORD);
         $teacher = $this->user(self::TEACHER_EMAIL, 'أستاذ المادة', 'teacher', self::TEACHER_PASSWORD);
         $students = $this->seedStudents();
         // Weekly timetables (ISO weekdays: 6 = Saturday … 4 = Thursday).
@@ -74,7 +74,7 @@ class ArabicDemoSeeder extends Seeder
             StudentAccount::updateOrCreate(['user_id' => $learner->id], ['student_id' => $student->id, 'relationship' => 'student']);
             foreach ([$parent, $learner] as $account) {
                 if (! $account->notifications()->exists()) {
-                    $account->notify(new SchoolUpdateNotification('مرحباً بك في مدرسي', 'تابع الحضور والواجبات والنتائج والمدفوعات من مكان واحد.', 'welcome'));
+                    $account->notify(new SchoolUpdateNotification('مرحباً بك في مُدرّسى', 'تابع الحضور والواجبات والنتائج والمدفوعات من مكان واحد.', 'welcome'));
                 }
             }
 
@@ -144,7 +144,7 @@ class ArabicDemoSeeder extends Seeder
                     'grade' => $templateData['grade'],
                     'duration_minutes' => 45,
                     'instructions' => 'اقرأ الأسئلة جيداً، واكتب خطوات الحل بوضوح قبل التسليم.',
-                    'watermark_text' => 'مدرسي · '.$templateData['grade'],
+                    'watermark_text' => 'مُدرّسى · '.$templateData['grade'],
                     'watermark_opacity' => 12,
                     'status' => $templateData['status'],
                 ],

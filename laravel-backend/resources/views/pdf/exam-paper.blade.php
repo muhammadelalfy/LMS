@@ -43,7 +43,7 @@
             <table class="header-table">
                 <tr>
                     <td>
-                        <div class="brand"><img src="{{ asset('brand/mudarisy_logo_navy.png') }}" alt="مدرسي" style="height: 38px;"></div>
+                        <div class="brand"><img src="{{ asset('brand/mudarisy_logo_navy.png') }}" alt="مُدرّسى" style="height: 38px;"></div>
                         <h1>{{ $template->title }}</h1>
                         <div class="muted">{{ $template->department?->name ?: 'اختبار' }}</div>
                     </td>

@@ -53,7 +53,7 @@ class IntegrationController extends Controller
         return response(
             '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             .'<body dir="rtl" style="font-family:sans-serif;text-align:center;padding:48px 16px">'
-            .'<h2>تم ربط الحساب</h2><p>يمكنك الآن العودة إلى تطبيق مدرسي.</p></body>',
+            .'<h2>تم ربط الحساب</h2><p>يمكنك الآن العودة إلى تطبيق مُدرّسى.</p></body>',
             200,
             ['Content-Type' => 'text/html; charset=utf-8'],
         );
