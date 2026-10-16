@@ -186,6 +186,7 @@
             .card { transition: none; }
         }
     </style>
+    <link rel="stylesheet" href="{{ asset('landing/motion.css') }}">
 </head>
 <body>
 @php
@@ -196,7 +197,8 @@
     $email = config('landing.contact_email');
 @endphp
 
-<header class="top">
+<div class="progress" id="progress" aria-hidden="true"></div>
+<header class="top" id="top-bar">
     <div class="wrap nav">
         <a class="brand-link" href="#top" aria-label="{{ $name }}">
             <img src="{{ asset('brand/mudarisy_mark_reversed.png') }}" alt="" width="36" height="46">
@@ -214,6 +216,8 @@
 
 <main id="top">
     <section class="hero">
+        <div class="grid-bg" aria-hidden="true"></div>
+        <div class="blob b1" aria-hidden="true"></div><div class="blob b2" aria-hidden="true"></div><div class="blob b3" aria-hidden="true"></div>
         <div class="wrap hero-grid">
             <div>
                 <span class="eyebrow">منصة تعليمية عربية متكاملة</span>
@@ -378,5 +382,8 @@
         <div class="copy">© {{ date('Y') }} {{ $name }}. جميع الحقوق محفوظة.</div>
     </div>
 </footer>
+<script src="{{ asset('vendor/gsap/gsap.min.js') }}"></script>
+<script src="{{ asset('vendor/gsap/ScrollTrigger.min.js') }}"></script>
+<script src="{{ asset('landing/motion.js') }}"></script>
 </body>
 </html>
