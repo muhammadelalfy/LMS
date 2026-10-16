@@ -109,6 +109,14 @@ class AuthController extends Controller
 
     private function tokenResponse(User $user, ?string $loginType = null): array
     {
+        if ($user->expires_at !== null) {
+            // A trial account is signed in on a few devices at most: the
+            // newest sign-ins stay.
+            $keep = max(1, (int) config('trial.max_devices')) - 1;
+            $stale = $user->tokens()->latest('id')->skip($keep)->take(PHP_INT_MAX)->pluck('id');
+            $user->tokens()->whereIn('id', $stale)->delete();
+        }
+
         return [
             'user' => $user->load('studentAccount.student'),
             'token' => $user->createToken('lms-web')->plainTextToken,

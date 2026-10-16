@@ -43,4 +43,28 @@ class TrialAccountTest extends TestCase
 
         $this->withToken($token)->getJson('/api/auth/me')->assertUnauthorized();
     }
+
+    public function test_a_trial_account_stays_inside_its_limits(): void
+    {
+        config(['trial.max_groups' => 1]);
+        $user = $this->teacher(['expires_at' => now()->addDay()]);
+        $token = $user->createToken('t')->plainTextToken;
+        $group = ['name' => 'مجموعة', 'grade' => 'الأول', 'days' => [1], 'start_time' => '10:00', 'end_time' => '11:00'];
+
+        $this->withToken($token)->postJson('/api/groups', $group)->assertCreated();
+        $this->withToken($token)->postJson('/api/groups', ['name' => 'ثانية'] + $group)->assertForbidden();
+        $this->withToken($token)->postJson('/api/payments', [])->assertForbidden();
+        $this->withToken($token)->postJson('/api/exams', [])->assertForbidden();
+        $this->withToken($token)->postJson('/api/students', ['name' => 'س', 'group' => 'غير مجموعتي'])->assertForbidden();
+    }
+
+    public function test_a_trial_account_keeps_one_device(): void
+    {
+        config(['trial.max_devices' => 1]);
+        $user = $this->teacher(['expires_at' => now()->addDay()]);
+        foreach (range(1, 2) as $_) {
+            $this->postJson('/api/auth/teacher/login', ['email' => $user->email, 'password' => 'Secret-pass-1'])->assertOk();
+        }
+        $this->assertSame(1, $user->tokens()->count());
+    }
 }

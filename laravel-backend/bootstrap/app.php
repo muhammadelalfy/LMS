@@ -1,5 +1,6 @@
 <?php
 
+use Modules\Auth\Http\Middleware\TrialLimits;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->group('school', [
             InitializeSchool::class,
             EnsureSchoolIsActive::class,
+            TrialLimits::class,
             // Last, so the school's cache prefix is already in place: a write
             // sent again with the same Idempotency-Key is answered, not repeated.
             IdempotentRequests::class,
