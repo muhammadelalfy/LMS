@@ -187,6 +187,7 @@
         }
     </style>
     <link rel="stylesheet" href="{{ asset('landing/motion.css') }}">
+    <link rel="stylesheet" href="{{ asset('landing/extras.css') }}">
 </head>
 <body>
 @php
@@ -216,6 +217,7 @@
 
 <main id="top">
     <section class="hero">
+        <canvas class="net" id="net" aria-hidden="true"></canvas>
         <div class="grid-bg" aria-hidden="true"></div>
         <div class="blob b1" aria-hidden="true"></div><div class="blob b2" aria-hidden="true"></div><div class="blob b3" aria-hidden="true"></div>
         <div class="wrap hero-grid">
@@ -238,6 +240,10 @@
             </aside>
         </div>
     </section>
+
+    <div class="marquee" aria-hidden="true">
+        <div class="marquee-track"><span class="chip">الحضور بـ QR</span><span class="chip">التعرّف على الوجه</span><span class="chip">الاختبارات</span><span class="chip">المحادثات</span><span class="chip">المكالمات</span><span class="chip">المدفوعات</span><span class="chip">التقارير</span><span class="chip">الإشعارات</span><span class="chip">الواجبات</span><span class="chip">المجموعات</span><span class="chip">يعمل دون إنترنت</span><span class="chip">أندرويد وiOS</span><span class="chip">الحضور بـ QR</span><span class="chip">التعرّف على الوجه</span><span class="chip">الاختبارات</span><span class="chip">المحادثات</span><span class="chip">المكالمات</span><span class="chip">المدفوعات</span><span class="chip">التقارير</span><span class="chip">الإشعارات</span><span class="chip">الواجبات</span><span class="chip">المجموعات</span><span class="chip">يعمل دون إنترنت</span><span class="chip">أندرويد وiOS</span></div>
+    </div>
 
     <section id="platform">
         <div class="wrap">
@@ -301,6 +307,34 @@
                 <article class="card"><div class="badge">🔔</div><h3>الإشعارات</h3><p>دفع وSMS وواتساب بحسب إعدادات كل مدرسة.</p></article>
                 <article class="card"><div class="badge">👥</div><h3>المجموعات</h3><p>فصول ومجموعات وجداول ومواعيد.</p></article>
                 <article class="card"><div class="badge">📴</div><h3>الوضع المحلي</h3><p>جرّب التطبيق كاملاً ببيانات تجريبية دون خادم.</p></article>
+            </div>
+        </div>
+    </section>
+
+    <section id="tour" class="tour">
+        <div class="tour-bg" aria-hidden="true"><span class="ring r1"></span><span class="ring r2"></span><span class="ring r3"></span></div>
+        <div class="wrap">
+            <div class="sec-head">
+                <div class="num">★</div>
+                <h2>جولة سريعة</h2>
+                <p>اسحب أو استخدم الأسهم لاستعراض ما يمكنك فعله بالتطبيق.</p>
+            </div>
+            <div class="slider" id="slider" aria-roledescription="carousel">
+                <div class="slider-viewport">
+                    <div class="slider-track">
+                <article class="slide"><div class="slide-num">٠١</div><div class="slide-icon">📱</div><h3>حضور في ثوانٍ</h3><p>امسح بطاقة الطالب بـ QR أو تعرّف على وجهه، ويصل إشعار ولي الأمر فوراً.</p></article>
+                <article class="slide"><div class="slide-num">٠٢</div><div class="slide-icon">📴</div><h3>يعمل دون إنترنت</h3><p>أضف الطلاب والواجبات والدفعات بلا اتصال، وتتزامن التغييرات تلقائياً عند عودته.</p></article>
+                <article class="slide"><div class="slide-num">٠٣</div><div class="slide-icon">🗓️</div><h3>أجندة المعلّم</h3><p>واجبات المجموعات وملاحظاتك الخاصة لكل مجموعة، بالكتابة أو بالصوت.</p></article>
+                <article class="slide"><div class="slide-num">٠٤</div><div class="slide-icon">📝</div><h3>اختبارات ونتائج</h3><p>أنشئ الاختبارات وأوراق العمل وتابع نتائج كل طالب ومجموعة.</p></article>
+                <article class="slide"><div class="slide-num">٠٥</div><div class="slide-icon">💬</div><h3>تواصل مباشر</h3><p>محادثات ومكالمات وحصص مباشرة بين المعلمين والطلاب وأولياء الأمور.</p></article>
+                    </div>
+                </div>
+                <div class="slider-bar" aria-hidden="true"><i></i></div>
+                <div class="slider-ctrl">
+                    <button class="sl-btn" type="button" data-dir="1" aria-label="التالي">→</button>
+                    <div class="sl-dots" role="tablist"></div>
+                    <button class="sl-btn" type="button" data-dir="-1" aria-label="السابق">←</button>
+                </div>
             </div>
         </div>
     </section>
@@ -385,5 +419,6 @@
 <script src="{{ asset('vendor/gsap/gsap.min.js') }}"></script>
 <script src="{{ asset('vendor/gsap/ScrollTrigger.min.js') }}"></script>
 <script src="{{ asset('landing/motion.js') }}"></script>
+<script src="{{ asset('landing/extras.js') }}"></script>
 </body>
 </html>
