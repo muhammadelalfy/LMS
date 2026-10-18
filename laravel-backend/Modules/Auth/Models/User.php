@@ -25,7 +25,7 @@ class User extends Authenticatable
         return \Database\Factories\UserFactory::new();
     }
 
-    protected $fillable = ['name', 'email', 'password', 'role'];
+    protected $fillable = ['name', 'email', 'password', 'role', 'disabled_at', 'expires_at'];
 
     protected $hidden = ['password', 'remember_token'];
 
@@ -38,6 +38,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'disabled_at' => 'datetime',
+            'expires_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -60,6 +62,13 @@ class User extends Authenticatable
     public function installedModules(): HasMany
     {
         return $this->hasMany(InstalledModule::class, 'installed_by');
+    }
+
+    /** Whether the account may sign in and use the API right now. */
+    public function isUsable(): bool
+    {
+        return $this->disabled_at === null
+            && ($this->expires_at === null || $this->expires_at->isFuture());
     }
 
     public function isAnyRole(string ...$roles): bool

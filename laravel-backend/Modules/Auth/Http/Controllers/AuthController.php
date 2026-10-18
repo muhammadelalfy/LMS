@@ -102,12 +102,21 @@ class AuthController extends Controller
 
         $user = $query->first();
         abort_unless($user && Hash::check($data['password'], $user->password), 422, 'بيانات الدخول غير صحيحة لهذا النوع من الحسابات.');
+        abort_unless($user->isUsable(), 403, 'هذا الحساب موقوف أو انتهت صلاحيته. تواصل مع الإدارة.');
 
         return $this->tokenResponse($user, $role);
     }
 
     private function tokenResponse(User $user, ?string $loginType = null): array
     {
+        if ($user->expires_at !== null) {
+            // A trial account is signed in on a few devices at most: the
+            // newest sign-ins stay.
+            $keep = max(1, (int) config('trial.max_devices')) - 1;
+            $stale = $user->tokens()->latest('id')->skip($keep)->take(PHP_INT_MAX)->pluck('id');
+            $user->tokens()->whereIn('id', $stale)->delete();
+        }
+
         return [
             'user' => $user->load('studentAccount.student'),
             'token' => $user->createToken('lms-web')->plainTextToken,

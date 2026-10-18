@@ -71,7 +71,7 @@ class SchoolLifecycleTest extends TestCase
     {
         config(['tenancy.operator_token' => 'op-secret']);
 
-        $this->operator()->getJson('http://demo.zewal.test/api/central/schools')->assertNotFound();
+        $this->operator()->getJson('http://demo.mudarisy.test/api/central/schools')->assertNotFound();
     }
 
     public function test_opening_a_school_gives_it_a_database_an_address_and_an_administrator(): void
@@ -83,15 +83,15 @@ class SchoolLifecycleTest extends TestCase
             ->assertJsonPath('id', 'alnour')
             ->assertJsonPath('plan', 'basic')
             ->assertJsonPath('student_limit', 200)
-            ->assertJsonPath('domains.0', 'alnour.zewal.test');
+            ->assertJsonPath('domains.0', 'alnour.mudarisy.test');
         $this->assertFileExists(base_path('storage/framework/testing/prov_alnour.sqlite'));
 
         // The administrator can sign in at the school's own address, and only there.
-        URL::forceRootUrl('http://alnour.zewal.test');
+        URL::forceRootUrl('http://alnour.mudarisy.test');
         $this->postJson('/api/auth/login', ['email' => 'admin@alnour.test', 'password' => 'secret-pass-1'])
             ->assertOk()->assertJsonStructure(['token']);
 
-        URL::forceRootUrl('http://demo.zewal.test');
+        URL::forceRootUrl('http://demo.mudarisy.test');
         $this->postJson('/api/auth/login', ['email' => 'admin@alnour.test', 'password' => 'secret-pass-1'])
             ->assertStatus(422);
     }

@@ -7,7 +7,7 @@
 # Octane (RoadRunner/Swoole) serves the API: `composer require laravel/octane`
 # in the production image, then `php artisan octane:start --host=0.0.0.0 --port=8000`.
 x-app: &app
-  image: zewal/api:latest # built from this repo; see deploy/README.md
+  image: mudarisy/api:latest # built from this repo; see deploy/README.md
   env_file: .env.production
   restart: unless-stopped
   depends_on: [mysql, redis-cache, redis-queue, redis-realtime]
@@ -49,7 +49,7 @@ services:
 
   mysql: # primary; add replicas and ProxySQL for read/write splitting (design §2)
     image: mysql:8.4
-    environment: { MYSQL_DATABASE: zewal, MYSQL_ROOT_PASSWORD: change-me }
+    environment: { MYSQL_DATABASE: mudarisy, MYSQL_ROOT_PASSWORD: change-me }
     volumes: ["mysql:/var/lib/mysql"]
     command: ["--innodb-buffer-pool-size=4G", "--max-connections=1000", "--binlog-format=ROW"]
 

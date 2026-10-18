@@ -1,6 +1,6 @@
-# Al Zewal LMS Laravel Backend
+# Mudarisy Laravel Backend
 
-This directory contains the Laravel 13 API for the Al Zewal Arabic mathematics LMS. It uses Eloquent models and migrations for MySQL and Laravel Sanctum for token-based authentication.
+This directory contains the Laravel 13 API for the Mudarisy school-management platform. It uses Eloquent models and migrations for MySQL and Laravel Sanctum for token-based authentication.
 
 ## Schools and modules
 
@@ -35,7 +35,7 @@ APP_URL=https://api.example.com
 DB_CONNECTION=mysql
 DB_HOST=127.0.0.1
 DB_PORT=3306
-DB_DATABASE=al_zewal
+DB_DATABASE=mudarisy
 DB_USERNAME=...
 DB_PASSWORD=...
 SESSION_DRIVER=database

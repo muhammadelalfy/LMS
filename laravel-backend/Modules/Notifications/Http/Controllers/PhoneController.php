@@ -35,7 +35,7 @@ class PhoneController extends Controller
         $code = (string) random_int(100000, 999999);
         $result = $channels->get('sms')->send($phone, new NotificationDelivery([
             'category' => 'verification',
-            'title' => 'زويل',
+            'title' => 'مُدرّسى',
             'body' => "رمز التحقق: {$code}",
         ]));
         if (! $result->ok) {

@@ -13,7 +13,7 @@ class ExamPaperPdfService
 
         $html = view('pdf.exam-paper-tcpdf', [
             'template' => $template,
-            'watermark' => $template->watermark_text ?: 'زويل التعليمية',
+            'watermark' => $template->watermark_text ?: 'مُدرّسى',
         ])->render();
 
         $pdf = new TCPDF('P', 'mm', 'A4', true, 'UTF-8', false);

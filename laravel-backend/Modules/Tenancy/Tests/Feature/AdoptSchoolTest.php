@@ -39,7 +39,7 @@ class AdoptSchoolTest extends TestCase
 
         $school = School::query()->find('legacy');
         $this->assertSame('enterprise', $school->plan);
-        $this->assertSame('legacy.zewal.test', $school->domains()->value('domain'));
+        $this->assertSame('legacy.mudarisy.test', $school->domains()->value('domain'));
         $this->assertSame($before, filesize($this->file), 'nothing was created or migrated on adoption');
 
         // Bringing it up to date is a separate, explicit step; afterwards it works as a school.
