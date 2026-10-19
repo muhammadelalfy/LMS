@@ -213,8 +213,15 @@ class ExamManagementController extends Controller
     {
         $this->authorizeSessionOwner($request, $session);
         abort_if(in_array($session->status, ['submitted', 'expired']), 422, 'تم إنهاء هذا الامتحان بالفعل.');
-        $session->update(['status' => 'submitted', 'submitted_at' => now(), 'last_event_at' => now()]);
-        $session->events()->create(['type' => 'submitted', 'occurred_at' => now()]);
+        // Submission is one state transition (§11): locked so a repeated or
+        // concurrent submit cannot double-submit, and atomic so the "submitted"
+        // status and its audit event never land separately.
+        DB::transaction(function () use ($session): void {
+            $locked = ExamSession::query()->whereKey($session->id)->lockForUpdate()->firstOrFail();
+            abort_if(in_array($locked->status, ['submitted', 'expired']), 422, 'تم إنهاء هذا الامتحان بالفعل.');
+            $locked->update(['status' => 'submitted', 'submitted_at' => now(), 'last_event_at' => now()]);
+            $locked->events()->create(['type' => 'submitted', 'occurred_at' => now()]);
+        });
         $session = $session->fresh(['template.questions', 'answers', 'events']);
         $this->withoutAnswerKeys($session->template);
 
