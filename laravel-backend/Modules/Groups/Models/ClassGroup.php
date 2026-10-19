@@ -96,4 +96,18 @@ class ClassGroup extends Model
     {
         return static::query()->ownedBy($user)->pluck('name')->all();
     }
+
+    /**
+     * The complement of [namesOwnedBy]: group names a *different*, named
+     * teacher runs. A Student-keyed resource (Payments, Exams, Attendance,
+     * FaceTemplate, Duty) is "owned" by [$user] when its group is *not* in
+     * this list — which also, correctly, covers a group string that does not
+     * (yet) match any `ClassGroup` row at all, the same "open" disposition an
+     * unassigned group already has (ADR 0002). Used instead of [namesOwnedBy]
+     * wherever the group is a free string, not a `ClassGroup` row itself.
+     */
+    public static function namesClaimedByOthers(User $user): array
+    {
+        return static::query()->whereNotNull('teacher_id')->where('teacher_id', '!=', $user->id)->pluck('name')->all();
+    }
 }

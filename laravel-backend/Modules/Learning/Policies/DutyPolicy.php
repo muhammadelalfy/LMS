@@ -52,11 +52,6 @@ class DutyPolicy
      */
     private function groupOwned(User $user, ?string $groupName): bool
     {
-        if ($groupName === null) {
-            return false;
-        }
-        $group = ClassGroup::query()->where('name', $groupName)->first();
-
-        return $group === null || $group->isOpenTo($user);
+        return $groupName !== null && ! in_array($groupName, ClassGroup::namesClaimedByOthers($user), true);
     }
 }
