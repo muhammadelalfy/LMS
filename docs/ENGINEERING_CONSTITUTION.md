@@ -13,6 +13,12 @@
 >
 > **Status markers.** **[NOW]** = true of the code today. **[BUILD]** = required by this constitution and
 > not built yet: build it when its feature is scheduled, to these rules. Do not pretend a **[BUILD]** item exists.
+>
+> **Upstream source.** This is the binding spec for this repo. It merges and condenses the generic,
+> 152-section `LMS Project Engineering Constitution — Complete Architecture Rules + xAPI.md` (repo root) with
+> what Mudarisy already is. When a [BUILD] domain (xAPI, certification, commerce, AI/RAG, media) needs more
+> detail than the condensed rule here gives — an exact JSON shape, a monitoring metric list, a test-case
+> enumeration — read the matching section of the root file; it is not superseded, only compressed here.
 
 ---
 
@@ -770,17 +776,25 @@ latency. **Never claim a capacity that was not measured.**
 
 1. **Analyse before coding:** read the module, follow its patterns; do not invent code that doesn't exist;
    verify names, routes and files first. Do not blindly code.
-2. **Change only what was asked.** No unrequested refactoring; keep diffs reviewable; match the surrounding
+2. **Before implementing any non-trivial business requirement, produce a short written analysis** covering:
+   requirement understanding · affected modules · domain boundaries · actors · business rules · entities ·
+   database changes · indexes · API changes · authorization · tenant impact · validation · transactions ·
+   events · queues · caching · xAPI events · attendance impact · certification impact · external integrations ·
+   security · performance · tests · deployment impact · implementation plan. Mark sections that don't apply as
+   "Not applicable" — do not omit them silently.
+3. **Change only what was asked.** No unrequested refactoring; keep diffs reviewable; match the surrounding
    code (naming, comments, Arabic copy tone).
-3. **Verify changes:** run the relevant tests and the analyzer; for UI, look at the screen; report failures
+4. **Verify changes:** run the relevant tests and the analyzer; for UI, look at the screen; report failures
    honestly.
-4. **Definition of Done:** requirement met · authorisation and tenant isolation checked · idempotent where
+5. **Definition of Done:** requirement met · authorisation and tenant isolation checked · idempotent where
    retried · offline behaviour defined · tests added · analyzer clean · migration backward compatible · no
    secrets · observability for new failure modes · docs/ADR updated if architecture changed.
-5. **Architecture Decision Records** in `docs/adr/` for significant decisions (database engine, tenancy
+6. **Architecture Decision Records** in `docs/adr/` for significant decisions (database engine, tenancy
    mapping, queue, LRS choice, AI provider): context, decision, alternatives, consequences.
-6. **Architecture documentation:** keep a current module map, data-flow diagram and feature lifecycle in
+7. **Architecture documentation:** keep a current module map, data-flow diagram and feature lifecycle in
    `docs/`; update the **[NOW]/[BUILD]** markers in this document as the platform changes.
+8. **Never invent existing code:** verify a referenced model, table, route, service, repository, job, event,
+   notification or module actually exists before relying on it.
 
 **Recommended feature lifecycle:** requirement → design against this constitution → migration (backward
 compatible) → Action + Policy + Request + Resource → tests → offline rule (if applicable) → CI → staged deploy →
