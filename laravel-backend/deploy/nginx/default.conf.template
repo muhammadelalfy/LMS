@@ -6,6 +6,9 @@
 
 resolver 127.0.0.11 valid=10s ipv6=off;
 
+# The default follows the CPU cache line (32 on some hosts), too small for long hostnames.
+map_hash_bucket_size 128;
+
 log_format lb '$remote_addr $host "$request" $status $body_bytes_sent '
               'upstream=$upstream_addr rt=$request_time urt=$upstream_response_time';
 access_log /var/log/nginx/access.log lb;
