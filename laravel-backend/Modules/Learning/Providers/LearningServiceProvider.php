@@ -5,7 +5,9 @@ namespace Modules\Learning\Providers;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Modules\Learning\Models\Duty;
 use Modules\Learning\Models\Worksheet;
+use Modules\Learning\Policies\DutyPolicy;
 use Modules\Learning\Policies\WorksheetPolicy;
 use Modules\Learning\Services\Ocr\ClaudeHandwritingReader;
 use Modules\Learning\Services\Ocr\HandwritingReader;
@@ -21,5 +23,6 @@ final class LearningServiceProvider extends ServiceProvider
     {
         Route::middleware(['api', 'school'])->prefix('api')->group(__DIR__.'/../routes/api.php');
         Gate::policy(Worksheet::class, WorksheetPolicy::class);
+        Gate::policy(Duty::class, DutyPolicy::class);
     }
 }

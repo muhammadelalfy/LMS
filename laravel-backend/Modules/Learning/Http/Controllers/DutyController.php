@@ -2,13 +2,13 @@
 
 namespace Modules\Learning\Http\Controllers;
 
-use Modules\Core\Http\Concerns\AuthorizesStaff;
 use App\Http\Controllers\Controller;
-use Modules\Learning\Models\Duty;
-use Modules\Learning\Services\DutyReminders;
-use Modules\Core\Support\Singleflight;
 use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
+use Modules\Core\Http\Concerns\AuthorizesStaff;
+use Modules\Core\Support\Singleflight;
+use Modules\Learning\Models\Duty;
+use Modules\Learning\Services\DutyReminders;
 
 /**
  * Daily duties per group. Staff write them (typed or dictated in the app),
@@ -39,6 +39,7 @@ class DutyController extends Controller
     {
         $this->authorizeStaff($request);
         $data = $this->validated($request);
+        abort_unless($request->user()->can('create', [Duty::class, $data]), 403, 'لا تملك صلاحية هذه المجموعة.');
 
         return response()->json(Duty::create([...$data, 'created_by' => $request->user()->id]), 201);
     }
@@ -47,6 +48,7 @@ class DutyController extends Controller
     {
         $this->authorizeStaff($request);
         $data = $this->validated($request, partial: true);
+        abort_unless($request->user()->can('update', [$duty, $data]), 403, 'لا تملك صلاحية هذه المجموعة.');
         if (array_key_exists('done', $data)) {
             $data['done_at'] = $data['done'] ? ($duty->done_at ?? now()) : null;
             unset($data['done']);
@@ -59,6 +61,7 @@ class DutyController extends Controller
     public function destroy(Request $request, Duty $duty)
     {
         $this->authorizeStaff($request);
+        abort_unless($request->user()->can('delete', $duty), 403, 'لا تملك صلاحية هذه المجموعة.');
         $duty->delete();
 
         return response()->noContent();
