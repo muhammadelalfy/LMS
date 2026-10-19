@@ -3,7 +3,10 @@
 namespace Modules\Groups\Models;
 
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Modules\Auth\Models\User;
+use Modules\Reports\Models\Concerns\BumpsReportVersion;
 
 /**
  * A group's weekly timetable. `days` holds ISO weekdays (1 = Monday …
@@ -11,7 +14,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ClassGroup extends Model
 {
-    use \Modules\Reports\Models\Concerns\BumpsReportVersion;
+    use BumpsReportVersion;
 
     /** How long before its start a group's students may already check in. */
     public const EARLY_ARRIVAL_MINUTES = 30;
@@ -67,5 +70,30 @@ class ClassGroup extends Model
     {
         return $this->meetsOn($localTime)
             && $localTime->hour * 60 + $localTime->minute >= self::minutesOf($this->end_time);
+    }
+
+    /**
+     * Whether [$user] may act on this group as its teacher: an unassigned
+     * group (no `teacher_id` yet) is open to any teacher; an assigned one is
+     * open only to the teacher it names. This is the single source of truth
+     * for "does this teacher own this group" (ADR 0002) — every module that
+     * needs the rule (Chat, and every Policy this ADR adds) calls this
+     * instead of re-checking `teacher_id` itself.
+     */
+    public function isOpenTo(User $user): bool
+    {
+        return $this->teacher_id === null || $this->teacher_id === $user->id;
+    }
+
+    /** Query scope: groups [$user] may act on as teacher (their own + unassigned). Callers bypass this scope entirely for an admin. */
+    public function scopeOwnedBy(Builder $query, User $user): Builder
+    {
+        return $query->where(fn (Builder $inner) => $inner->whereNull('teacher_id')->orWhere('teacher_id', $user->id));
+    }
+
+    /** Group names [$user] may act on, for the Student-keyed modules (Payments, Exams, Attendance, Duty, FaceTemplate). */
+    public static function namesOwnedBy(User $user): array
+    {
+        return static::query()->ownedBy($user)->pluck('name')->all();
     }
 }

@@ -2,13 +2,13 @@
 
 namespace Modules\Chat\Services;
 
-use Modules\Groups\Models\ClassGroup;
+use Illuminate\Support\Collection;
+use Modules\Auth\Models\User;
 use Modules\Chat\Models\Conversation;
+use Modules\Chat\Models\UserBlock;
+use Modules\Groups\Models\ClassGroup;
 use Modules\Students\Models\Student;
 use Modules\Students\Models\StudentAccount;
-use Modules\Auth\Models\User;
-use Modules\Chat\Models\UserBlock;
-use Illuminate\Support\Collection;
 
 /**
  * Who may talk to whom. The one place these rules live; the REST endpoints
@@ -152,7 +152,7 @@ class ChatAccess
             return true;
         }
         if ($user->isAnyRole('teacher')) {
-            return $group->teacher_id === null || $group->teacher_id === $user->id;
+            return $group->isOpenTo($user);
         }
 
         return $user->isAnyRole('student') && $this->groupOf($user)?->id === $group->id;
