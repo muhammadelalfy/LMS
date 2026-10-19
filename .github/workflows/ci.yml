@@ -61,13 +61,16 @@ jobs:
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: "8.3"
-          extensions: mbstring, dom, fileinfo, sqlite3, pdo_sqlite, zip, openssl
+          php-version: "8.5"
+          extensions: mbstring, dom, fileinfo, sqlite3, pdo_sqlite, zip, openssl, intl, gd, bcmath
           coverage: none
           tools: composer:v2
 
       - name: Install PHP dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Audit PHP dependencies
+        run: composer audit --locked --no-dev --abandoned=ignore
 
       - name: Prepare test environment
         run: |
@@ -85,3 +88,99 @@ jobs:
 
       - name: Run Laravel tests
         run: php artisan test --compact
+
+  image:
+    name: API image + stack smoke test
+    needs: laravel
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE: ghcr.io/${{ github.repository_owner }}/mudarisy-api
+    defaults:
+      run:
+        working-directory: laravel-backend/deploy
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build API image
+        uses: docker/build-push-action@v6
+        with:
+          context: laravel-backend
+          load: true
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Start the stack (3 API replicas behind the load balancer)
+        run: |
+          cp compose.env.example .env
+          sed -i "s|^API_IMAGE=.*|API_IMAGE=$IMAGE:${{ github.sha }}|; s|^WEB_IMAGE=.*|WEB_IMAGE=nginx:1.28-alpine|" .env
+          ./make-env.sh "$IMAGE:${{ github.sha }}" api.mudarisy.localhost mudarisy.localhost
+          docker compose up -d --wait
+
+      - name: Smoke test through the load balancer
+        env:
+          SMOKE_SKIP_WEB: "1"
+          SMOKE_LOGIN_EMAIL: owner@ci.test
+          SMOKE_LOGIN_PASSWORD: CiSmoke!2026pass
+        run: |
+          docker compose exec -T api php artisan school:create ci --name=CI --plan=pro \
+            --admin-email="$SMOKE_LOGIN_EMAIL" --admin-password="$SMOKE_LOGIN_PASSWORD"
+          ./smoke-test.sh http://localhost api.mudarisy.localhost ci.mudarisy.localhost
+
+      - name: Show stack logs on failure
+        if: failure()
+        run: docker compose logs --tail=100
+
+      - name: Push image
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+          docker push "$IMAGE:${{ github.sha }}"
+          docker tag "$IMAGE:${{ github.sha }}" "$IMAGE:latest" && docker push "$IMAGE:latest"
+
+  deploy:
+    name: Deploy to production
+    needs: image
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+        run: |
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/id_ed25519 && chmod 600 ~/.ssh/id_ed25519
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
+
+      - name: Upload stack definition
+        run: |
+          scp laravel-backend/deploy/{docker-compose.yml,deploy.sh,smoke-test.sh} \
+            "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/mudarisy/"
+          scp laravel-backend/deploy/nginx/* "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/mudarisy/nginx/"
+
+      - name: Roll out the new image
+        run: |
+          target="${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}"
+          echo "${{ secrets.GITHUB_TOKEN }}" | ssh "$target" "docker login ghcr.io -u ${{ github.actor }} --password-stdin"
+          status=0
+          ssh "$target" "/opt/mudarisy/deploy.sh API_IMAGE ghcr.io/${{ github.repository_owner }}/mudarisy-api:${{ github.sha }}" || status=$?
+          ssh "$target" "docker logout ghcr.io" || true
+          exit $status
