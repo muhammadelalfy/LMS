@@ -3,13 +3,11 @@
 namespace Modules\PluginStore\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Modules\PluginStore\Models\InstalledModule;
 use Modules\PluginStore\Models\PluginProduct;
 use Modules\PluginStore\Services\PluginInstaller;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Throwable;
 
 class PluginStoreController extends Controller
 {
@@ -60,25 +58,18 @@ class PluginStoreController extends Controller
         abort_unless($plugin->is_active, 404);
         abort_unless($request->user()->pluginPurchases()->where('plugin_product_id', $plugin->id)->where('status', 'completed')->exists(), 403, 'يجب شراء الإضافة قبل تثبيتها.');
 
-        try {
-            $module = $installer->install($plugin, $request->user()->id);
-            return response()->json(['module' => $module->load('plugin'), 'message' => 'تم تثبيت الإضافة وتفعيلها بنجاح.']);
-        } catch (Throwable $error) {
-            report($error);
-            return response()->json(['message' => $error->getMessage()], 422);
-        }
+        $module = $installer->install($plugin, $request->user()->id);
+
+        return response()->json(['module' => $module->load('plugin'), 'message' => 'تم تفعيل الإضافة لمدرستك.']);
     }
 
-    public function uninstall(Request $request, PluginProduct $plugin): JsonResponse
+    public function uninstall(Request $request, PluginProduct $plugin, PluginInstaller $installer): JsonResponse
     {
         abort_unless($request->user()->isAnyRole('admin'), 403, 'إدارة الإضافات متاحة لمدير النظام فقط.');
         $module = InstalledModule::query()->where('plugin_product_id', $plugin->id)->firstOrFail();
-        $path = base_path($module->path);
-        if (is_dir($path)) {
-            abort_unless(str_starts_with(realpath($path) ?: '', realpath(base_path('Modules')) . DIRECTORY_SEPARATOR), 422, 'مسار الوحدة غير آمن.');
-            \Illuminate\Support\Facades\File::deleteDirectory($path);
-        }
-        $module->update(['status' => 'uninstalled']);
-        return response()->json(['message' => 'تم إلغاء تثبيت الإضافة.']);
+
+        $installer->uninstall($module);
+
+        return response()->json(['message' => 'تم إلغاء تفعيل الإضافة لمدرستك.']);
     }
 }
