@@ -3,6 +3,25 @@
     var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var gsap = window.gsap;
 
+    // 0. The hero fills what the sticky header leaves of the first screen: keep that height exact.
+    var topBar = document.getElementById('top-bar');
+    if (topBar) {
+        var setHeaderHeight = function () {
+            document.documentElement.style.setProperty('--header-h', topBar.offsetHeight + 'px');
+        };
+        var hero = document.querySelector('.hero');
+        var cue = document.querySelector('.scroll-cue');
+        // The cue only helps when the hero is exactly one screen; when it runs past the fold
+        // (phones, short windows) the content already shows there is more below.
+        var placeCue = function () {
+            if (cue && hero) cue.classList.toggle('is-off', hero.offsetTop + hero.offsetHeight > window.innerHeight + 1);
+        };
+        var layout = function () { setHeaderHeight(); placeCue(); };
+        layout();
+        window.addEventListener('resize', layout);
+        if (window.ResizeObserver) { new ResizeObserver(layout).observe(topBar); if (hero) new ResizeObserver(placeCue).observe(hero); }
+    }
+
     // 1. Network of drifting points that react to the pointer.
     var canvas = document.getElementById('net');
     if (canvas && canvas.getContext && !reduce) {
