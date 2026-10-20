@@ -88,6 +88,11 @@ services:
     image: ${WEB_IMAGE:-mudarisy-web:local}
     restart: unless-stopped
     deploy: { resources: { limits: { memory: 64m } } }
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
     logging: *logging
 
   lb:
@@ -97,12 +102,13 @@ services:
     environment:
       CENTRAL_HOST: ${CENTRAL_HOST:?set CENTRAL_HOST in .env}
       PUBLIC_IP: ${PUBLIC_IP:-127.0.0.1}
+    # A directory mount, not per-file: a file replaced on the host (new inode) would
+    # otherwise stay invisible to the container. deploy.sh re-renders and reloads it.
     volumes:
-      - ./nginx/default.conf.template:/etc/nginx/templates/default.conf.template:ro
-      - ./nginx/proxy-headers.inc:/etc/nginx/conf.d/proxy-headers.inc:ro
+      - ./nginx:/etc/nginx/templates:ro
     depends_on:
       api: { condition: service_healthy }
-      web: { condition: service_started }
+      web: { condition: service_healthy }
       reverb: { condition: service_started }
     logging: *logging
 

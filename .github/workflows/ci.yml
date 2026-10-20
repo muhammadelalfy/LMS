@@ -108,19 +108,24 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Lint deploy scripts
+        run: shellcheck -S warning deploy.sh smoke-test.sh make-env.sh
+
       - name: Build API image
         uses: docker/build-push-action@v6
         with:
           context: laravel-backend
           load: true
           tags: ${{ env.IMAGE }}:${{ github.sha }}
+          labels: org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
       - name: Start the stack (3 API replicas behind the load balancer)
         run: |
           cp compose.env.example .env
-          sed -i "s|^API_IMAGE=.*|API_IMAGE=$IMAGE:${{ github.sha }}|; s|^WEB_IMAGE=.*|WEB_IMAGE=nginx:1.28-alpine|" .env
+          sed -i -e "s|^API_IMAGE=.*|API_IMAGE=$IMAGE:${{ github.sha }}|" -e "s|^WEB_IMAGE=.*|WEB_IMAGE=nginx:1.28-alpine|" \
+                 -e "s|^SMOKE_SCHOOL_HOST=.*|SMOKE_SCHOOL_HOST=ci.mudarisy.localhost|" .env
           ./make-env.sh "$IMAGE:${{ github.sha }}" api.mudarisy.localhost mudarisy.localhost
           docker compose up -d --wait
 
@@ -133,6 +138,20 @@ jobs:
           docker compose exec -T api php artisan school:create ci --name=CI --plan=pro \
             --admin-email="$SMOKE_LOGIN_EMAIL" --admin-password="$SMOKE_LOGIN_PASSWORD"
           ./smoke-test.sh http://localhost api.mudarisy.localhost ci.mudarisy.localhost
+
+      - name: Zero-downtime rollout with deploy.sh (two rollouts via a local registry)
+        env:
+          SMOKE_SKIP_WEB: "1"
+        run: |
+          docker run -d --name registry -p 127.0.0.1:5001:5000 registry:2
+          for tag in rollout-a rollout-b; do
+            docker tag "$IMAGE:${{ github.sha }}" "localhost:5001/mudarisy-api:$tag"
+            docker push -q "localhost:5001/mudarisy-api:$tag"
+          done
+          ./deploy.sh API_IMAGE localhost:5001/mudarisy-api:rollout-a
+          ./deploy.sh API_IMAGE localhost:5001/mudarisy-api:rollout-b
+          test "$(docker compose ps -q api | wc -l)" -eq 3
+          grep -qx 'server api:8000 resolve max_fails=3 fail_timeout=10s;' nginx/upstreams/api.inc
 
       - name: Show stack logs on failure
         if: failure()
@@ -172,9 +191,8 @@ jobs:
 
       - name: Upload stack definition
         run: |
-          scp laravel-backend/deploy/{docker-compose.yml,deploy.sh,smoke-test.sh} \
+          scp -r laravel-backend/deploy/{docker-compose.yml,deploy.sh,smoke-test.sh,nginx} \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/mudarisy/"
-          scp laravel-backend/deploy/nginx/* "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/mudarisy/nginx/"
 
       - name: Roll out the new image
         run: |

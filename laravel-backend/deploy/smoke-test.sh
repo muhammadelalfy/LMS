@@ -13,8 +13,17 @@ check() { # name expected actual
     if [[ "$3" == "$2" ]]; then echo "ok   $1 ($3)"; else echo "FAIL $1: expected $2, got $3"; fail=1; fi
 }
 status() { curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$@"; }
-# "yes" when the page at $2 (on host $1) is served and contains $3.
-serves() { curl -sf --max-time 10 -H "Host: $1" "$BASE$2" | grep -qF "$3" && echo yes || echo no; }
+# "yes" when the page at $2 (on host $1) answers 200 and contains $3, otherwise why not.
+# The body is read in full before matching: `curl | grep -q` under pipefail fails at random
+# when grep exits early and curl dies on the broken pipe.
+serves() {
+    local out code body
+    out="$(curl -s --max-time 10 -H "Host: $1" -w '\n%{http_code}' "$BASE$2")" || { echo "no (curl failed)"; return; }
+    code="${out##*$'\n'}" body="${out%$'\n'*}"
+    if [[ "$code" != 200 ]]; then echo "no (HTTP $code)"
+    elif [[ "$body" == *"$3"* ]]; then echo yes
+    else echo "no (HTTP 200, page lacks $3)"; fi
+}
 
 LANDING_MARK='id="download"'
 APP_MARK='<div id="root">'

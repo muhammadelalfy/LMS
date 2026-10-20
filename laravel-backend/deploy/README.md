@@ -40,7 +40,8 @@ decide the tenancy mapping in an ADR before migrating).
 | `compose.env.example` → `.env` | Image tags, replica count, hosts (not secret) |
 | `.env.production.example` → `.env.production` | App config and secrets. Never committed. Create with `make-env.sh`. |
 | `make-env.sh` | Writes `.env.production` with fresh secrets; refuses to overwrite |
-| `deploy.sh` | Rolls one image forward, smoke-tests, rolls back on failure |
+| `deploy.sh` | Zero-downtime rollout of one image, smoke test, instant switch-back on failure |
+| `nginx/upstreams/*.inc` | Server lists for the `api` and `web` upstreams (`deploy.sh` rewrites them during a rollout) |
 | `smoke-test.sh` | End-to-end checks through the load balancer |
 
 ## Run locally
@@ -67,12 +68,29 @@ Repository secrets (both repos, `production` environment):
 `DEPLOY_HOST`, `DEPLOY_USER` (`deploy`), `DEPLOY_SSH_KEY` (private key of the CI
 deploy key), `DEPLOY_KNOWN_HOSTS` (`ssh-keyscan <host>` output).
 
-Roll back by hand: edit `API_IMAGE`/`WEB_IMAGE` in `/opt/mudarisy/.env` to an earlier
-tag and `docker compose up -d --wait`. Migrations must stay backward compatible
-(constitution §9), so older code keeps working against a newer schema.
+### How a rollout works (`deploy.sh`)
+
+1. Checks the nginx config, pulls the image, and (for the API) runs migrations in `init`.
+2. **Pins** nginx to the running replicas, then starts as many new ones beside them.
+   New replicas take no traffic until their health check passes; if they never do,
+   they are removed and nothing else changes.
+3. **Switches** nginx to the new replicas with a graceful reload (no dropped requests),
+   keeping the old ones running.
+4. **Smoke-tests** through the load balancer. On failure it switches straight back to
+   the old replicas (a reload, under a second) and removes the new ones.
+5. **Retires** the old replicas, points nginx back at the whole service, and restarts
+   Reverb, the worker and the scheduler on the new image.
+
+Measured locally with three request streams running throughout: a normal API or web
+rollout dropped 0 of ~1,500 requests; an image that never became healthy, 0; a healthy
+image with broken pages was live only for the few seconds of the smoke test.
+
+Roll back by hand with `./deploy.sh API_IMAGE <previous tag>` (the same zero-downtime
+path). Migrations must stay backward compatible (constitution §9), so older code keeps
+working against a newer schema.
 
 ## Known limits
 
-- `docker compose up` replaces all API replicas at once: expect a few seconds of 502s per backend deploy.
+- Changing the `lb` service definition itself (ports, mounts) recreates it: about a second of refused connections.
 - No TLS on the origin yet. Put Cloudflare (proxied, Full mode with an Origin certificate) in front before real users.
 - LiveKit (calls) is not in this stack yet; `livekit.yaml` is the starting point.

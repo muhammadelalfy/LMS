@@ -6,4 +6,4 @@ proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 proxy_set_header X-Forwarded-Proto $forwarded_proto;
 proxy_set_header X-Forwarded-Host $host;
 proxy_next_upstream error timeout http_502 http_503;
-proxy_connect_timeout 5s;
+proxy_connect_timeout 2s;

@@ -14,10 +14,13 @@ log_format lb '$remote_addr $host "$request" $status $body_bytes_sent '
               'upstream=$upstream_addr rt=$request_time urt=$upstream_response_time';
 access_log /var/log/nginx/access.log lb;
 
+# Server lists live in upstreams/*.inc. Normally they name the compose service (every
+# replica, re-resolved every 10 s); deploy.sh rewrites them to exact containers while it
+# rolls replicas, so traffic moves with a graceful reload instead of racing DNS.
 upstream api {
     zone api 64k;
     least_conn;
-    server api:8000 resolve max_fails=3 fail_timeout=10s;
+    include /etc/nginx/templates/upstreams/api.inc;
     keepalive 32;
 }
 
@@ -28,7 +31,7 @@ upstream reverb {
 
 upstream web {
     zone web 64k;
-    server web:80 resolve;
+    include /etc/nginx/templates/upstreams/web.inc;
     keepalive 8;
 }
 
@@ -70,23 +73,23 @@ server {
     # The landing page is the front door on every host, school sites included.
     location = / {
         proxy_pass http://api;
-        include /etc/nginx/conf.d/proxy-headers.inc;
+        include /etc/nginx/templates/proxy-headers.inc;
     }
 
     location ~ ^/(brand|landing|logo|vendor)/|^/(favicon\.ico|robots\.txt)$ {
         proxy_pass http://api;
-        include /etc/nginx/conf.d/proxy-headers.inc;
+        include /etc/nginx/templates/proxy-headers.inc;
         expires 7d;
     }
 
     location ~ ^/(api|broadcasting|storage|up)(/|$) {
         proxy_pass http://api;
-        include /etc/nginx/conf.d/proxy-headers.inc;
+        include /etc/nginx/templates/proxy-headers.inc;
         proxy_read_timeout 60s;
     }
 
     location / {
         proxy_pass http://$site_upstream;
-        include /etc/nginx/conf.d/proxy-headers.inc;
+        include /etc/nginx/templates/proxy-headers.inc;
     }
 }
