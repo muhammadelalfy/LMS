@@ -44,6 +44,7 @@ decide the tenancy mapping in an ADR before migrating).
 | `nginx/upstreams/*.inc` | Server lists for the `api` and `web` upstreams (`deploy.sh` rewrites them during a rollout) |
 | `nginx/site.inc` | Locations shared by the HTTP (80) and HTTPS (443) servers |
 | `nginx/cloudflare-*.inc`, `update-cloudflare-ips.sh` | Cloudflare's published IP ranges, used to trust visitor IP and scheme headers |
+| `install-origin-cert.sh` | Installs the Cloudflare Origin certificate after checking it matches the server's key |
 | `make-certs.sh` | Creates `certs/origin.key`/`origin.pem` (self-signed until the Cloudflare Origin certificate is installed) |
 | `smoke-test.sh` | End-to-end checks through the load balancer |
 
@@ -104,7 +105,7 @@ always overwritten with that address, never appended to. Refresh the ranges occa
 One-time setup, in the Cloudflare dashboard for the zone:
 
 1. **DNS**, both *Proxied*: an `A` record `api` and one `*` pointing at the server's IP. Existing records win over the wildcard, so apex, `www`, mail and so on are unaffected. (If the plan refuses a proxied wildcard, add one proxied record per school instead.)
-2. **Origin certificate:** *SSL/TLS, Origin Server, Create Certificate, Use my private key and CSR.* Paste `/opt/mudarisy/certs/origin.csr` from the server, keep the hostnames `mudarisy.com` and `*.mudarisy.com`, and save the PEM Cloudflare returns as `/opt/mudarisy/certs/origin.pem`. The private key never leaves the server. Then `docker compose exec lb nginx -s reload`.
+2. **Origin certificate:** *SSL/TLS, Origin Server, Create Certificate, Use my private key and CSR.* Paste `/opt/mudarisy/certs/origin.csr` from the server and keep the hostnames `mudarisy.com` and `*.mudarisy.com`. Copy the PEM Cloudflare returns to the server and run `./install-origin-cert.sh <that file>`: it refuses a certificate that does not match the server's key, and reloads nginx only if the config still passes. The private key never leaves the server.
 3. **SSL mode:** *SSL/TLS, Overview, Full (strict)*.
 
 Until step 2 the origin serves a self-signed certificate, which Cloudflare accepts in *Full* (not
