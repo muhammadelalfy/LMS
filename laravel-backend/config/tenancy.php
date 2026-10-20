@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use Modules\Tenancy\Database\SqliteDatabaseManager;
 use Modules\Tenancy\Models\School;
 use Modules\Tenancy\Support\TenantCachePrefix;
 use Stancl\Tenancy\Bootstrappers\DatabaseTenancyBootstrapper;
@@ -11,7 +12,6 @@ use Stancl\Tenancy\Database\Models\Domain;
 use Stancl\Tenancy\Features\TenantConfig;
 use Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager;
 use Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager;
-use Modules\Tenancy\Database\SqliteDatabaseManager;
 
 /*
  * Every school is a tenant with its own database and its own subdomain
