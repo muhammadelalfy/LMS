@@ -42,6 +42,7 @@
             background: #fff;
             line-height: 1.8;
         }
+        :root { --header-h: 69px; }
         a { color: inherit; text-decoration: none; }
         .wrap { width: min(1180px, 100% - 32px); margin-inline: auto; }
 
@@ -82,7 +83,12 @@
                 radial-gradient(900px 400px at 15% 10%, rgba(212,175,85,.18), transparent 60%),
                 linear-gradient(160deg, var(--navy-900), var(--navy-700) 70%, var(--navy-600));
             color: #fff;
-            padding: 84px 0 96px;
+            /* The sticky header sits above the hero, so header + hero = one screen. --header-h is
+               kept exact by extras.js; the vh line is the fallback for browsers without svh. */
+            min-height: calc(100vh - var(--header-h));
+            min-height: calc(100svh - var(--header-h));
+            display: grid; align-content: center;
+            padding: clamp(40px, 9vh, 96px) 0 clamp(88px, 14vh, 128px);
         }
         .hero-grid { display: grid; grid-template-columns: 1.15fr .85fr; gap: 48px; align-items: center; }
         .eyebrow {
@@ -249,6 +255,9 @@
                 <small>فريق {{ $name }}</small>
             </aside>
         </div>
+        <a class="scroll-cue" href="#platform" aria-label="انزل لاستكشاف المنصة">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+        </a>
     </section>
 
     <div class="marquee" aria-hidden="true">

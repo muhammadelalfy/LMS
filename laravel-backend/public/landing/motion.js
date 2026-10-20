@@ -17,6 +17,7 @@
             start: 0, end: 'max',
             onUpdate: function (self) {
                 bar.classList.toggle('scrolled', self.scroll() > 12);
+                if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
                 var hide = self.direction === 1 && self.scroll() > 400;
                 gsap.to(bar, { yPercent: hide ? -100 : 0, duration: 0.35, ease: 'power2.out', overwrite: true });
             }
