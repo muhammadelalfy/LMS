@@ -11,7 +11,7 @@ use Stancl\Tenancy\Database\Models\Domain;
 use Stancl\Tenancy\Features\TenantConfig;
 use Stancl\Tenancy\TenantDatabaseManagers\MySQLDatabaseManager;
 use Stancl\Tenancy\TenantDatabaseManagers\PostgreSQLDatabaseManager;
-use Stancl\Tenancy\TenantDatabaseManagers\SQLiteDatabaseManager;
+use Modules\Tenancy\Database\SqliteDatabaseManager;
 
 /*
  * Every school is a tenant with its own database and its own subdomain
@@ -58,7 +58,7 @@ return [
         'prefix' => env('TENANCY_DB_PREFIX', 'tenant'),
         'suffix' => env('TENANCY_DB_SUFFIX', ''),
         'managers' => [
-            'sqlite' => SQLiteDatabaseManager::class,
+            'sqlite' => SqliteDatabaseManager::class,
             'mysql' => MySQLDatabaseManager::class,
             'mariadb' => MySQLDatabaseManager::class,
             'pgsql' => PostgreSQLDatabaseManager::class,
