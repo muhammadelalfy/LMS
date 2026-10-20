@@ -1,43 +1,96 @@
-# Deploying for scale
+# Deploying Mudarisy
 
-Templates for the architecture in `zewal-mobile/docs/SYSTEM_DESIGN.md` §2–3.
-**None of these files has been run** — Docker, Redis and k6 are not installed on
-the development machine. Treat them as a starting point to adapt and then prove with
-`loadtests/`.
+One host runs the whole stack with Docker Compose. nginx load-balances every
+request across N stateless API replicas; data lives on shared volumes.
 
-| File | What it is |
+```mermaid
+flowchart LR
+    Client --> LB[lb: nginx]
+    LB -->|"/api /broadcasting /storage /up"| API1[api x N: FrankenPHP]
+    LB -->|"/app (WebSocket)"| Reverb[reverb]
+    LB -->|"school host, everything else"| Web[web: SPA]
+    LB -->|central host| API1
+    API1 --> DB[(db volume: central + per-school SQLite)]
+    API1 --> Redis[(redis: cache, queue, sessions)]
+    Worker[worker] --> Redis
+    Scheduler[scheduler] --> Redis
+    Init[init: migrations, runs first] --> DB
+```
+
+| Service | What it does |
 |---|---|
-| `docker-compose.yml` | API nodes (Octane), Reverb WebSocket nodes, scheduler, one worker pool per queue, MySQL, three Redis roles, LiveKit |
-| `nginx.conf` | edge: WebSockets on `/app`, API everywhere else |
-| `livekit.yaml` | LiveKit server with TURN fallback and the webhook to this API |
+| `lb` | nginx 1.28. School hosts get the web app, with API paths balanced (`least_conn`) over every `api` replica; the central host and the bare IP get Laravel. Re-resolves replicas every 10 s. |
+| `api` | Laravel on FrankenPHP, `API_REPLICAS` copies (default 3). |
+| `init` | One-shot, runs before `api`: refreshes code-owned `database/` files on the volume, runs central + per-school migrations. |
+| `reverb`, `worker`, `scheduler` | WebSockets, queue worker, `schedule:work`. |
+| `redis` | Cache, queues, sessions (`noeviction`, AOF on). |
+| `web` | The `front-end-service` SPA (built image from that repo). |
 
-## Environment (production)
+**SQLite and replicas.** Every replica shares the `db` volume on this one host.
+WAL mode, a 10 s busy timeout, and `IMMEDIATE` transactions keep concurrent writers
+safe. Spreading replicas over several hosts needs PostgreSQL first (constitution §9:
+decide the tenancy mapping in an ADR before migrating).
 
+## Files
+
+| File | Purpose |
+|---|---|
+| `docker-compose.yml` | The stack |
+| `nginx/default.conf.template`, `nginx/proxy-headers.inc` | Load balancer config (`CENTRAL_HOST`, `PUBLIC_IP` filled in at start) |
+| `compose.env.example` → `.env` | Image tags, replica count, hosts (not secret) |
+| `.env.production.example` → `.env.production` | App config and secrets. Never committed. Create with `make-env.sh`. |
+| `make-env.sh` | Writes `.env.production` with fresh secrets; refuses to overwrite |
+| `deploy.sh` | Zero-downtime rollout of one image, smoke test, instant switch-back on failure |
+| `nginx/upstreams/*.inc` | Server lists for the `api` and `web` upstreams (`deploy.sh` rewrites them during a rollout) |
+| `smoke-test.sh` | End-to-end checks through the load balancer |
+
+## Run locally
+
+```bash
+docker build -t mudarisy-api:local ..                      # from laravel-backend/
+docker build -t mudarisy-web:local ../../../front-end-service
+cp compose.env.example .env
+./make-env.sh mudarisy-api:local api.mudarisy.localhost mudarisy.localhost
+docker compose up -d --wait
+docker compose exec api php artisan school:create demo --admin-email=you@example.com --admin-password='...'
+./smoke-test.sh http://localhost api.mudarisy.localhost demo.mudarisy.localhost
 ```
-APP_ENV=production            CACHE_STORE=redis        QUEUE_CONNECTION=redis     SESSION_DRIVER=redis
-BROADCAST_CONNECTION=reverb   REVERB_APP_ID= REVERB_APP_KEY= REVERB_APP_SECRET= REVERB_HOST= REVERB_PORT=443 REVERB_SCHEME=https
-LIVEKIT_URL=wss://media.example.com  LIVEKIT_API_KEY=  LIVEKIT_API_SECRET=
-FIREBASE_CREDENTIALS=         SMS_*  WHATSAPP_*        (see .env.example)
-CENTRAL_DOMAINS=api.example.com   TENANT_BASE_DOMAIN=example.com   CENTRAL_API_TOKEN=<long random>
-TENANCY_DB_PREFIX=school_     TENANCY_DB_SUFFIX=          (MySQL user needs CREATE/DROP DATABASE)
-```
 
-## Queues
+## CI/CD
 
-Jobs name their queue; run a worker pool for each so they cannot starve one another:
+`.github/workflows/ci.yml` (this repo) runs the Laravel tests and `composer audit`. It
+then builds the image, starts this stack with 3 replicas, opens a school, and runs
+`smoke-test.sh`. On `main` it pushes `ghcr.io/<owner>/mudarisy-api:<sha>` and runs
+`deploy.sh API_IMAGE …` on the server over SSH. `front-end-service` does the same for
+`WEB_IMAGE`.
 
-| Queue | What runs on it | Pool |
-|---|---|---|
-| `critical` | call invitations and endings | small, always warm |
-| `chat` | chat broadcasts | sized by message rate |
-| `whatsapp`, `sms` | paid-channel sends (rate-limited per channel in the job) | sized to the provider's rate |
-| `default`, `low` | everything else | small |
+Repository secrets (both repos, `production` environment):
+`DEPLOY_HOST`, `DEPLOY_USER` (`deploy`), `DEPLOY_SSH_KEY` (private key of the CI
+deploy key), `DEPLOY_KNOWN_HOSTS` (`ssh-keyscan <host>` output).
 
-## Before the first deploy
+### How a rollout works (`deploy.sh`)
 
-1. `php artisan migrate --force` (the central tables), then `php artisan tenants:migrate --force` to bring every school up to date. An existing single-school install becomes a school with `php artisan school:adopt <code> --database=<file>`; new ones are opened with `school:create` or the operator API.
-2. Set one teacher on each group (`class_groups.teacher_id`) — until then every teacher may talk to that group's students.
-3. `php artisan config:cache route:cache event:cache`.
-4. Point the LiveKit webhook at the **central** address, `https://api.example.com/api/webhooks/livekit` (one URL for all schools), register `https://api.example.com/api/integrations/{google,zoom}/callback` as the OAuth redirects, and verify with a test call.
-5. Run `loadtests/` against staging and compare with the targets.
-6. Wildcard DNS (`*.example.com` to the load balancer) and a wildcard TLS certificate, so a new school's address works the moment it is opened. SMS, WhatsApp and Fawry callbacks are set to each school's own address (`https://<school>.example.com/api/webhooks/...`). Keep one queue worker running: the scheduler queues one job per school.
+1. Checks the nginx config, pulls the image, and (for the API) runs migrations in `init`.
+2. **Pins** nginx to the running replicas, then starts as many new ones beside them.
+   New replicas take no traffic until their health check passes; if they never do,
+   they are removed and nothing else changes.
+3. **Switches** nginx to the new replicas with a graceful reload (no dropped requests),
+   keeping the old ones running.
+4. **Smoke-tests** through the load balancer. On failure it switches straight back to
+   the old replicas (a reload, under a second) and removes the new ones.
+5. **Retires** the old replicas, points nginx back at the whole service, and restarts
+   Reverb, the worker and the scheduler on the new image.
+
+Measured locally with three request streams running throughout: a normal API or web
+rollout dropped 0 of ~1,500 requests; an image that never became healthy, 0; a healthy
+image with broken pages was live only for the few seconds of the smoke test.
+
+Roll back by hand with `./deploy.sh API_IMAGE <previous tag>` (the same zero-downtime
+path). Migrations must stay backward compatible (constitution §9), so older code keeps
+working against a newer schema.
+
+## Known limits
+
+- Changing the `lb` service definition itself (ports, mounts) recreates it: about a second of refused connections.
+- No TLS on the origin yet. Put Cloudflare (proxied, Full mode with an Origin certificate) in front before real users.
+- LiveKit (calls) is not in this stack yet; `livekit.yaml` is the starting point.

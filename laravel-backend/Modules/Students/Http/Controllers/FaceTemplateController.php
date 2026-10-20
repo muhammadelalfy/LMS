@@ -2,11 +2,12 @@
 
 namespace Modules\Students\Http\Controllers;
 
-use Modules\Core\Http\Concerns\AuthorizesStaff;
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Modules\Core\Http\Concerns\AuthorizesStaff;
+use Modules\Groups\Models\ClassGroup;
 use Modules\Students\Models\FaceTemplate;
 use Modules\Students\Models\Student;
-use Illuminate\Http\Request;
 
 /**
  * Enrolled faces for face attendance, shared by every staff device. Staff
@@ -20,10 +21,14 @@ class FaceTemplateController extends Controller
     {
         $this->authorizeStaff($request);
 
+        $query = FaceTemplate::query()->with('student');
+        if (! $request->user()->isAnyRole('admin')) {
+            $excluded = ClassGroup::namesClaimedByOthers($request->user());
+            $query->whereHas('student', fn ($q) => $q->whereNotIn('group', $excluded));
+        }
+
         return [
-            'data' => FaceTemplate::query()
-                ->with('student')
-                ->get()
+            'data' => $query->get()
                 ->map(fn (FaceTemplate $template) => $template->toPayload())
                 ->values(),
         ];
@@ -33,6 +38,7 @@ class FaceTemplateController extends Controller
     public function update(Request $request, Student $student)
     {
         $this->authorizeStaff($request);
+        abort_unless($request->user()->can('update', [FaceTemplate::class, $student]), 403, 'لا تملك صلاحية هذا الطالب.');
         $data = $request->validate([
             'consent' => 'accepted',
             'model' => 'required|string|max:64',
@@ -58,6 +64,7 @@ class FaceTemplateController extends Controller
     public function destroy(Request $request, Student $student)
     {
         $this->authorizeStaff($request);
+        abort_unless($request->user()->can('delete', [FaceTemplate::class, $student]), 403, 'لا تملك صلاحية هذا الطالب.');
         FaceTemplate::query()->where('student_id', $student->id)->delete();
 
         return response()->noContent();

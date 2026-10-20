@@ -1,0 +1,95 @@
+# Rendered by the nginx image's envsubst step (only ${CENTRAL_HOST}/${PUBLIC_IP}).
+#
+# Every host opens on the Laravel landing page at `/`. School hosts
+# (<school>.<base domain>) serve the web app for everything else (sign-in at
+# /login), with API paths load-balanced across every `api` replica. The central
+# host (and the bare IP) go to Laravel for everything: operator API, webhooks.
+
+resolver 127.0.0.11 valid=10s ipv6=off;
+
+# The default follows the CPU cache line (32 on some hosts), too small for long hostnames.
+map_hash_bucket_size 128;
+
+log_format lb '$remote_addr $host "$request" $status $body_bytes_sent '
+              'upstream=$upstream_addr rt=$request_time urt=$upstream_response_time';
+access_log /var/log/nginx/access.log lb;
+
+# Server lists live in upstreams/*.inc. Normally they name the compose service (every
+# replica, re-resolved every 10 s); deploy.sh rewrites them to exact containers while it
+# rolls replicas, so traffic moves with a graceful reload instead of racing DNS.
+upstream api {
+    zone api 64k;
+    least_conn;
+    include /etc/nginx/templates/upstreams/api.inc;
+    keepalive 32;
+}
+
+upstream reverb {
+    zone reverb 64k;
+    server reverb:8080 resolve;
+}
+
+upstream web {
+    zone web 64k;
+    include /etc/nginx/templates/upstreams/web.inc;
+    keepalive 8;
+}
+
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
+# Keep the scheme set by an upstream TLS terminator (Cloudflare), else ours.
+map $http_x_forwarded_proto $forwarded_proto {
+    default $http_x_forwarded_proto;
+    ''      $scheme;
+}
+
+map $host $site_upstream {
+    hostnames;
+    default         web;
+    ${CENTRAL_HOST} api;
+    ${PUBLIC_IP}    api;
+}
+
+server {
+    listen 80 default_server;
+    server_name _;
+    server_tokens off;
+    client_max_body_size 25m;
+
+    location /app/ {
+        proxy_pass http://reverb;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $forwarded_proto;
+        proxy_read_timeout 3h;
+    }
+
+    # The landing page is the front door on every host, school sites included.
+    location = / {
+        proxy_pass http://api;
+        include /etc/nginx/templates/proxy-headers.inc;
+    }
+
+    location ~ ^/(brand|landing|logo|vendor)/|^/(favicon\.ico|robots\.txt)$ {
+        proxy_pass http://api;
+        include /etc/nginx/templates/proxy-headers.inc;
+        expires 7d;
+    }
+
+    location ~ ^/(api|broadcasting|storage|up)(/|$) {
+        proxy_pass http://api;
+        include /etc/nginx/templates/proxy-headers.inc;
+        proxy_read_timeout 60s;
+    }
+
+    location / {
+        proxy_pass http://$site_upstream;
+        include /etc/nginx/templates/proxy-headers.inc;
+    }
+}

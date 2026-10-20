@@ -3,25 +3,24 @@
 namespace Modules\Attendance\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Modules\Core\Http\Concerns\AuthorizesStaff;
-use Modules\Attendance\Models\AttendanceRecord;
-use Modules\Attendance\Services\AbsenceSweeper;
-use Modules\Groups\Services\SessionReminders;
-use Modules\Core\Support\Singleflight;
-use Modules\Payments\Services\StudentLedger;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
+use Modules\Attendance\Models\AttendanceRecord;
+use Modules\Attendance\Services\AbsenceSweeper;
 use Modules\Attendance\Services\AttendanceDomainService;
+use Modules\Core\Http\Concerns\AuthorizesStaff;
+use Modules\Core\Support\Singleflight;
+use Modules\Groups\Models\ClassGroup;
+use Modules\Groups\Services\SessionReminders;
+use Modules\Payments\Services\StudentLedger;
 
 class AttendanceController extends Controller
 {
     use AuthorizesStaff;
 
-    public function __construct(private readonly AttendanceDomainService $attendance)
-    {
-    }
+    public function __construct(private readonly AttendanceDomainService $attendance) {}
 
     public function index(Request $request)
     {
@@ -40,6 +39,7 @@ class AttendanceController extends Controller
             'status' => 'required|in:present,absent,late',
             'note' => 'nullable|string',
         ]);
+        abort_unless($request->user()->can('create', [AttendanceRecord::class, $data]), 403, 'لا تملك صلاحية هذا الطالب.');
 
         $record = $this->attendance->create($data, $request->user()->id);
 
@@ -124,6 +124,7 @@ class AttendanceController extends Controller
     public function update(Request $request, AttendanceRecord $attendance)
     {
         $this->authorizeStaff($request);
+        abort_unless($request->user()->can('update', $attendance), 403, 'لا تملك صلاحية هذا الطالب.');
         $data = $request->validate([
             'date_at' => 'sometimes|date',
             'status' => 'sometimes|in:present,absent,late',
@@ -136,6 +137,7 @@ class AttendanceController extends Controller
     public function destroy(Request $request, AttendanceRecord $attendance)
     {
         $this->authorizeStaff($request);
+        abort_unless($request->user()->can('delete', $attendance), 403, 'لا تملك صلاحية هذا الطالب.');
         $this->attendance->delete($attendance);
 
         return response()->noContent();
@@ -143,10 +145,17 @@ class AttendanceController extends Controller
 
     private function scope($query, Request $request): void
     {
-        $account = $request->user()->studentAccount;
-        if ($request->user()->isAnyRole('student', 'parent')) {
+        $user = $request->user();
+        $account = $user->studentAccount;
+        if ($user->isAnyRole('student', 'parent')) {
             abort_unless($account, 403);
             $query->where('student_id', $account->student_id);
+
+            return;
+        }
+        if ($user->isAnyRole('teacher')) {
+            $excluded = ClassGroup::namesClaimedByOthers($user);
+            $query->whereHas('student', fn ($q) => $q->whereNotIn('group', $excluded));
         }
     }
 }

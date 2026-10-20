@@ -2,12 +2,13 @@
 
 namespace Modules\Notifications\Http\Controllers;
 
-use Modules\Core\Http\Concerns\AuthorizesStaff;
 use App\Http\Controllers\Controller;
-use Modules\Notifications\Models\DeviceToken;
-use Modules\Students\Models\Student;
-use Modules\Notifications\Services\StudentNotifier;
 use Illuminate\Http\Request;
+use Modules\Core\Http\Concerns\AuthorizesStaff;
+use Modules\Groups\Models\ClassGroup;
+use Modules\Notifications\Models\DeviceToken;
+use Modules\Notifications\Services\StudentNotifier;
+use Modules\Students\Models\Student;
 
 /**
  * Staff-written notifications to chosen students, a whole group or everyone,
@@ -30,9 +31,29 @@ class SchoolMessageController extends Controller
             'group' => 'nullable|string|max:32',
             'all' => 'nullable|boolean',
         ], ['title.required' => 'اكتب عنوان الإشعار.', 'body.required' => 'اكتب نص الإشعار.']);
+        $user = $request->user();
+        $all = (bool) ($data['all'] ?? false);
+
+        // ADR 0002: a whole-school broadcast is admin-only; a teacher's
+        // chosen group or students must be within the groups they teach.
+        if ($all) {
+            abort_unless($user->isAnyRole('admin'), 403, 'إرسال رسالة لكل المدرسة متاح للمشرف فقط.');
+        }
+        if (! $user->isAnyRole('admin') && filled($data['group'] ?? null)) {
+            abort_if(
+                in_array($data['group'], ClassGroup::namesClaimedByOthers($user), true),
+                403,
+                'لا تملك صلاحية هذه المجموعة.',
+            );
+        }
+        if (! $user->isAnyRole('admin') && ! empty($data['student_ids'] ?? [])) {
+            $excluded = ClassGroup::namesClaimedByOthers($user);
+            $outOfReach = Student::query()->whereIn('id', $data['student_ids'])->whereIn('group', $excluded)->exists();
+            abort_if($outOfReach, 403, 'لا تملك صلاحية بعض هؤلاء الطلاب.');
+        }
 
         $studentIds = match (true) {
-            (bool) ($data['all'] ?? false) => Student::query()->pluck('id')->all(),
+            $all => Student::query()->pluck('id')->all(),
             filled($data['group'] ?? null) => Student::query()->where('group', $data['group'])->pluck('id')->all(),
             default => $data['student_ids'] ?? [],
         };
