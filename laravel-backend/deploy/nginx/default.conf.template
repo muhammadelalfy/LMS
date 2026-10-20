@@ -1,8 +1,9 @@
 # Rendered by the nginx image's envsubst step (only ${CENTRAL_HOST}/${PUBLIC_IP}).
 #
-# School hosts (<school>.<base domain>) serve the web app, with the API paths
-# load-balanced across every `api` replica. The central host (and the bare IP)
-# go to Laravel for everything: operator API, landing page, webhooks.
+# Every host opens on the Laravel landing page at `/`. School hosts
+# (<school>.<base domain>) serve the web app for everything else (sign-in at
+# /login), with API paths load-balanced across every `api` replica. The central
+# host (and the bare IP) go to Laravel for everything: operator API, webhooks.
 
 resolver 127.0.0.11 valid=10s ipv6=off;
 
@@ -64,6 +65,18 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $forwarded_proto;
         proxy_read_timeout 3h;
+    }
+
+    # The landing page is the front door on every host, school sites included.
+    location = / {
+        proxy_pass http://api;
+        include /etc/nginx/conf.d/proxy-headers.inc;
+    }
+
+    location ~ ^/(brand|landing|logo|vendor)/|^/(favicon\.ico|robots\.txt)$ {
+        proxy_pass http://api;
+        include /etc/nginx/conf.d/proxy-headers.inc;
+        expires 7d;
     }
 
     location ~ ^/(api|broadcasting|storage|up)(/|$) {

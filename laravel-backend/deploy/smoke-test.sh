@@ -13,11 +13,19 @@ check() { # name expected actual
     if [[ "$3" == "$2" ]]; then echo "ok   $1 ($3)"; else echo "FAIL $1: expected $2, got $3"; fail=1; fi
 }
 status() { curl -s -o /dev/null -w '%{http_code}' --max-time 10 "$@"; }
+# "yes" when the page at $2 (on host $1) is served and contains $3.
+serves() { curl -sf --max-time 10 -H "Host: $1" "$BASE$2" | grep -qF "$3" && echo yes || echo no; }
 
-check "central landing page"       200 "$(status -H "Host: $CENTRAL" "$BASE/")"
+LANDING_MARK='id="download"'
+APP_MARK='<div id="root">'
+
+check "central opens on landing page" yes "$(serves "$CENTRAL" / "$LANDING_MARK")"
+check "school opens on landing page"  yes "$(serves "$SCHOOL" / "$LANDING_MARK")"
+check "landing assets on school host" 200 "$(status -H "Host: $SCHOOL" "$BASE/landing/motion.css")"
+check "landing offers school sign-in" yes "$(serves "$SCHOOL" / 'href="/login"')"
 if [[ -z "${SMOKE_SKIP_WEB:-}" ]]; then
-    check "school web app shell"       200 "$(status -H "Host: $SCHOOL" "$BASE/")"
-    check "school deep link fallback"  200 "$(status -H "Host: $SCHOOL" "$BASE/admin/login")"
+    check "school sign-in is the web app" yes "$(serves "$SCHOOL" /login "$APP_MARK")"
+    check "school deep link fallback"     yes "$(serves "$SCHOOL" /admin/login "$APP_MARK")"
 fi
 check "api health through lb"      200 "$(status -H "Host: $SCHOOL" "$BASE/up")"
 check "unknown school is refused"  404 "$(status -H "Host: no-such-school-$$.${SCHOOL#*.}" -H 'Accept: application/json' "$BASE/api/auth/me")"

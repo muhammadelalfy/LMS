@@ -62,6 +62,7 @@
         .nav ul { display: flex; gap: 22px; list-style: none; margin: 0; padding: 0; margin-inline-start: auto; }
         .nav ul a { color: #cfd9ea; font-weight: 500; padding: 6px 0; border-bottom: 2px solid transparent; }
         .nav ul a:hover { color: #fff; border-color: var(--gold-500); }
+        .nav-actions { display: flex; align-items: center; gap: 10px; }
 
         .btn {
             display: inline-flex; align-items: center; gap: 8px;
@@ -174,9 +175,11 @@
             .hero-grid, .split, footer .cols { grid-template-columns: 1fr; }
             .g3, .g4 { grid-template-columns: 1fr 1fr; }
             .nav ul { display: none; }
-            .nav .btn { margin-inline-start: auto; }
+            .nav .nav-actions { margin-inline-start: auto; }
         }
         @media (max-width: 560px) {
+            .nav-actions .btn { padding: 8px 16px; font-size: 15px; white-space: nowrap; }
+            .nav-actions .btn-ghost + .btn-gold { display: none; }
             .g3, .g4 { grid-template-columns: 1fr; }
             section { padding: 56px 0; }
             .download { padding: 32px 20px; }
@@ -196,6 +199,8 @@
     $ios = config('landing.ios_url');
     $web = config('landing.web_url');
     $email = config('landing.contact_email');
+    // On a school's own address the platform is one click away; the central site has no school to sign in to.
+    $login = in_array(request()->getHost(), config('tenancy.central_domains', []), true) ? null : '/login';
 @endphp
 
 <div class="progress" id="progress" aria-hidden="true"></div>
@@ -211,7 +216,12 @@
             <li><a href="#features">المزايا</a></li>
             <li><a href="#how">كيف تبدأ</a></li>
         </ul>
-        <a class="btn btn-gold" href="#download">حمّل التطبيق</a>
+        <div class="nav-actions">
+            @if ($login)
+                <a class="btn btn-ghost" href="{{ $login }}">تسجيل الدخول</a>
+            @endif
+            <a class="btn btn-gold" href="#download">حمّل التطبيق</a>
+        </div>
     </div>
 </header>
 
@@ -378,7 +388,9 @@
                     @else
                         <span class="btn btn-navy" aria-disabled="true">iOS — قريباً</span>
                     @endif
-                    @if ($web)
+                    @if ($login)
+                        <a class="btn btn-gold" href="{{ $login }}">الدخول من المتصفح</a>
+                    @elseif ($web)
                         <a class="btn btn-gold" href="{{ $web }}" rel="noopener">فتح نسخة الويب</a>
                     @endif
                 </div>
