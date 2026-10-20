@@ -42,6 +42,9 @@ decide the tenancy mapping in an ADR before migrating).
 | `make-env.sh` | Writes `.env.production` with fresh secrets; refuses to overwrite |
 | `deploy.sh` | Zero-downtime rollout of one image, smoke test, instant switch-back on failure |
 | `nginx/upstreams/*.inc` | Server lists for the `api` and `web` upstreams (`deploy.sh` rewrites them during a rollout) |
+| `nginx/site.inc` | Locations shared by the HTTP (80) and HTTPS (443) servers |
+| `nginx/cloudflare-*.inc`, `update-cloudflare-ips.sh` | Cloudflare's published IP ranges, used to trust visitor IP and scheme headers |
+| `make-certs.sh` | Creates `certs/origin.key`/`origin.pem` (self-signed until the Cloudflare Origin certificate is installed) |
 | `smoke-test.sh` | End-to-end checks through the load balancer |
 
 ## Run locally
@@ -89,8 +92,25 @@ Roll back by hand with `./deploy.sh API_IMAGE <previous tag>` (the same zero-dow
 path). Migrations must stay backward compatible (constitution §9), so older code keeps
 working against a newer schema.
 
+## HTTPS and Cloudflare
+
+Visitors reach Cloudflare over HTTPS; Cloudflare connects to this host on **443** (or 80). nginx
+takes the visitor's real IP from `CF-Connecting-IP` and the scheme from `X-Forwarded-Proto`
+**only when the TCP peer is inside Cloudflare's published ranges**, so a request sent straight
+to the origin cannot choose the address that rate limits and logs record. `X-Forwarded-For` is
+always overwritten with that address, never appended to. Refresh the ranges occasionally with
+`./update-cloudflare-ips.sh`, review the diff, commit and deploy.
+
+One-time setup, in the Cloudflare dashboard for the zone:
+
+1. **DNS**, both *Proxied*: an `A` record `api` and one `*` pointing at the server's IP. Existing records win over the wildcard, so apex, `www`, mail and so on are unaffected. (If the plan refuses a proxied wildcard, add one proxied record per school instead.)
+2. **Origin certificate:** *SSL/TLS, Origin Server, Create Certificate, Use my private key and CSR.* Paste `/opt/mudarisy/certs/origin.csr` from the server, keep the hostnames `mudarisy.com` and `*.mudarisy.com`, and save the PEM Cloudflare returns as `/opt/mudarisy/certs/origin.pem`. The private key never leaves the server. Then `docker compose exec lb nginx -s reload`.
+3. **SSL mode:** *SSL/TLS, Overview, Full (strict)*.
+
+Until step 2 the origin serves a self-signed certificate, which Cloudflare accepts in *Full* (not
+*strict*). Until DNS exists the stack stays reachable on its `<ip>.sslip.io` names over plain HTTP.
+
 ## Known limits
 
 - Changing the `lb` service definition itself (ports, mounts) recreates it: about a second of refused connections.
-- No TLS on the origin yet. Put Cloudflare (proxied, Full mode with an Origin certificate) in front before real users.
 - LiveKit (calls) is not in this stack yet; `livekit.yaml` is the starting point.

@@ -24,3 +24,5 @@ sed -e "s|^APP_KEY=.*|APP_KEY=${app_key}|" \
     .env.production.example > .env.production
 
 echo "wrote .env.production (mode 600)"
+
+./make-certs.sh

@@ -2,6 +2,7 @@
 # End-to-end checks through the load balancer. Run from deploy/ after `docker compose up -d --wait`.
 #   ./smoke-test.sh <base-url> <central-host> <school-host>
 # With SMOKE_LOGIN_EMAIL / SMOKE_LOGIN_PASSWORD set, also signs in to the school.
+# With SMOKE_TLS_URL set (https://host:port), also checks the origin's HTTPS listener.
 set -uo pipefail
 
 BASE="${1:-http://localhost}"
@@ -37,6 +38,11 @@ if [[ -z "${SMOKE_SKIP_WEB:-}" ]]; then
     check "school deep link fallback"     yes "$(serves "$SCHOOL" /admin/login "$APP_MARK")"
 fi
 check "api health through lb"      200 "$(status -H "Host: $SCHOOL" "$BASE/up")"
+if [[ -n "${SMOKE_TLS_URL:-}" ]]; then
+    # The origin's own certificate is Cloudflare-only (or self-signed), so it is not verified here.
+    check "origin serves HTTPS"        200 "$(status -k -H "Host: $SCHOOL" "$SMOKE_TLS_URL/up")"
+    check "landing over HTTPS"         200 "$(status -k -H "Host: $SCHOOL" "$SMOKE_TLS_URL/")"
+fi
 check "unknown school is refused"  404 "$(status -H "Host: no-such-school-$$.${SCHOOL#*.}" -H 'Accept: application/json' "$BASE/api/auth/me")"
 check "anonymous api is refused"   401 "$(status -H "Host: $SCHOOL" -H 'Accept: application/json' "$BASE/api/auth/me")"
 

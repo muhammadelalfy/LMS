@@ -34,7 +34,8 @@ log() { printf '==> %s\n' "$*"; }
 set_image() { sed -i "s|^$1=.*|$1=$2|" .env; export "$1=$2"; }
 
 smoke() {
-    ./smoke-test.sh "http://127.0.0.1:${HTTP_PORT:-80}" "$CENTRAL_HOST" "$SMOKE_SCHOOL_HOST"
+    SMOKE_TLS_URL="https://127.0.0.1:${HTTPS_PORT:-443}" \
+        ./smoke-test.sh "http://127.0.0.1:${HTTP_PORT:-80}" "$CENTRAL_HOST" "$SMOKE_SCHOOL_HOST"
 }
 
 # Re-render the template (it may have changed) and reload without dropping connections.
@@ -125,6 +126,8 @@ roll_abort() {
     new=()
     route_to
 }
+
+./make-certs.sh
 
 log "checking nginx config"
 docker compose run --rm --no-deps -e NGINX_ENTRYPOINT_QUIET_LOGS=1 lb nginx -t -q
