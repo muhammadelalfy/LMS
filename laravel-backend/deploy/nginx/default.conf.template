@@ -1,4 +1,4 @@
-# Rendered by the nginx image's envsubst step (only ${CENTRAL_HOST}/${PUBLIC_IP}).
+# Rendered by the nginx image's envsubst step (only ${CENTRAL_HOST}, ${PUBLIC_IP}, ${ROOT_DOMAIN}).
 #
 # Cloudflare terminates TLS for visitors and connects here over HTTPS (port 443, Full strict)
 # or HTTP (port 80). Both servers share site.inc. The visitor's real IP and scheme are taken
@@ -60,11 +60,16 @@ map "$from_cloudflare:$http_x_forwarded_proto" $forwarded_proto {
     "~^1:(?<proto>https?)$" $proto;
 }
 
+# Hosts with no school behind them (operator API, landing page, webhooks) go to Laravel. The apex
+# and www of the root domain are central too; ROOT_DOMAIN is a placeholder that matches nothing
+# when no root domain is configured.
 map $host $site_upstream {
     hostnames;
-    default         web;
-    ${CENTRAL_HOST} api;
-    ${PUBLIC_IP}    api;
+    default              web;
+    ${CENTRAL_HOST}      api;
+    ${PUBLIC_IP}         api;
+    ${ROOT_DOMAIN}       api;
+    www.${ROOT_DOMAIN}   api;
 }
 
 server {

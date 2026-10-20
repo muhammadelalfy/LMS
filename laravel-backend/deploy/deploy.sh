@@ -133,8 +133,12 @@ log "checking nginx config"
 docker compose run --rm --no-deps -e NGINX_ENTRYPOINT_QUIET_LOGS=1 lb nginx -t -q
 
 export "$var=$image"
-log "pulling $image"
-docker compose pull --quiet "$service" "${companions[@]}"
+# DEPLOY_SKIP_PULL=1 rolls an image already on this host (docker load), e.g. to apply new
+# environment settings without a registry round trip.
+if [[ -z "${DEPLOY_SKIP_PULL:-}" ]]; then
+    log "pulling $image"
+    docker compose pull --quiet "$service" "${companions[@]}"
+fi
 set_image "$var" "$image"
 
 # Converge the load balancer first; it is recreated only if its definition changed.

@@ -102,6 +102,7 @@ services:
     environment:
       CENTRAL_HOST: ${CENTRAL_HOST:?set CENTRAL_HOST in .env}
       PUBLIC_IP: ${PUBLIC_IP:-127.0.0.1}
+      ROOT_DOMAIN: ${ROOT_DOMAIN:-root.invalid}
     # A directory mount, not per-file: a file replaced on the host (new inode) would
     # otherwise stay invisible to the container. deploy.sh re-renders and reloads it.
     volumes:

@@ -36,7 +36,7 @@ decide the tenancy mapping in an ADR before migrating).
 | File | Purpose |
 |---|---|
 | `docker-compose.yml` | The stack |
-| `nginx/default.conf.template`, `nginx/proxy-headers.inc` | Load balancer config (`CENTRAL_HOST`, `PUBLIC_IP` filled in at start) |
+| `nginx/default.conf.template`, `nginx/proxy-headers.inc` | Load balancer config (`CENTRAL_HOST`, `PUBLIC_IP`, `ROOT_DOMAIN` filled in at start) |
 | `compose.env.example` → `.env` | Image tags, replica count, hosts (not secret) |
 | `.env.production.example` → `.env.production` | App config and secrets. Never committed. Create with `make-env.sh`. |
 | `make-env.sh` | Writes `.env.production` with fresh secrets; refuses to overwrite |
@@ -108,7 +108,18 @@ One-time setup, in the Cloudflare dashboard for the zone:
 3. **SSL mode:** *SSL/TLS, Overview, Full (strict)*.
 
 Until step 2 the origin serves a self-signed certificate, which Cloudflare accepts in *Full* (not
-*strict*). Until DNS exists the stack stays reachable on its `<ip>.sslip.io` names over plain HTTP.
+*strict*).
+
+Domain settings for a root domain such as `mudarisy.com` (set once on the server, then roll the API):
+
+| File | Setting |
+|---|---|
+| `.env` | `CENTRAL_HOST=api.mudarisy.com`, `ROOT_DOMAIN=mudarisy.com`, `SMOKE_SCHOOL_HOST=<an existing school host>` |
+| `.env.production` | `CENTRAL_DOMAINS=mudarisy.com,www.mudarisy.com,api.mudarisy.com,<ip>`, `TENANT_BASE_DOMAIN=mudarisy.com`, `APP_URL=https://api.mudarisy.com` |
+
+`mudarisy.com`, `www` and `api` serve the central app (landing page, operator API, webhooks);
+every `<school>.mudarisy.com` is a school. To apply new environment settings without a registry
+round trip: `DEPLOY_SKIP_PULL=1 ./deploy.sh API_IMAGE <the image already running>`.
 
 ## Known limits
 
