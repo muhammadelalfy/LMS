@@ -98,14 +98,16 @@ services:
   lb:
     image: nginx:1.28-alpine
     restart: unless-stopped
-    ports: ["${HTTP_PORT:-80}:80"]
+    ports: ["${HTTP_PORT:-80}:80", "${HTTPS_PORT:-443}:443"]
     environment:
       CENTRAL_HOST: ${CENTRAL_HOST:?set CENTRAL_HOST in .env}
       PUBLIC_IP: ${PUBLIC_IP:-127.0.0.1}
+      ROOT_DOMAIN: ${ROOT_DOMAIN:-root.invalid}
     # A directory mount, not per-file: a file replaced on the host (new inode) would
     # otherwise stay invisible to the container. deploy.sh re-renders and reloads it.
     volumes:
       - ./nginx:/etc/nginx/templates:ro
+      - ./certs:/etc/nginx/certs:ro
     depends_on:
       api: { condition: service_healthy }
       web: { condition: service_healthy }

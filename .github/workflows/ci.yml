@@ -109,7 +109,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Lint deploy scripts
-        run: shellcheck -S warning deploy.sh smoke-test.sh make-env.sh
+        run: shellcheck -S warning deploy.sh smoke-test.sh make-env.sh make-certs.sh install-origin-cert.sh update-cloudflare-ips.sh
 
       - name: Build API image
         uses: docker/build-push-action@v6
@@ -132,6 +132,7 @@ jobs:
       - name: Smoke test through the load balancer
         env:
           SMOKE_SKIP_WEB: "1"
+          SMOKE_TLS_URL: https://localhost
           SMOKE_LOGIN_EMAIL: owner@ci.test
           SMOKE_LOGIN_PASSWORD: CiSmoke!2026pass
         run: |
@@ -191,7 +192,7 @@ jobs:
 
       - name: Upload stack definition
         run: |
-          scp -r laravel-backend/deploy/{docker-compose.yml,deploy.sh,smoke-test.sh,nginx} \
+          scp -r laravel-backend/deploy/{docker-compose.yml,deploy.sh,smoke-test.sh,make-certs.sh,install-origin-cert.sh,nginx} \
             "${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:/opt/mudarisy/"
 
       - name: Roll out the new image

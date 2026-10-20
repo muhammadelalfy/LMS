@@ -36,12 +36,16 @@ decide the tenancy mapping in an ADR before migrating).
 | File | Purpose |
 |---|---|
 | `docker-compose.yml` | The stack |
-| `nginx/default.conf.template`, `nginx/proxy-headers.inc` | Load balancer config (`CENTRAL_HOST`, `PUBLIC_IP` filled in at start) |
+| `nginx/default.conf.template`, `nginx/proxy-headers.inc` | Load balancer config (`CENTRAL_HOST`, `PUBLIC_IP`, `ROOT_DOMAIN` filled in at start) |
 | `compose.env.example` → `.env` | Image tags, replica count, hosts (not secret) |
 | `.env.production.example` → `.env.production` | App config and secrets. Never committed. Create with `make-env.sh`. |
 | `make-env.sh` | Writes `.env.production` with fresh secrets; refuses to overwrite |
 | `deploy.sh` | Zero-downtime rollout of one image, smoke test, instant switch-back on failure |
 | `nginx/upstreams/*.inc` | Server lists for the `api` and `web` upstreams (`deploy.sh` rewrites them during a rollout) |
+| `nginx/site.inc` | Locations shared by the HTTP (80) and HTTPS (443) servers |
+| `nginx/cloudflare-*.inc`, `update-cloudflare-ips.sh` | Cloudflare's published IP ranges, used to trust visitor IP and scheme headers |
+| `install-origin-cert.sh` | Installs the Cloudflare Origin certificate after checking it matches the server's key |
+| `make-certs.sh` | Creates `certs/origin.key`/`origin.pem` (self-signed until the Cloudflare Origin certificate is installed) |
 | `smoke-test.sh` | End-to-end checks through the load balancer |
 
 ## Run locally
@@ -89,8 +93,36 @@ Roll back by hand with `./deploy.sh API_IMAGE <previous tag>` (the same zero-dow
 path). Migrations must stay backward compatible (constitution §9), so older code keeps
 working against a newer schema.
 
+## HTTPS and Cloudflare
+
+Visitors reach Cloudflare over HTTPS; Cloudflare connects to this host on **443** (or 80). nginx
+takes the visitor's real IP from `CF-Connecting-IP` and the scheme from `X-Forwarded-Proto`
+**only when the TCP peer is inside Cloudflare's published ranges**, so a request sent straight
+to the origin cannot choose the address that rate limits and logs record. `X-Forwarded-For` is
+always overwritten with that address, never appended to. Refresh the ranges occasionally with
+`./update-cloudflare-ips.sh`, review the diff, commit and deploy.
+
+One-time setup, in the Cloudflare dashboard for the zone:
+
+1. **DNS**, both *Proxied*: an `A` record `api` and one `*` pointing at the server's IP. Existing records win over the wildcard, so apex, `www`, mail and so on are unaffected. (If the plan refuses a proxied wildcard, add one proxied record per school instead.)
+2. **Origin certificate:** *SSL/TLS, Origin Server, Create Certificate, Use my private key and CSR.* Paste `/opt/mudarisy/certs/origin.csr` from the server and keep the hostnames `mudarisy.com` and `*.mudarisy.com`. Copy the PEM Cloudflare returns to the server and run `./install-origin-cert.sh <that file>`: it refuses a certificate that does not match the server's key, and reloads nginx only if the config still passes. The private key never leaves the server.
+3. **SSL mode:** *SSL/TLS, Overview, Full (strict)*.
+
+Until step 2 the origin serves a self-signed certificate, which Cloudflare accepts in *Full* (not
+*strict*).
+
+Domain settings for a root domain such as `mudarisy.com` (set once on the server, then roll the API):
+
+| File | Setting |
+|---|---|
+| `.env` | `CENTRAL_HOST=api.mudarisy.com`, `ROOT_DOMAIN=mudarisy.com`, `SMOKE_SCHOOL_HOST=<an existing school host>` |
+| `.env.production` | `CENTRAL_DOMAINS=mudarisy.com,www.mudarisy.com,api.mudarisy.com,<ip>`, `TENANT_BASE_DOMAIN=mudarisy.com`, `APP_URL=https://api.mudarisy.com` |
+
+`mudarisy.com`, `www` and `api` serve the central app (landing page, operator API, webhooks);
+every `<school>.mudarisy.com` is a school. To apply new environment settings without a registry
+round trip: `DEPLOY_SKIP_PULL=1 ./deploy.sh API_IMAGE <the image already running>`.
+
 ## Known limits
 
 - Changing the `lb` service definition itself (ports, mounts) recreates it: about a second of refused connections.
-- No TLS on the origin yet. Put Cloudflare (proxied, Full mode with an Origin certificate) in front before real users.
 - LiveKit (calls) is not in this stack yet; `livekit.yaml` is the starting point.

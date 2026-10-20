@@ -1,4 +1,8 @@
-# Rendered by the nginx image's envsubst step (only ${CENTRAL_HOST}/${PUBLIC_IP}).
+# Rendered by the nginx image's envsubst step (only ${CENTRAL_HOST}, ${PUBLIC_IP}, ${ROOT_DOMAIN}).
+#
+# Cloudflare terminates TLS for visitors and connects here over HTTPS (port 443, Full strict)
+# or HTTP (port 80). Both servers share site.inc. The visitor's real IP and scheme are taken
+# from Cloudflare's headers only when the TCP peer is inside Cloudflare's published ranges.
 #
 # Every host opens on the Laravel landing page at `/`. School hosts
 # (<school>.<base domain>) serve the web app for everything else (sign-in at
@@ -13,6 +17,16 @@ map_hash_bucket_size 128;
 log_format lb '$remote_addr $host "$request" $status $body_bytes_sent '
               'upstream=$upstream_addr rt=$request_time urt=$upstream_response_time';
 access_log /var/log/nginx/access.log lb;
+
+# Visitor IP: believe CF-Connecting-IP only from Cloudflare. Anyone else reaching the origin
+# directly cannot choose the address that rate limits and logs see.
+include /etc/nginx/templates/cloudflare-ips.inc;
+real_ip_header CF-Connecting-IP;
+
+geo $realip_remote_addr $from_cloudflare {
+    default 0;
+    include /etc/nginx/templates/cloudflare-geo.inc;
+}
 
 # Server lists live in upstreams/*.inc. Normally they name the compose service (every
 # replica, re-resolved every 10 s); deploy.sh rewrites them to exact containers while it
@@ -40,56 +54,41 @@ map $http_upgrade $connection_upgrade {
     ''      close;
 }
 
-# Keep the scheme set by an upstream TLS terminator (Cloudflare), else ours.
-map $http_x_forwarded_proto $forwarded_proto {
-    default $http_x_forwarded_proto;
-    ''      $scheme;
+# The scheme Laravel should see: the one Cloudflare reports, else the one this connection used.
+map "$from_cloudflare:$http_x_forwarded_proto" $forwarded_proto {
+    default            $scheme;
+    "~^1:(?<proto>https?)$" $proto;
 }
 
+# Hosts with no school behind them (operator API, landing page, webhooks) go to Laravel. The apex
+# and www of the root domain are central too; ROOT_DOMAIN is a placeholder that matches nothing
+# when no root domain is configured.
 map $host $site_upstream {
     hostnames;
-    default         web;
-    ${CENTRAL_HOST} api;
-    ${PUBLIC_IP}    api;
+    default              web;
+    ${CENTRAL_HOST}      api;
+    ${PUBLIC_IP}         api;
+    ${ROOT_DOMAIN}       api;
+    www.${ROOT_DOMAIN}   api;
 }
 
 server {
     listen 80 default_server;
     server_name _;
-    server_tokens off;
-    client_max_body_size 25m;
+    include /etc/nginx/templates/site.inc;
+}
 
-    location /app/ {
-        proxy_pass http://reverb;
-        proxy_http_version 1.1;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection $connection_upgrade;
-        proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $forwarded_proto;
-        proxy_read_timeout 3h;
-    }
+server {
+    listen 443 ssl default_server;
+    http2 on;
+    server_name _;
 
-    # The landing page is the front door on every host, school sites included.
-    location = / {
-        proxy_pass http://api;
-        include /etc/nginx/templates/proxy-headers.inc;
-    }
+    ssl_certificate     /etc/nginx/certs/origin.pem;
+    ssl_certificate_key /etc/nginx/certs/origin.key;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:ssl:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
 
-    location ~ ^/(brand|landing|logo|vendor)/|^/(favicon\.ico|robots\.txt)$ {
-        proxy_pass http://api;
-        include /etc/nginx/templates/proxy-headers.inc;
-        expires 7d;
-    }
-
-    location ~ ^/(api|broadcasting|storage|up)(/|$) {
-        proxy_pass http://api;
-        include /etc/nginx/templates/proxy-headers.inc;
-        proxy_read_timeout 60s;
-    }
-
-    location / {
-        proxy_pass http://$site_upstream;
-        include /etc/nginx/templates/proxy-headers.inc;
-    }
+    include /etc/nginx/templates/site.inc;
 }

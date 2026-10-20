@@ -34,7 +34,8 @@ log() { printf '==> %s\n' "$*"; }
 set_image() { sed -i "s|^$1=.*|$1=$2|" .env; export "$1=$2"; }
 
 smoke() {
-    ./smoke-test.sh "http://127.0.0.1:${HTTP_PORT:-80}" "$CENTRAL_HOST" "$SMOKE_SCHOOL_HOST"
+    SMOKE_TLS_URL="https://127.0.0.1:${HTTPS_PORT:-443}" \
+        ./smoke-test.sh "http://127.0.0.1:${HTTP_PORT:-80}" "$CENTRAL_HOST" "$SMOKE_SCHOOL_HOST"
 }
 
 # Re-render the template (it may have changed) and reload without dropping connections.
@@ -126,12 +127,18 @@ roll_abort() {
     route_to
 }
 
+./make-certs.sh
+
 log "checking nginx config"
 docker compose run --rm --no-deps -e NGINX_ENTRYPOINT_QUIET_LOGS=1 lb nginx -t -q
 
 export "$var=$image"
-log "pulling $image"
-docker compose pull --quiet "$service" "${companions[@]}"
+# DEPLOY_SKIP_PULL=1 rolls an image already on this host (docker load), e.g. to apply new
+# environment settings without a registry round trip.
+if [[ -z "${DEPLOY_SKIP_PULL:-}" ]]; then
+    log "pulling $image"
+    docker compose pull --quiet "$service" "${companions[@]}"
+fi
 set_image "$var" "$image"
 
 # Converge the load balancer first; it is recreated only if its definition changed.
