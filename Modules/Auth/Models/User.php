@@ -33,7 +33,7 @@ class User extends Authenticatable
     /** A teacher who registered and is waiting for the school to approve them. */
     public const STATUS_PENDING = 'pending';
 
-    protected $attributes = ['status' => self::STATUS_ACTIVE];
+    protected $attributes = ['status' => self::STATUS_ACTIVE, 'is_demo' => false];
 
     /**
      * Get the attributes that should be cast.
@@ -45,6 +45,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'disabled_at' => 'datetime',
+            'is_demo' => 'boolean',
             'expires_at' => 'datetime',
             'password' => 'hashed',
         ];
@@ -76,6 +77,12 @@ class User extends Authenticatable
         return $this->status === self::STATUS_ACTIVE
             && $this->disabled_at === null
             && ($this->expires_at === null || $this->expires_at->isFuture());
+    }
+
+    /** A "try it" account: it cannot change its own sign-in details or manage other accounts. */
+    public function isDemo(): bool
+    {
+        return $this->is_demo === true;
     }
 
     public function isPending(): bool

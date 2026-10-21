@@ -4,6 +4,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Modules\Auth\Http\Controllers\AuditLogController;
 use Modules\Auth\Http\Controllers\AuthController;
+use Modules\Auth\Http\Controllers\DemoLoginController;
 use Modules\Auth\Http\Controllers\PasswordResetController;
 use Modules\Auth\Http\Controllers\TeacherRegistrationController;
 use Modules\Auth\Http\Controllers\UserAdminController;
@@ -18,6 +19,7 @@ Route::post('/auth/student/login', fn (Request $request, AuthController $control
 
 Route::get('/auth/options', [TeacherRegistrationController::class, 'options']);
 Route::post('/auth/register-teacher', [TeacherRegistrationController::class, 'register'])->middleware('throttle:5,1');
+Route::post('/auth/demo-login', [DemoLoginController::class, 'store'])->middleware('throttle:20,1');
 Route::post('/auth/forgot-password', [PasswordResetController::class, 'forgot'])->middleware('throttle:5,1');
 Route::post('/auth/reset-password', [PasswordResetController::class, 'reset'])->middleware('throttle:10,1');
 
