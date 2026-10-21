@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Modules\Courses\Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\Sanctum;
 use Modules\Auth\Models\User;
 use Modules\Courses\Enums\ContentStatus;
@@ -227,5 +228,33 @@ class CourseManagementTest extends TestCase
         $this->postJson("/api/course-lessons/{$lessonId}/status", ['status' => 'published'])->assertForbidden();
         $this->deleteJson("/api/course-lessons/{$lessonId}")->assertForbidden();
         $this->assertSame(ContentStatus::Draft, CourseLesson::find($lessonId)->status);
+    }
+
+    public function test_a_session_time_keeps_its_instant_whatever_offset_it_arrives_with(): void
+    {
+        Sanctum::actingAs($this->admin());
+        [, $subjectId] = $this->outlined();
+        // 16:00 UTC, as a browser sends it; the school runs on Cairo time.
+        $response = $this->postJson("/api/course-subjects/{$subjectId}/lessons", ['title' => 'مباشر', 'live_at' => '2027-01-15T16:00:00.000Z', 'live_link' => 'https://meet.example/x'])->assertCreated();
+
+        $this->assertTrue(Carbon::parse($response->json('live_at'))->equalTo(Carbon::parse('2027-01-15T16:00:00Z')));
+        $stored = CourseLesson::findOrFail($response->json('id'));
+        $this->assertTrue($stored->live_at->equalTo(Carbon::parse('2027-01-15T16:00:00Z')));
+        $this->assertSame('2027-01-15 18:00:00', $stored->getRawOriginal('live_at'), 'stored as the school\'s wall-clock time');
+
+        // Editing it with another offset for the same instant changes nothing.
+        $this->patchJson("/api/course-lessons/{$stored->id}", ['live_at' => '2027-01-15T18:00:00+02:00', 'live_link' => 'https://meet.example/x'])->assertOk();
+        $this->assertTrue($stored->fresh()->live_at->equalTo(Carbon::parse('2027-01-15T16:00:00Z')));
+    }
+
+    public function test_a_courses_dates_are_kept_the_same_way(): void
+    {
+        Sanctum::actingAs($this->admin());
+
+        $id = $this->postJson('/api/courses', $this->create(['starts_at' => '2027-03-01T10:00:00Z', 'ends_at' => '2027-03-02T10:00:00Z']))->assertCreated()->json('id');
+
+        $course = Course::findOrFail($id);
+        $this->assertTrue($course->starts_at->equalTo(Carbon::parse('2027-03-01T10:00:00Z')));
+        $this->assertTrue($course->ends_at->equalTo(Carbon::parse('2027-03-02T10:00:00Z')));
     }
 }

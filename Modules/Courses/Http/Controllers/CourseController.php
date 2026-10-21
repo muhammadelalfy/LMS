@@ -14,6 +14,7 @@ use Modules\Courses\Enums\CourseKind;
 use Modules\Courses\Enums\OutlineStyle;
 use Modules\Courses\Enums\Pricing;
 use Modules\Courses\Enums\SequencingMode;
+use Modules\Courses\Http\Concerns\ConvertsToSchoolTime;
 use Modules\Courses\Models\Course;
 use Modules\Courses\Models\LessonProgress;
 use Modules\Courses\Services\CourseOutline;
@@ -24,6 +25,7 @@ use Modules\Courses\Services\CourseSlugs;
 class CourseController extends Controller
 {
     use AuthorizesStaff;
+    use ConvertsToSchoolTime;
 
     public function __construct(private readonly CourseOutline $outline, private readonly CourseSlugs $slugs) {}
 
@@ -160,7 +162,7 @@ class CourseController extends Controller
     {
         $required = $course ? 'sometimes' : 'required';
 
-        return $request->validate([
+        return $this->inSchoolTime($request->validate([
             'title' => [$required, 'string', 'max:200'],
             'kind' => ['sometimes', Rule::enum(CourseKind::class)],
             'summary' => ['nullable', 'string', 'max:500'],
@@ -180,7 +182,7 @@ class CourseController extends Controller
             'pricing' => ['sometimes', Rule::enum(Pricing::class)],
             'price_amount' => ['nullable', 'integer', 'min:1', 'max:100000000'],
             'discounted_price_amount' => ['nullable', 'integer', 'min:1', 'lt:price_amount'],
-        ]);
+        ]), ['starts_at', 'ends_at', 'visible_from', 'visible_until']);
     }
 
     /** A paid course needs a price; a free one carries none. */

@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Modules\Core\Http\Concerns\AuthorizesStaff;
 use Modules\Courses\Enums\ContentStatus;
+use Modules\Courses\Http\Concerns\ConvertsToSchoolTime;
 use Modules\Courses\Models\Course;
 use Modules\Courses\Models\CourseLesson;
 use Modules\Courses\Models\CourseSubject;
@@ -18,6 +19,7 @@ use Modules\Courses\Services\CourseOutline;
 class CourseLessonController extends Controller
 {
     use AuthorizesStaff;
+    use ConvertsToSchoolTime;
 
     public function __construct(private readonly CourseOutline $outline) {}
 
@@ -86,7 +88,7 @@ class CourseLessonController extends Controller
             $data['live_provider'] = 'other';
         }
 
-        return $data;
+        return $this->inSchoolTime($data, ['live_at']);
     }
 
     private function shape(CourseLesson $lesson): array
