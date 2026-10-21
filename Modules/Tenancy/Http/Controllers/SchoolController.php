@@ -5,6 +5,7 @@ namespace Modules\Tenancy\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Modules\Students\Models\Student;
 use Modules\Tenancy\Models\School;
 use Modules\Tenancy\Services\SchoolProvisioner;
 
@@ -15,9 +16,14 @@ use Modules\Tenancy\Services\SchoolProvisioner;
  */
 class SchoolController extends Controller
 {
-    public function index()
+    /** `?usage=1` adds each school's student count (it opens every school's database, so it is opt-in). */
+    public function index(Request $request)
     {
-        return ['data' => School::query()->with('domains')->orderBy('name')->get()->map(fn (School $school) => $this->present($school))->values()];
+        $usage = $request->boolean('usage');
+
+        return ['data' => School::query()->with('domains')->orderBy('name')->get()
+            ->map(fn (School $school) => $this->present($school) + ($usage ? ['students_count' => $this->studentsOf($school)] : []))
+            ->values()];
     }
 
     public function show(School $school)
@@ -83,6 +89,18 @@ class SchoolController extends Controller
         $school->delete();
 
         return response()->noContent();
+    }
+
+    /** The school's student count, or null when its database cannot be read (one broken school must not hide the rest). */
+    private function studentsOf(School $school): ?int
+    {
+        try {
+            return (int) $school->run(fn () => Student::query()->count());
+        } catch (\Throwable $e) {
+            report($e);
+
+            return null;
+        }
     }
 
     private function present(School $school): array
