@@ -3,13 +3,13 @@
 namespace Modules\Auth\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use Modules\Auth\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\PersonalAccessToken;
+use Modules\Auth\Models\User;
 
 class AuthController extends Controller
 {
@@ -102,6 +102,7 @@ class AuthController extends Controller
 
         $user = $query->first();
         abort_unless($user && Hash::check($data['password'], $user->password), 422, 'بيانات الدخول غير صحيحة لهذا النوع من الحسابات.');
+        abort_if($user->isPending(), 403, 'حسابك قيد المراجعة. ستتمكن من الدخول بعد موافقة إدارة المدرسة.');
         abort_unless($user->isUsable(), 403, 'هذا الحساب موقوف أو انتهت صلاحيته. تواصل مع الإدارة.');
 
         return $this->tokenResponse($user, $role);

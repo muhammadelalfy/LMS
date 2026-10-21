@@ -2,32 +2,38 @@
 
 namespace Modules\Auth\Models;
 
-use Modules\Students\Models\StudentAccount;
-use Modules\Notifications\Models\DeviceToken;
-use Modules\PluginStore\Models\PluginPurchase;
-use Modules\PluginStore\Models\InstalledModule;
-
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Database\Factories\UserFactory;
-use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
+use Modules\Notifications\Models\DeviceToken;
+use Modules\PluginStore\Models\InstalledModule;
+use Modules\PluginStore\Models\PluginPurchase;
+use Modules\Students\Models\StudentAccount;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
     use HasApiTokens, HasFactory, Notifiable;
 
-    protected static function newFactory(): \Database\Factories\UserFactory
+    protected static function newFactory(): UserFactory
     {
-        return \Database\Factories\UserFactory::new();
+        return UserFactory::new();
     }
 
     protected $fillable = ['name', 'email', 'password', 'role', 'disabled_at', 'expires_at'];
 
     protected $hidden = ['password', 'remember_token'];
+
+    public const STATUS_ACTIVE = 'active';
+
+    /** A teacher who registered and is waiting for the school to approve them. */
+    public const STATUS_PENDING = 'pending';
+
+    protected $attributes = ['status' => self::STATUS_ACTIVE];
 
     /**
      * Get the attributes that should be cast.
@@ -67,8 +73,24 @@ class User extends Authenticatable
     /** Whether the account may sign in and use the API right now. */
     public function isUsable(): bool
     {
-        return $this->disabled_at === null
+        return $this->status === self::STATUS_ACTIVE
+            && $this->disabled_at === null
             && ($this->expires_at === null || $this->expires_at->isFuture());
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === self::STATUS_PENDING;
+    }
+
+    /** pending, disabled or active, in the words the admin screens use. */
+    public function accountState(): string
+    {
+        return match (true) {
+            $this->isPending() => 'pending',
+            $this->disabled_at !== null => 'disabled',
+            default => 'active',
+        };
     }
 
     public function isAnyRole(string ...$roles): bool
