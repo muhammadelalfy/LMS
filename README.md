@@ -1,6 +1,6 @@
 # Mudarisy Laravel Backend
 
-This directory contains the Laravel 13 API for the Mudarisy school-management platform. It uses Eloquent models and migrations for MySQL and Laravel Sanctum for token-based authentication.
+This repository is the Laravel 13 API for the Mudarisy school-management platform (the web app is in `front-end-service`, the mobile app in `lms-mobile`). It uses Eloquent models and migrations for MySQL and Laravel Sanctum for token-based authentication.
 
 ## Schools and modules
 
