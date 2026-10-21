@@ -1,0 +1,123 @@
+/* Landing: the way into the platform (mobile menu, school-code box) and wide-screen scaling.
+   Loaded after the page's own styles, so equal-specificity rules here win. */
+
+/* Header links get a 44px-tall hit area without changing how they look. */
+.nav ul a { padding-block: 11px; }
+
+/* ---- mobile menu ---------------------------------------------------------------------------- */
+.nav-toggle {
+    display: none; place-items: center; width: 44px; height: 44px; padding: 0; border-radius: 12px;
+    border: 1.5px solid rgba(255, 255, 255, .3); background: transparent; color: #fff; cursor: pointer;
+    transition: border-color .2s, background-color .2s;
+}
+.nav-toggle:hover { border-color: #d4af55; background: rgba(212, 175, 85, .12); }
+.nav-toggle:focus-visible { outline: 2px solid #d4af55; outline-offset: 3px; }
+.nav-toggle .bars { position: relative; width: 20px; height: 14px; display: block; }
+.nav-toggle .bars i {
+    position: absolute; inset-inline: 0; height: 2px; border-radius: 2px; background: currentColor;
+    transition: transform .25s cubic-bezier(.2, 0, 0, 1), opacity .15s;
+}
+.nav-toggle .bars i:nth-child(1) { top: 0; }
+.nav-toggle .bars i:nth-child(2) { top: 6px; }
+.nav-toggle .bars i:nth-child(3) { top: 12px; }
+.nav-open .nav-toggle .bars i:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+.nav-open .nav-toggle .bars i:nth-child(2) { opacity: 0; }
+.nav-open .nav-toggle .bars i:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+@media (max-width: 900px) {
+    .nav-toggle { display: inline-grid; }
+    .nav ul {
+        display: flex; position: absolute; top: 100%; inset-inline: 0; flex-direction: column; gap: 0;
+        margin: 0; padding: 6px 16px 14px; background: rgba(8, 21, 43, .98);
+        border-bottom: 1px solid rgba(255, 255, 255, .1); box-shadow: 0 24px 40px rgba(0, 0, 0, .35);
+        visibility: hidden; opacity: 0; transform: translateY(-8px);
+        transition: opacity .2s, transform .2s, visibility 0s linear .2s;
+    }
+    .nav-open .nav ul { visibility: visible; opacity: 1; transform: none; transition: opacity .2s, transform .2s; }
+    .nav ul li { border-bottom: 1px solid rgba(255, 255, 255, .08); }
+    .nav ul li:last-child { border-bottom: 0; }
+    .nav ul a { display: block; padding: 14px 4px; font-size: 18px; border-bottom: 0; min-height: 48px; }
+}
+@media (max-width: 560px) {
+    .nav { gap: 12px; }
+    .nav-actions .btn { min-height: 44px; align-items: center; }
+    .nav-actions .btn-ghost { display: none; }
+    .brand-link .brand-name { font-size: 20px; }
+}
+@media (max-width: 380px) {
+    .brand-link .brand-name { display: none; }
+}
+
+/* ---- "enter your school code" -------------------------------------------------------------- */
+.school-dialog {
+    width: min(460px, calc(100vw - 32px)); padding: 0; border: 0; border-radius: 24px; font: inherit; color: var(--ink);
+    background: #fff; box-shadow: 0 30px 80px rgba(8, 21, 43, .45); overflow: visible;
+}
+.school-dialog::backdrop { background: rgba(8, 21, 43, .62); backdrop-filter: blur(4px); }
+.school-card { position: relative; padding: 36px 32px 30px; text-align: start; }
+.school-card h2 { margin: 0 0 8px; font-size: 26px; font-weight: 800; }
+.school-help { margin: 0 0 20px; color: var(--muted); font-size: 16px; line-height: 1.8; }
+.school-help b, .school-help span { color: var(--ink); }
+.school-card label { display: block; font-weight: 700; margin-bottom: 6px; }
+.school-field {
+    display: flex; align-items: center; gap: 8px; padding: 0 14px; min-height: 52px; border-radius: 14px;
+    border: 1.5px solid #c9d2de; background: #fff; direction: ltr;
+}
+.school-field:focus-within { border-color: #d4af55; box-shadow: 0 0 0 3px rgba(212, 175, 85, .28); }
+.school-field input {
+    flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font: inherit; font-size: 18px; color: var(--ink);
+    padding: 12px 0;
+}
+.school-field span { color: var(--muted); font-size: 16px; white-space: nowrap; }
+.school-status { min-height: 28px; margin: 10px 0 12px; font-size: 15px; color: var(--muted); }
+.school-status.is-error { color: #b42318; }
+.school-status.is-ok { color: #1f7a4d; }
+.school-go { width: 100%; justify-content: center; min-height: 52px; }
+.school-go[aria-busy="true"] { opacity: .75; pointer-events: none; }
+.school-x {
+    position: absolute; top: 14px; inset-inline-end: 14px; width: 44px; height: 44px; border: 0; border-radius: 12px;
+    background: transparent; color: var(--muted); font-size: 28px; line-height: 1; cursor: pointer;
+}
+.school-x:hover { background: var(--navy-50); color: var(--ink); }
+.school-x:focus-visible, .school-go:focus-visible { outline: 2px solid #d4af55; outline-offset: 3px; }
+@media (prefers-reduced-motion: no-preference) {
+    .school-dialog[open] { animation: school-in .32s cubic-bezier(.34, 1.56, .64, 1); }
+    .school-dialog[open]::backdrop { animation: school-fade .2s ease-out; }
+}
+@keyframes school-in { from { opacity: 0; transform: translateY(14px) scale(.96); } to { opacity: 1; transform: none; } }
+@keyframes school-fade { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 480px) { .school-card { padding: 30px 20px 24px; } .school-card h2 { font-size: 22px; } }
+
+/* ---- wide screens ---------------------------------------------------------------------------
+   The page is built around a 1180px column. On large monitors that leaves wide empty margins and
+   small type, so the column and the key sizes grow in steps. */
+@media (min-width: 1500px) {
+    .wrap { width: min(1380px, 100% - 96px); }
+    .nav { min-height: 76px; }
+    .brand-link img { height: 52px; }
+    .brand-link .brand-name { font-size: 25px; }
+    .nav ul { gap: 30px; }
+    .nav ul a { font-size: 18px; }
+    .hero h1 { font-size: clamp(56px, 3.7vw, 74px); }
+    .hero p.lead { font-size: 22px; max-width: 58ch; }
+    .hero-grid { gap: 72px; }
+    .btn { font-size: 18px; padding: 14px 30px; }
+    .quote-card { padding: 36px; }
+    .quote-card p { font-size: 26px; }
+    section { padding: 104px 0; }
+    .sec-head h2 { font-size: clamp(38px, 2.4vw, 48px); }
+    .sec-head p, .card p { font-size: 18px; }
+    .card { padding: 32px; }
+    .card h3 { font-size: 22px; }
+    .stats strong { font-size: 50px; }
+}
+@media (min-width: 2000px) {
+    .wrap { width: min(1700px, 100% - 160px); }
+    .hero h1 { font-size: clamp(74px, 3.6vw, 92px); }
+    .hero p.lead { font-size: 26px; }
+    .quote-card p { font-size: 30px; }
+    .btn { font-size: 20px; padding: 16px 36px; }
+    .sec-head h2 { font-size: clamp(46px, 2.3vw, 58px); }
+    .card h3 { font-size: 26px; }
+    .sec-head p, .card p { font-size: 21px; }
+}

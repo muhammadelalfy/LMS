@@ -42,7 +42,7 @@
             background: #fff;
             line-height: 1.8;
         }
-        :root { --header-h: 69px; }
+        :root { --header-h: 69px; --marquee-h: 75px; }
         a { color: inherit; text-decoration: none; }
         .wrap { width: min(1180px, 100% - 32px); margin-inline: auto; }
 
@@ -83,10 +83,11 @@
                 radial-gradient(900px 400px at 15% 10%, rgba(212,175,85,.18), transparent 60%),
                 linear-gradient(160deg, var(--navy-900), var(--navy-700) 70%, var(--navy-600));
             color: #fff;
-            /* The sticky header sits above the hero, so header + hero = one screen. --header-h is
-               kept exact by extras.js; the vh line is the fallback for browsers without svh. */
-            min-height: calc(100vh - var(--header-h));
-            min-height: calc(100svh - var(--header-h));
+            /* The first screen is the sticky header, the hero, and the moving strip at its bottom edge.
+               --header-h and --marquee-h are kept exact by extras.js; the vh line is the fallback for
+               browsers without svh. */
+            min-height: calc(100vh - var(--header-h) - var(--marquee-h));
+            min-height: calc(100svh - var(--header-h) - var(--marquee-h));
             display: grid; align-content: center;
             padding: clamp(40px, 9vh, 96px) 0 clamp(88px, 14vh, 128px);
         }
@@ -197,6 +198,7 @@
     </style>
     <link rel="stylesheet" href="{{ asset('landing/motion.css') }}">
     <link rel="stylesheet" href="{{ asset('landing/extras.css') }}">
+    <link rel="stylesheet" href="{{ asset('landing/entry.css') }}">
 </head>
 <body>
 @php
@@ -207,6 +209,10 @@
     $email = config('landing.contact_email');
     // On a school's own address the platform is one click away; the central site has no school to sign in to.
     $login = in_array(request()->getHost(), config('tenancy.central_domains', []), true) ? null : '/login';
+    // Where "enter the platform" goes: the school's sign-in, a configured web address, or (on the
+    // main site, where no school is chosen yet) nowhere, which opens the school-code box.
+    $target = $login ?: ($web ?: null);
+    $base = config('tenancy.base_domain');
 @endphp
 
 <div class="progress" id="progress" aria-hidden="true"></div>
@@ -216,18 +222,19 @@
             <img src="{{ asset('brand/mudarisy_mark_reversed.png') }}" alt="" width="36" height="46">
             <span class="brand-name">{{ $name }}</span>
         </a>
-        <ul>
-            <li><a href="#platform">المنصة</a></li>
+        <ul id="nav-links">
+            <li><a href="#platform">عن المنصة</a></li>
             <li><a href="#app">التطبيق</a></li>
             <li><a href="#features">المزايا</a></li>
             <li><a href="#how">كيف تبدأ</a></li>
         </ul>
         <div class="nav-actions">
-            @if ($login)
-                <a class="btn btn-ghost" href="{{ $login }}">تسجيل الدخول</a>
-            @endif
-            <a class="btn btn-gold" href="#download">حمّل التطبيق</a>
+            @include('landing._enter', ['class' => 'btn btn-gold', 'label' => 'ادخل المنصة'])
+            <a class="btn btn-ghost" href="#download">حمّل التطبيق</a>
         </div>
+        <button type="button" class="nav-toggle" id="nav-toggle" aria-expanded="false" aria-controls="nav-links" aria-label="القائمة">
+            <span class="bars" aria-hidden="true"><i></i><i></i><i></i></span>
+        </button>
     </div>
 </header>
 
@@ -245,8 +252,8 @@
                     لكل مدرسة أو أكاديمية، مع تطبيق جوال للإدارة والمعلمين والطلاب وأولياء الأمور.
                 </p>
                 <div class="cta">
-                    <a class="btn btn-gold" href="#download">حمّل التطبيق</a>
-                    <a class="btn btn-ghost" href="#platform">تعرّف على المنصة</a>
+                    @include('landing._enter', ['class' => 'btn btn-gold', 'label' => 'ادخل المنصة'])
+                    <a class="btn btn-ghost" href="#download">حمّل التطبيق</a>
                 </div>
             </div>
             <aside class="quote-card" aria-label="رسالتنا">
@@ -397,11 +404,7 @@
                     @else
                         <span class="btn btn-navy" aria-disabled="true">iOS — قريباً</span>
                     @endif
-                    @if ($login)
-                        <a class="btn btn-gold" href="{{ $login }}">الدخول من المتصفح</a>
-                    @elseif ($web)
-                        <a class="btn btn-gold" href="{{ $web }}" rel="noopener">فتح نسخة الويب</a>
-                    @endif
+                    @include('landing._enter', ['class' => 'btn btn-gold', 'label' => 'الدخول من المتصفح'])
                 </div>
             </div>
         </div>
@@ -437,9 +440,26 @@
         <div class="copy">© {{ date('Y') }} {{ $name }}. جميع الحقوق محفوظة.</div>
     </div>
 </footer>
+@unless ($target)
+    <dialog class="school-dialog" id="school-dialog" aria-labelledby="school-title">
+        <form class="school-card" id="school-form" novalidate>
+            <button type="button" class="school-x" data-close-school aria-label="إغلاق">&times;</button>
+            <h2 id="school-title">ادخل إلى مدرستك</h2>
+            <p class="school-help">اكتب رمز مدرستك. هو أول جزء من عنوانها، مثل <b dir="ltr">alnour</b> في <span dir="ltr">alnour.{{ $base }}</span>.</p>
+            <label for="school-code">رمز المدرسة</label>
+            <div class="school-field">
+                <input id="school-code" name="code" dir="ltr" inputmode="url" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="41" required placeholder="alnour">
+                <span dir="ltr" aria-hidden="true">.{{ $base }}</span>
+            </div>
+            <p class="school-status" id="school-status" role="status" aria-live="polite"></p>
+            <button class="btn btn-gold school-go" type="submit">متابعة</button>
+        </form>
+    </dialog>
+@endunless
 <script src="{{ asset('vendor/gsap/gsap.min.js') }}"></script>
 <script src="{{ asset('vendor/gsap/ScrollTrigger.min.js') }}"></script>
 <script src="{{ asset('landing/motion.js') }}"></script>
 <script src="{{ asset('landing/extras.js') }}"></script>
+<script src="{{ asset('landing/entry.js') }}" defer></script>
 </body>
 </html>

@@ -10,16 +10,24 @@
             document.documentElement.style.setProperty('--header-h', topBar.offsetHeight + 'px');
         };
         var hero = document.querySelector('.hero');
+        var strip = document.querySelector('.marquee');
         var cue = document.querySelector('.scroll-cue');
-        // The cue only helps when the hero is exactly one screen; when it runs past the fold
-        // (phones, short windows) the content already shows there is more below.
-        var placeCue = function () {
-            if (cue && hero) cue.classList.toggle('is-off', hero.offsetTop + hero.offsetHeight > window.innerHeight + 1);
+        var setStripHeight = function () {
+            if (strip) document.documentElement.style.setProperty('--marquee-h', strip.offsetHeight + 'px');
         };
-        var layout = function () { setHeaderHeight(); placeCue(); };
+        // The cue only helps when header + hero + strip are exactly one screen; when they run past
+        // the fold (phones, short windows) the content already shows there is more below.
+        var placeCue = function () {
+            if (cue && hero) cue.classList.toggle('is-off', hero.offsetTop + hero.offsetHeight + (strip ? strip.offsetHeight : 0) > window.innerHeight + 1);
+        };
+        var layout = function () { setHeaderHeight(); setStripHeight(); placeCue(); };
         layout();
         window.addEventListener('resize', layout);
-        if (window.ResizeObserver) { new ResizeObserver(layout).observe(topBar); if (hero) new ResizeObserver(placeCue).observe(hero); }
+        if (window.ResizeObserver) {
+            new ResizeObserver(layout).observe(topBar);
+            if (strip) new ResizeObserver(layout).observe(strip);
+            if (hero) new ResizeObserver(placeCue).observe(hero);
+        }
     }
 
     // 1. Network of drifting points that react to the pointer.
