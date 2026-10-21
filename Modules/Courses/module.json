@@ -1,0 +1,14 @@
+{
+  "name": "Courses",
+  "alias": "courses",
+  "description": "Courses made of sections and lessons, with enrollment, payment-gated access, live lessons and progress.",
+  "keywords": [
+    "courses"
+  ],
+  "priority": 10,
+  "providers": [
+    "Modules\\Courses\\Providers\\CoursesServiceProvider"
+  ],
+  "files": [],
+  "version": "1.0.0"
+}
