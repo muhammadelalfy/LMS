@@ -51,8 +51,8 @@ decide the tenancy mapping in an ADR before migrating).
 ## Run locally
 
 ```bash
-docker build -t mudarisy-api:local ..                      # from laravel-backend/
-docker build -t mudarisy-web:local ../../../front-end-service
+docker build -t mudarisy-api:local ..                      # from the repo root
+docker build -t mudarisy-web:local ../../front-end-service
 cp compose.env.example .env
 ./make-env.sh mudarisy-api:local api.mudarisy.localhost mudarisy.localhost
 docker compose up -d --wait

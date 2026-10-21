@@ -13,7 +13,7 @@ mutate state that is shared by **every school on the same running application**,
 "installed" fact in each school's own tenant database. Reading the actual code confirms and sharpens the
 audit's finding:
 
-**Tenancy model actually in use** (`laravel-backend/config/tenancy.php`,
+**Tenancy model actually in use** (`config/tenancy.php`,
 `Modules/Tenancy/Services/SchoolProvisioner.php`): `stancl/tenancy` v3 with `DatabaseTenancyBootstrapper` —
 **database-per-school**. Each school has its own SQLite file (PostgreSQL in `[BUILD]`), and tenant tables
 (including PluginStore's `plugin_products`, `plugin_purchases`, `installed_modules` — see
@@ -27,7 +27,7 @@ installs") describe.
 
 1. **The module registry is one JSON file for the whole deployment.** `config/modules.php` sets
    `'activator' => 'file'` with `'statuses-file' => base_path('modules_statuses.json')`. That file
-   (`laravel-backend/modules_statuses.json`) lists every module's enabled/disabled flag for the **entire
+   (`modules_statuses.json`) lists every module's enabled/disabled flag for the **entire
    application process**, not per request, not per tenant. `PluginInstaller::install()` calls
    `Module::find($plugin->module_name)?->enable()`, which writes to this single shared file. There is no
    tenant dimension in `nwidart/laravel-modules`'s activator at all.

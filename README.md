@@ -1,39 +1,72 @@
-# LMS
+# Mudarisy Laravel Backend
 
-**Zewal** is a global Arabic RTL school management system (SMS) for schools, academies, and learning centers across any subject. The platform combines a Laravel 13 API with Eloquent models, a React 19/Vite frontend, monitored exams, attendance QR workflows, reports, payments, worksheets, and rich question types including math notation and dimensioned geometry.
+This repository is the Laravel 13 API for the Mudarisy school-management platform (the web app is in `front-end-service`, the mobile app in `lms-mobile`). It uses Eloquent models and migrations for MySQL and Laravel Sanctum for token-based authentication.
 
-## Architecture
+## Schools and modules
 
-| Area | Stack and responsibility |
-|---|---|
-| Frontend | React 19, TypeScript, Vite, Tailwind CSS 4, Arabic RTL UI, browser-side exam PDF capture |
-| Backend | Laravel 13, PHP 8.3, Eloquent ORM, Sanctum role-specific authentication |
-| Modules | `Modules/Attendance` and plugin-store boundaries using `nwidart/laravel-modules` |
-| Data | MySQL-compatible production configuration and SQLite test workflow |
-| Quality | Vitest, TypeScript checks, Laravel feature tests, PHP syntax checks, and Vite production builds |
+One installation serves many schools. **Each school has its own database** and is reached at its own subdomain (`alnour.example.com`); the platform's own tables (schools, addresses, cache, jobs) live in the central database. Business code is split into feature modules under `Modules/` (`Auth`, `Students`, `Groups`, `Attendance`, `Payments`, `Exams`, `Learning`, `Notifications`, `Chat`, `Calls`, `Reports`, `PluginStore`, `Tenancy`), each with its own models, controllers, routes, migrations (`Database/Migrations`) and tests (`Tests`). Design: `zewal-mobile/docs/SYSTEM_DESIGN.md` §12.
 
-## Local development
+```bash
+php artisan migrate                                         # central tables only
+php artisan school:create alnour --name="مدرسة النور" --plan=basic --admin-email=owner@alnour.example
+php artisan school:adopt alnour --database=database.sqlite  # or: keep an existing single-school database as a school
+php artisan school:list
+php artisan school:status alnour suspended                  # turn a school away (or `active`)
+php artisan tenants:migrate                                 # run a release's migrations in every school
+```
 
-Install Node dependencies with `pnpm install`, then run the frontend and server with `pnpm dev`. For the Laravel API, copy `laravel-backend/.env.example` to `laravel-backend/.env`, configure the database, run `php artisan key:generate`, and apply migrations with `php artisan migrate`.
+The operator can do the same over HTTP on a central address (`CENTRAL_DOMAINS`) with `Authorization: Bearer $CENTRAL_API_TOKEN`: `GET/POST /api/central/schools`, `PATCH/DELETE /api/central/schools/{id}`, `POST /api/central/schools/{id}/domains`. Without a token configured these routes do not exist.
 
-Run the standard checks with `pnpm lint`, `pnpm check`, `pnpm test`, and `pnpm build`. Run Laravel checks from `laravel-backend` with `php artisan test` and the PHP syntax command documented in `.github/workflows/ci.yml`.
+For local development set `DEFAULT_SCHOOL=demo` so a plain `http://127.0.0.1:8000` serves that school (ignored outside `local` and `testing`), and use `php artisan lms:reset-development-data` to open it with the Arabic demo data.
 
-## Agile Git workflow
+Periodic work is queued once per active school (`schools:dispatch <command>` in `routes/console.php`) and needs a running queue worker besides `schedule:run`.
+## Domain model
 
-`main` is the protected, releasable branch. The long-lived integration branches are `backend` and `frontend`; each contains only changes for its corresponding application layer and is merged into `main` through review. Every feature starts from the relevant integration branch using a short-lived branch such as `feature/backend-exam-grading` or `feature/frontend-exam-preview`.
+The backend models users, students, student accounts, worksheets, worksheet assignments, attendance records, exam results, and payments. A worksheet assignment belongs to exactly one worksheet and student, and its lifecycle is `assigned`, `in_progress`, `submitted`, or `graded`.
 
-Pull Requests are required for all merges. A PR should describe the user story, acceptance criteria, implementation notes, tests, screenshots or PDF evidence when relevant, and any migration or rollback considerations. CI must pass before review. The preferred delivery cycle is: backlog item, feature branch, small commits, PR, automated checks, reviewer approval, squash merge, and branch deletion.
+## MySQL configuration
 
-## Branch convention
+Production should use MySQL 8 or a compatible managed MySQL service. Configure the backend environment with:
 
-| Branch | Purpose |
-|---|---|
-| `main` | Protected release branch |
-| `backend` | Laravel, Eloquent, migrations, modules, API, and backend tests |
-| `frontend` | React, styling, client API integration, and frontend tests |
-| `feature/backend-*` | Short-lived backend feature branch |
-| `feature/frontend-*` | Short-lived frontend feature branch |
-| `bugfix/*` | Reproducible defect fix |
-| `chore/*` | Tooling, documentation, or maintenance |
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://api.example.com
+DB_CONNECTION=mysql
+DB_HOST=127.0.0.1
+DB_PORT=3306
+DB_DATABASE=mudarisy
+DB_USERNAME=...
+DB_PASSWORD=...
+SESSION_DRIVER=database
+CACHE_STORE=database
+QUEUE_CONNECTION=database
+```
 
-See [`docs/git-agile-workflow.md`](docs/git-agile-workflow.md) and the PR template for the complete process. CI runs on every push and Pull Request through `.github/workflows/ci.yml`.
+Never commit a real `.env` file or credentials. Run `php artisan migrate --force` against the configured MySQL database during deployment.
+
+## API contract
+
+Authentication is exposed through `/api/auth/register`, `/api/auth/login`, `/api/auth/me`, and `/api/auth/logout`. Protected LMS endpoints use Sanctum bearer tokens. Admins and teachers can manage students, create worksheets, assign work, and view reports. Students can submit their own assignments, while parents and students can read only the records authorized by their account relationship.
+
+The current report endpoint is `/api/reports/summary`; it aggregates student count, attendance statuses, exam totals, and payment totals from Eloquent queries.
+
+## Local verification
+
+The feature suite runs against SQLite (the central database in memory, and every school in a throwaway file) so it does not require local production credentials; every test runs inside a school:
+
+```bash
+php artisan test --compact
+```
+
+The test suite currently covers registration/login, teacher assignment, student submission, and role authorization. Production validation must also run the migration and endpoint smoke checks against MySQL.
+
+## Arabic local demo data
+
+The project includes localized factories and a guarded `ArabicDemoSeeder` for local development and automated testing. Run it with:
+
+```bash
+APP_ENV=local php artisan db:seed --class=Database\\Seeders\\ArabicDemoSeeder --force
+```
+
+The seeder is intentionally blocked outside `local` and `testing`. It is idempotent and creates six Arabic students, parent and student accounts, unique QR tokens, published mathematics worksheets, assignments, five days of attendance history, exam results, and payment records. Development credentials are printed by the command and must not be reused in production.
