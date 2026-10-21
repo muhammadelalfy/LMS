@@ -59,8 +59,9 @@ class CourseController extends Controller
         $instructorIds = $this->instructorIds($request);
 
         $course = Course::create($data + ['slug' => $this->slugs->uniqueFrom($data['title']), 'created_by' => $request->user()->id]);
-        // A teacher who creates a course teaches it; management may name others.
-        $course->instructors()->sync($this->positions($instructorIds ?? [$request->user()->id]));
+        // A teacher who creates a course teaches it. An admin who creates one does not (only teachers can be
+        // instructors); they name who teaches it, now or later.
+        $course->instructors()->sync($this->positions($instructorIds ?? ($request->user()->isAnyRole('teacher') ? [$request->user()->id] : [])));
 
         return response()->json(CoursePresenter::staff($this->loaded($course)), 201);
     }

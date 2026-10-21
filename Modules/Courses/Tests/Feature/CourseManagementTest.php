@@ -76,6 +76,18 @@ class CourseManagementTest extends TestCase
         $this->getJson('/api/courses')->assertOk()->assertJsonCount(2, 'data');
     }
 
+    public function test_an_admin_who_creates_a_course_is_not_made_its_instructor_and_names_the_teachers(): void
+    {
+        $teacher = $this->teacher();
+        Sanctum::actingAs($this->admin());
+
+        $id = $this->postJson('/api/courses', $this->create())->assertCreated()->assertJsonPath('instructors', [])->json('id');
+        $this->putJson("/api/courses/{$id}/instructors", ['instructor_ids' => [$teacher->id]])->assertOk()->assertJsonPath('instructors.0.id', $teacher->id);
+
+        $named = $this->postJson('/api/courses', $this->create(['instructor_ids' => [$teacher->id]]))->assertCreated();
+        $this->assertSame([$teacher->id], collect($named->json('instructors'))->pluck('id')->all());
+    }
+
     public function test_students_and_parents_cannot_run_courses(): void
     {
         foreach (['student', 'parent'] as $role) {
