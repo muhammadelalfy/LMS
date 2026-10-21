@@ -2,22 +2,22 @@
 
 declare(strict_types=1);
 
-namespace Modules\Courses\Http\Concerns;
+namespace Modules\Courses\Support;
 
 use Illuminate\Support\Carbon;
 
-trait ConvertsToSchoolTime
+final class SchoolTime
 {
     /**
      * Times arrive with their own offset (a browser sends UTC), but the database holds wall-clock times in
-     * the application's timezone. Converting first keeps the instant the same; otherwise a 18:00 session
+     * the application's timezone. Converting first keeps the instant the same; otherwise an 18:00 session
      * would be read back hours earlier or later.
      *
      * @param  array<string, mixed>  $data
      * @param  list<string>  $keys
      * @return array<string, mixed>
      */
-    private function inSchoolTime(array $data, array $keys): array
+    public static function convert(array $data, array $keys): array
     {
         foreach ($keys as $key) {
             if (! empty($data[$key])) {
