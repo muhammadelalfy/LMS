@@ -12,5 +12,6 @@
     "Calls": true,
     "Reports": true,
     "PluginStore": true,
-    "Tenancy": true
+    "Tenancy": true,
+    "Courses": true
 }
