@@ -2,22 +2,20 @@
 
 namespace Modules\Notifications\Services;
 
-use Modules\Notifications\Models\NotificationPreference;
-use Modules\Students\Models\StudentAccount;
-use Modules\Auth\Models\User;
-use Modules\Notifications\Notifications\SchoolUpdateNotification;
-use Modules\Notifications\Services\FallbackScheduler;
+use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Str;
+use Modules\Auth\Models\User;
+use Modules\Notifications\Models\NotificationPreference;
+use Modules\Notifications\Notifications\SchoolUpdateNotification;
+use Modules\Students\Models\StudentAccount;
 
 class StudentNotifier
 {
     public function __construct(
         private readonly FcmPushSender $push,
         private readonly FallbackScheduler $fallbacks,
-    ) {
-    }
+    ) {}
 
     /**
      * Notify the accounts linked to the given students: their inbox always,
@@ -25,7 +23,7 @@ class StudentNotifier
      *
      * @param  array<int, int>  $studentIds
      * @param  array<int, string>|null  $relationships  limit to 'parent' and/or 'student' accounts
-     * @return int  the number of accounts notified
+     * @return int the number of accounts notified
      */
     public function notify(
         array $studentIds,
@@ -53,7 +51,7 @@ class StudentNotifier
      * fallback chain, WhatsApp and SMS for those who switched them on.
      *
      * @param  Collection<int, User>  $users
-     * @return int  the number of accounts notified
+     * @return int the number of accounts notified
      */
     public function notifyUsers(Collection $users, string $title, string $body, string $category): int
     {
@@ -61,11 +59,29 @@ class StudentNotifier
             return 0;
         }
         $ref = (string) Str::uuid();
-        Notification::send($users, new SchoolUpdateNotification($title, $body, $category, $ref));
+        $this->writeInbox($users, new SchoolUpdateNotification($title, $body, $category, $ref));
         $this->push->send($this->pushRecipients($users, $category), $title, $body, ['category' => $category]);
         $this->fallbacks->schedule($users, $ref, $title, $body, $category);
 
         return $users->count();
+    }
+
+    /** One insert for every inbox entry (Notification::send would run one query per person). */
+    private function writeInbox(Collection $users, SchoolUpdateNotification $notification): void
+    {
+        $now = now();
+        $data = json_encode($notification->toArray($users->first()), JSON_UNESCAPED_UNICODE);
+
+        DatabaseNotification::query()->insert($users->map(fn (User $user) => [
+            'id' => (string) Str::uuid(),
+            'type' => $notification::class,
+            'data' => $data,
+            'read_at' => null,
+            'notifiable_type' => $user->getMorphClass(),
+            'notifiable_id' => $user->getKey(),
+            'created_at' => $now,
+            'updated_at' => $now,
+        ])->all());
     }
 
     /**
