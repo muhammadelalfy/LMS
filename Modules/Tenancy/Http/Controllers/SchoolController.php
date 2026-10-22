@@ -5,6 +5,7 @@ namespace Modules\Tenancy\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
+use Modules\Auth\Services\DemoAccounts;
 use Modules\Students\Models\Student;
 use Modules\Tenancy\Models\School;
 use Modules\Tenancy\Services\SchoolProvisioner;
@@ -57,6 +58,7 @@ class SchoolController extends Controller
             'status' => ['sometimes', Rule::in([School::ACTIVE, School::SUSPENDED])],
             'max_students' => 'sometimes|nullable|integer|min:1',
             'trial_ends_at' => 'sometimes|nullable|date',
+            'demo_logins' => 'sometimes|boolean',
             'settings' => 'sometimes|array',
             'settings.*' => 'nullable|string|max:500',
         ]);
@@ -69,6 +71,10 @@ class SchoolController extends Controller
             $school->setAttribute($key, $value);
         }
         $school->save();
+        // Switching "try it" sign-ins on makes sure the demo accounts exist, in the school's own database.
+        if ($data['demo_logins'] ?? false) {
+            $school->run(fn () => app(DemoAccounts::class)->ensure());
+        }
 
         return $this->present($school->fresh('domains'));
     }
@@ -114,6 +120,7 @@ class SchoolController extends Controller
             'trial_ends_at' => $school->trial_ends_at?->toISOString(),
             'max_students' => $school->max_students,
             'student_limit' => $school->studentLimit(),
+            'demo_logins' => (bool) $school->demo_logins,
             'domains' => $school->domains->pluck('domain')->values(),
             // Which settings are set, never their values.
             'settings' => array_keys($school->settings()),

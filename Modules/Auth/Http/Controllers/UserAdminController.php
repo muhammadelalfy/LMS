@@ -156,6 +156,8 @@ class UserAdminController extends Controller
     private function authorizeAdmin(Request $request): void
     {
         abort_unless($request->user()->isAnyRole('admin'), 403, 'هذه الصفحة للمشرف فقط.');
+        // A "try it" admin looks around; it never decides who else may sign in.
+        abort_if($request->user()->isDemo(), 403, 'الحساب التجريبي لا يدير الحسابات.');
     }
 
     /** The school must always have an admin who can sign in. */

@@ -48,6 +48,7 @@ class AuthController extends Controller
     public function updateProfile(Request $request)
     {
         $user = $request->user();
+        abort_if($user->isDemo(), 403, 'الحساب التجريبي لا يمكن تعديل بياناته.');
         $data = $request->validate([
             'name' => 'required|string|max:120',
             'email' => ['required', 'email', 'max:190', Rule::unique('users', 'email')->ignore($user->id)],
@@ -61,6 +62,7 @@ class AuthController extends Controller
     public function changePassword(Request $request)
     {
         $user = $request->user();
+        abort_if($user->isDemo(), 403, 'الحساب التجريبي لا يمكن تغيير كلمة مروره.');
         $data = $request->validate([
             'current_password' => 'required|string',
             'password' => ['required', Password::defaults(), 'confirmed', 'different:current_password'],
