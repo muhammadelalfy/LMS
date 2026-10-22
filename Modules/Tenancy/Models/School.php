@@ -17,6 +17,8 @@ use Stancl\Tenancy\Database\Models\Tenant as BaseTenant;
  * @property string $status active | suspended
  * @property \Illuminate\Support\Carbon|null $trial_ends_at
  * @property int|null $max_students
+ * @property string|null $brand_color the academy's color, like #1F4E8C (kept in `data`)
+ * @property string|null $logo_url (kept in `data`)
  */
 class School extends BaseTenant implements TenantWithDatabase
 {
