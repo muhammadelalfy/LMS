@@ -5,6 +5,7 @@ use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
+use Modules\Core\Http\Middleware\GuardAgainstQueryLoops;
 use Modules\Core\Http\Middleware\IdempotentRequests;
 use Modules\Tenancy\Http\Middleware\EnsureSchoolIsActive;
 use Modules\Tenancy\Http\Middleware\InitializeSchool;
@@ -33,6 +34,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Everything a school's people use: find the school from the address
         // (never on a central domain), and turn away a locked school.
         $middleware->group('school', [
+            GuardAgainstQueryLoops::class,
             InitializeSchool::class,
             EnsureSchoolIsActive::class,
             TrialLimits::class,
